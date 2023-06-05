@@ -1,0 +1,53 @@
+
+<div class="container-fluid"  ng-if="entity.UPDATE_SERVICE_CONFIG || entity.ADD_SERVICE_CONFIG">
+
+    <div class="row mt-2">
+        <div class="col-md-8 offset-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4 ng-if="addService.id">{{'SERVICE.EDIT'|translate}}</h4>
+                    <h4 ng-if="!addService.id">{{'SERVICE.ADD'|translate}}</h4>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="form-group"><label>{{'SERVICE.SERVICE_NAME'|translate}}</label> <input
+                            class="form-control" type="text" ng-model="addService.service_name"/></div>
+
+                        <div class="form-group"><label class="w-50">Mã dịch vụ (Map với BBCS) </label>
+                            <input type="text" ng-model="addService.product_code" class="form-group w-25">
+
+
+                        </div>
+
+                        <div class="form-group"><label class="w-50">{{'SERVICE.TYPE.TITLE'|translate}}</label>
+                            <select ng-model="addService.type" class="form-group w-25"  ng-options="item.id as item.title for item in lstType">
+                            
+                            </select>
+                        </div>
+                        <div class="form-group"><label class="w-50">Tính cước qua OCS </label>
+                            <select  ng-disabled="addService.id" ng-model="addService.ocs_charge" class="form-group w-25"
+                                    ng-options="item.id as item.title for item in lstOCS">
+        
+                            </select>
+                        </div>
+                        
+                        <div class="form-group"><label class="w-50">{{'LBL.STATUS.TITLE'|translate}}</label>
+                            <select  ng-model="addService.status" class="form-group w-25" ng-options="item.id as item.title for item in lstStatus">
+                            
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <button class="btn " ng-click="onAddService()"
+                                    ng-class="addService.id?'btn-warning':'btn-primary'"><i class="fa"
+                                                                                            ng-class="addService.id?'fa-save':'fa-send'"></i>
+                                {{addService.id?"Cập nhật":"Thêm"}}
+                            </button>
+                            <button class="btn btn-secondary" ng-click="closeService()"><i class="fa fa-times"></i> Hủy </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

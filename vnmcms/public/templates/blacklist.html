@@ -1,0 +1,317 @@
+
+
+
+<div class="container-fluid mt-2">
+    <div class="row">
+        <div class="col">
+            <h4 class="display-4 mt-2 pl-1">CHẶN DNC</h4>
+        </div>
+    </div>
+</div>
+
+
+<ul class="nav ml-1">
+    <li class="nav-item " ng-repeat="nav in lstBlackListNav" ng-if="nav.permission"
+        ng-class="(nav.active)?'disabled':''">
+        <a class="nav-link"               ng-class="(nav.active)?'disabled':''" href="" ng-click="switchNavBlackList(nav)">{{nav.title}}</a>
+    </li>
+
+</ul>
+
+
+
+
+<div class="container-fluid mt-1" ng-show="!navBlacklist|| navBlacklist=='black-list'">
+        
+   
+        <div class="row">
+            <div class="col">
+                <h4 class="display-4 mt-2 pl-1">DANH SÁCH CHẶN DNC ({{dncDetailParams.total}})</h4>
+         
+            </div>
+        </div>
+ 
+    
+    
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header justify-content-between d-flex">
+                    
+                    <div class="input-group" style="margin-right: 18px;">
+                        <input type="text" class="form-control" ng-model="dncDetailParams.q" placeholder="Tìm số thuê bao"/>
+                        <div class="input-group-append" >
+                            <button class="btn btn-primary" ng-click="getDNCBlacklist()"><i class="fa fa-search"></i> </button>
+                        </div>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                    
+                    <button class="btn btn-secondary btn-sm" ng-if="entity.BLACK_LIST" ng-click="openAddBlackListForm()"><i class="fa fa-plus"></i> Thêm mới, cập nhật </button>
+                    
+                    <button class="btn btn-default btn-outline-secondary btn-sm" ng-if="entity.BLACK_LIST_IMPORT" ng-click="openImportModal()"><i class="fa fa-upload"></i> Nhập từ file .CSV</button>
+                    </div>
+                
+                
+                </div>
+                <div class="card-body">
+                    <table ng-table-dynamic="dncDetailTable with dncDetailCols"
+    
+                           class="tickets table table-condensed table-bordered table-striped small table-sm"
+                           style="margin-top: 10px;" template-header="dncDetailTable_template">
+        
+        
+                        <tr ng-if="$data.length == 0 || $data == undefined">
+                            <td colspan="100" style="display:table-cell !important;text-align:center">
+                                {{'LBL_NO_DATA_FOUND'|translate}}
+                            </td>
+                        </tr>
+                        <tr ng-repeat="row in $data track by $index" ng-if="$data.length > 0">
+                            <td ng-repeat="col in dncDetailCols" ng-class="col.cssclass">
+            
+                                <span ng-if="col.field !='action' && col.field !='type'"> {{row[col.field]}}</span>
+                                <span ng-if="col.field=='type'">
+                                    {{dncType[row.type]}}
+                                </span>
+                                <span  ng-if="col.field=='action' "><a href=""   class="text-danger" ng-click="removeDncBlacklist(row)"><i class="fa fa-trash"></i> Xóa</a> </span>
+        
+        
+                            </td>
+                        </tr>
+                    </table>
+
+                    
+                </div>
+                <br>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt-1" ng-show="  navBlacklist=='white-list'">
+        
+   
+        <div class="row">
+            <div class="col">
+                <h4 class="display-4 mt-2 pl-1">DANH SÁCH WHITELIST DNC({{dncWhitelistDetailParams.total}})</h4>
+         
+            </div>
+        </div>
+ 
+    
+    
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header justify-content-between d-flex">
+                    
+                    <div class="input-group" style="margin-right: 18px;">
+                        <input type="text" class="form-control" ng-model="dncWhitelistDetailParams.q" placeholder="Tìm theo hotline hoặc enterprise"/>
+                        <div class="input-group-append" >
+                            <button class="btn btn-primary" ng-click="getDNCWhitelist()"><i class="fa fa-search"></i> </button>
+                        </div>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                    
+                    <button class="btn btn-secondary btn-sm" ng-if="entity.WHITE_LIST" ng-click="openAddWhitelistForm()"><i class="fa fa-plus"></i> Thêm mới, cập nhật </button>
+                    
+                    </div>
+                
+                
+                </div>
+                <div class="card-body">
+                    <table ng-table-dynamic="dncWhitelistDetailTable with dncWhitelistDetailCols"
+    
+                           class="tickets table table-condensed table-bordered table-striped small table-sm"
+                           style="margin-top: 10px;" template-header="dncWhitelistDetailTable_template">
+        
+        
+                        <tr ng-if="$data.length == 0 || $data == undefined">
+                            <td colspan="100" style="display:table-cell !important;text-align:center">
+                                {{'LBL_NO_DATA_FOUND'|translate}}
+                            </td>
+                        </tr>
+                        <tr ng-repeat="row in $data track by $index" ng-if="$data.length > 0">
+                            <td ng-repeat="col in dncWhitelistDetailCols" ng-class="col.cssclass">
+            
+                                <span ng-if="col.field !='action' && col.field !='type'"> {{row[col.field]}}</span>
+                                <span ng-if="col.field=='type'">
+                                    {{dncType[row.type]}}
+                                </span>
+                                <span  ng-if="col.field=='action' "><a href=""   class="text-danger" ng-click="onRemoveWhiteList(row)"><i class="fa fa-trash"></i> Xóa</a> </span>
+        
+        
+                            </td>
+                        </tr>
+                    </table>
+
+                    
+                </div>
+                <br>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="addBlackListForm" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="addBlackListForm"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" >
+                  Thêm mới số thuê bao vào danh sách DNC</h5>
+                <button  ng-hide="uploading" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="card">
+                    <div class="card-header">
+                       Thêm thuê bao vào danh sách DNC, Có thể thêm nhiều số cách nhau bởi dấu phẩy (,) (Tối đa 1500 số)
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Số thuê bao</label>
+                            <textarea  ng-disabled="uploading" ng-model="newBlackList.phone_no_list" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng thái</label>
+                            <select  ng-disabled="uploading"  ng-options="item.id as item.label for item in lstBlackListStatus" ng-model="newBlackList.status" class="form-control">
+                            </select>
+                        </div>
+    
+                        <p ng-show="uploading" class="text-info">Vui lòng giữ cửa sổ khi dữ liệu bắt đầu tải lên</p>
+                        <p ng-show="uploading" class="text-success">
+                            Đã tải lên {{newBlackList.successCount}} | {{newBlackList.datalength}}
+                        </p>
+                    
+                    
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" ng-hide="uploading"  class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" ng-disabled="uploading"  class="btn btn-primary" ng-click="onSaveBlackList(newBlackList)"><i class="fa fa-paper-plane"></i> {{'CRUD.U'|translate}}</button>
+            
+            </div>
+        </div>
+    </div>
+</div><div class="modal fade" id="addWhiteListForm" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="addWhiteListForm"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" >
+                  Cập nhật hotline vào danh sách whitelist</h5>
+                <button  ng-hide="uploading" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="card">
+                    <div class="card-header">
+                       Thêm hotline vào danh sách whitelist, Có thể thêm nhiều số cách nhau bởi dấu phẩy (,) (Tối đa 1500 ký tự)
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Số hotline</label>
+                            <textarea  ng-disabled="uploading" ng-model="newWhiteList.hotline_numbers" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng thái</label>
+                            <select  ng-disabled="uploading"  ng-options="item.id as item.title for item in lstWhitelistStatus" ng-model="newWhiteList.white_list" class="form-control">
+                            </select>
+                        </div>
+    
+                        <p ng-show="uploading" class="text-info">Vui lòng giữ cửa sổ khi dữ liệu bắt đầu tải lên</p>
+                    
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" ng-hide="uploading"  class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" ng-disabled="uploading"  class="btn btn-primary" ng-click="onSaveWhiteList(newWhiteList)"><i class="fa fa-paper-plane"></i> {{'CRUD.U'|translate}}</button>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importBlackListForm" tabindex="-1"  data-backdrop="static" data-keyboard="false" role="dialog" aria-labelledby="importBlackListForm"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" >
+                 Tải lên danh sách thuê bao từ file .CSV </h5>
+                <button type="button" class="close"  ng-hide="uploading" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="card">
+                    <div class="card-header">
+                       Có thể tải lên hàng loạt thuê bao cần thêm vào, xóa đi với tập tin định dạng CSV. Cấu trúc gồm 2 cột (Thuê bao, Trạng Thái). Tối đa không quá 500.000 dòng trên 1 file.
+                        Bấm vào <a href="/sampleBlacklist.csv"> đây </a> để tải về file mẫu cấu trúc CSV
+                    </div>
+                    <div class="card-body">
+                        
+                        <div class="form-group">
+                            <label>Tập tin .CSV</label>
+                            <br>
+    
+                            <input ng-disabled="uploading" type="file" id="file-input-uploadcsv" accept=".csv" />
+     
+                            <hr>
+                            <h6 ng-show="newBlackList.datalength>0">Tổng số thuê bao trong file: {{newBlackList.datalength|number:0}}</h6>
+                            <p ng-show="uploading" class="text-info">Vui lòng giữ cửa sổ khi dữ liệu đang thực hiện tải lên</p>
+                            <p ng-show="uploading" class="text-success">
+                                Đã tải lên {{newBlackList.successCount|number:0}} | {{newBlackList.datalength|number:0}}
+                            </p>
+                            
+                        </div>
+                        
+                    
+                    
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" ng-hide="uploading" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" ng-disabled="uploading"  class="btn btn-primary" ng-click="onSaveBlackListImport(newBlackList)"><i class="fa fa-paper-plane"></i>
+                    <span ng-show="uploading"> Đang tải lên ... </span>
+                    <span ng-hide="uploading">  {{'CRUD.U'|translate}} </span>
+                    
+                </button>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script id="dncDetailTable_template" type="text/ng-template">
+    <tr>
+        <th ng-repeat="column in dncDetailCols" class="header text-muted"
+            ng-click="dncDetailTable.sorting(column.sortable, dncDetailTable.isSortBy(column.sortable, 'asc') ? 'desc' : 'asc')"
+            ng-class="{'sort-asc': dncDetailTable.isSortBy(column.sortable, 'asc'), 'sort-desc': dncDetailTable.isSortBy(column.sortable, 'desc'), 'sortable': column.sortable}">
+            {{column.title | translate }}
+        </th>
+    </tr>
+</script>
+
+
+<script id="dncWhitelistDetailTable_template" type="text/ng-template">
+    <tr>
+        <th ng-repeat="column in dncWhitelistDetailCols" class="header text-muted"
+            ng-click="dncWhitelistDetailTable.sorting(column.sortable, dncWhitelistDetailTable.isSortBy(column.sortable, 'asc') ? 'desc' : 'asc')"
+            ng-class="{'sort-asc': dncWhitelistDetailTable.isSortBy(column.sortable, 'asc'), 'sort-desc': dncWhitelistDetailTable.isSortBy(column.sortable, 'desc'), 'sortable': column.sortable}">
+            {{column.title | translate }}
+        </th>
+    </tr>
+</script>
+

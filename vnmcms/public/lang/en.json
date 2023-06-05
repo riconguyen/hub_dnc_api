@@ -1,0 +1,597 @@
+{
+  "CURRENCY": "$",
+  "LOCAL_CURRENCY": "៛",
+  "LBL": {
+    "UNIT":{
+      "MINUTES":"Min(s)",
+      "SECONDS":"Sec(s)"
+    },
+    "SELECT": "Select",
+    "CHANGE_PASS":"Change password",
+    "EXPORT":"Export excel",
+    "CREATED_AT": "Created at",
+    "UPDATED_AT": "Updated at",
+    "SIGN_OUT": "Sign out",
+    "FROM_DATE": "From",
+    "TO_DATE": "To",
+    "TYPE":"Type",
+    "DURATION":"Duration",
+    "AMOUNT":"Amount",
+    "CALL":"Call(s)",
+    "CUSTOMERS":"Customer",
+    "SUCCESS_CALL":"Success call",
+    "FAIL_CALL":"Failed call",
+    "TOTAL":"Total",
+    "OPTIONAL": "Options",
+    "TIME_RANGE": {
+      "TITLE": "Time range",
+      "DAY": "Today",
+      "WEEK": "A week",
+      "MONTH": "A month",
+      "QUARTER": "A quater",
+      "YEAR": "An year",
+      "Y2D": "Year to day",
+      "MANUAL": "Manual date"
+    },
+    "STATUS": {
+      "TITLE": "Status",
+      "0": "Active",
+      "1": "In-active",
+      "2": "Canceled"
+    },
+    "USER": {
+      "EMAIL": "Email",
+      "NAME": "Full name",
+      "ROLE": "Role",
+      "ADD": "Add new user",
+      "EDIT": "Edit user information",
+      "PASSWORD": "Password",
+      "PASSWORD_HIN": "A random password",
+      "LIST": "User list",
+      "RESET_PASSWORD": "Reset password"
+    }
+  },
+  "CRUD": {
+    "TITLE": "Action",
+    "COG": "Config",
+    "C": "Add",
+    "U": "Update",
+    "R": "View",
+    "E": "Edit",
+    "D": "Delete",
+    "OK": "OK",
+    "NO": "Cancel",
+    "STATUS": {
+      "TITLE": "Status",
+      "0": "Pause",
+      "1": "Active"
+    }
+  },
+  "NAV": {
+    "HOME": "Home",
+    "CUSTOMER": "Customers",
+    "REPORT": "Reports",
+    "USERS": "Users",
+    "SEARCH_BTN": "Search",
+    "SERVICES": "Packages",
+    "SIP_TRUNK": "Call tracking",
+    "USER": "Users manager",
+    "SETTING": "Setting",
+    "DOWNLOAD":"Download"
+  },
+  "ARTICLE": {
+    "HEADER": {
+      "TITLE": "Article",
+      "DESC": "Article description"
+    },
+    "NAV": {
+      "LIST": "List article",
+      "CREATE": "Add new article",
+      "MOD": "Manager article"
+    }
+  },
+  "LOGIN": {
+    "invalid_email_or_password": "Invalid password or email, please try again",
+    "you_have_no_permission_to_access": "Your account temporary locked. Contact to systerm administrator for more detail",
+    "COMPLETE": "Login successful, please wait to initiate the system",
+    "captcha_verify_failed": "Verify captcha faild. Please try again",
+    "captcha_empty": "Captcha empty",
+    "password_empty": "Password empty",
+    "email_empty": "Email empty",
+    "TITLE":"Login to",
+    "PASSWORD":"Password",
+    "PASSWORD_HIND":"Input your password to continue",
+    "CONTINUE":"Continue",
+    "EMAIL":"Email"
+  },
+  "CUSTOMER": {
+    "ADD": {
+      "TITLE": "Add new customer",
+      "STATUS": "Status"
+    },
+    "STATUS": {
+      "1": "In-active",
+      "2": "Canceled",
+      "0": "Active"
+    },
+    "INFO": "Customer infomation",
+    "LIST": "Customer manager",
+    "ID": "ID",
+    "CUS_NAME": "Customer name",
+    "COMPANYNAME": "Company name",
+    "TAXCODE": "Tax code",
+    "LICENSENO": "Business license no",
+    "ISSUEDBY": "Issue by",
+    "DATEOFISSUE": "Date of issue",
+    "FIRSTNAME": "First name",
+    "MIDINIT": "mid init",
+    "LASTNAME": "Last Name",
+    "ADDR": "Address",
+    "ENTERPRISE_NUMBER": "Enterprise number",
+    "CITY": "City",
+    "STATE": "State/region",
+    "ZIP": "Zipcode",
+    "COUNTRY": "Country/Teritory",
+    "PHONE1": "Phone no 1",
+    "PHONE2": "Phone no 2 ",
+    "EMAIL": "Email",
+    "BCC": "Email BCC",
+    "SEND_STATISTICS": "Send statistic",
+    "BLOCKED": "Blocked",
+    "CAPACITY": "Capacity",
+    "DESCRIPTION": "Description",
+    "SERVICE_ID": "Package ID",
+    "SERVICE_NAME": "Package",
+    "PRODUCT_CODE": "Package code",
+    "SIP": {
+      "IP_AUTH": "IP Auth",
+      "IP_PROXY": "IP Proxy",
+      "DESTINATION": "IP Destination",
+      "HOTLINE_NUMBERS": "Hotline number(s)",
+      "SPLIT_CONTRACT":"Split contract from Enterprise no",
+      "FEE_LIMIT":"Default fee limit"
+
+    }
+  },
+  "SERVICE": {
+    "NAME": {
+      "HOTLINE": "Hotline",
+      "USER": "Account",
+      "OPTION": "Optional",
+      "QUANTITY": "Quantity",
+      "SMS": "Short message"
+    },
+    "TITLE": "Manager package",
+    "DESCRIPTION": "Manage all packages on system",
+    "SERVICE_NAME": "Package name",
+    "ID": "ID",
+    "PRODUCT_CODE": "Package code",
+    "LIST": "All packages",
+    "ADD": "Add new package",
+    "EDIT": "Edit",
+    "TYPE": {
+      "TITLE": "Type",
+      "0": "All-inclusive",
+      "1": "Pay per user"
+    },
+    "CALL_TYPE": {
+      "TITLE": "Type",
+      "1": "Within network",
+      "2": "Across network"
+    },
+    "OPTION_TYPE": {
+      "1": "EXTENSION",
+      "2": "CALL_RECORD",
+      "3": "DATA_STORAGE",
+      "4": "API",
+      "5": "SOFTPHONE_3C"
+    },
+    "QUANTITY_TYPE": {
+      "0": "Within network",
+      "1": "Across network",
+      "2": "International"
+    },
+    "QUANTITY_RESUB": {
+      "0": "No",
+      "1": "Resub"
+    },
+    "PRICE": {
+      "TYPE": {
+        "TITLE": "Type",
+        "1": "Within network",
+        "2": "Across network",
+        "3": "International"
+      },
+      "CALL_TYPE": {
+        "TITLE": "Type",
+        "0": "External",
+        "1": "Internal",
+        "2": "Across network"
+      },
+      "SMS_TYPE": {
+        "TITLE": "SMS Price type",
+        "0": "MO",
+        "1": "MT"
+      },
+      "USER": {
+        "TITLE": "Cost per user",
+        "FROM_USER": "From ",
+        "TO_USER": "To ",
+        "PRICE": "Price (riel)"
+      },
+      "HOTLINE": {
+        "TITLE": "Hot-line quotation",
+        "FROM_HOTLINE_NUM": "From ",
+        "TO_HOTLINE_NUM": "To",
+        "PRICE": "Price",
+        "INIT_PRICE": "Init price"
+      },
+      "CALL": {
+        "TITLE": "Call charge fee",
+        "FROM_MIN": "From second",
+        "TO_MIN": "To second",
+        "TYPE": "Type",
+        "CALL_FEES": "Price (riel)",
+        "CALL_TYPE": "Call type"
+      },
+      "SMS": {
+        "TITLE": "SMS charge fee",
+        "FROM_SMS": "From sms number",
+        "TO_SMS": "To sms number",
+        "TYPE": "Type",
+        "SMS_FEES": "Price (riel)",
+        "SMS_TYPE": "Loại"
+      },
+      "QUANTITY": {
+        "TITLE": "Quantity package",
+        "MIN": "Second",
+        "PRICE": "Price",
+        "TYPE": "Type",
+        "DESCRIPTION": "Description",
+        "STATUS": "Status"
+      },
+      "OPTION": {
+        "TITLE": "Option",
+        "FROM": "From",
+        "TO": "To",
+        "PRICE": "Price",
+        "TYPE": "Type",
+        "DESCRIPTION": "Description",
+        "WARNING": "Change this information will effected to all users using services"
+      }
+    }
+  },
+  "SIP": {
+    "TITLE": "Monitoring call",
+    "SIP_NOT_SET": "Sip not set",
+    "SEARCH":{
+      "PLACEHOLDER":"Enter phone number to search",
+      "RESULT":"Results",
+      "KEYWORD":"Keyword"
+    },
+    "SETTING":{
+      "CONFIGURATION":"Sip configurarion",
+      "TITLE":"View sip configuration",
+      "INFO":"Configuration",
+      "DELETE":"Delete",
+      "DELETE_TEXT":"Delete sip config of this number: ",
+      "DELETE_TEXT_INFO":"This action will remove sip setting of hotline"
+    },
+    "DATA_LIMIT_500_ROW":"Data limit 500 rows to display, please using search field to narrow your results",
+    "DATA_LIMIT_BY_FILTER":"Data currently filtered by ",
+
+    "ACL": {
+      "TITLE": "ALC",
+      "IP_AUTH": "Ip Auth",
+      "IP_PROXY": "Ip Proxy",
+      "BLOCK_REGEX_CALLER": "Block Regex Caller",
+      "BLOCK_REGEX_CALLEE": "Block Regex Callee",
+      "ALLOW_REGEX_CALLER": "Allow Regex Caller",
+      "ALLOW_REGEX_CALLEE": "Allow Regex Callee",
+      "DESCRIPTION": "Description",
+      "REG_SAMPLE":"Regular expression sample"
+    },
+    "ROUTING": {
+      "TITLE": "Routing",
+      "DIRECTION": "Direction",
+      "CALLER": "Hotline",
+      "CALLEE": "Callee",
+      "DESTINATION": "Destination",
+      "PRIORITY": "Priority",
+      "DESCRIPTION": "Description",
+      "VENDOR_ID": "Vendor id",
+      "SIP_PROFILE_ID": "Sip profile id",
+      "ACL_BACKUP_ID": "Acl backup id"
+    },
+    "CALL": {
+      "HISTORY": "Call history",
+      "NO_HISTORY": "No history call",
+      "SEARCH_IN": "Search call",
+      "DIRECTION": {
+        "IN": "Call in",
+        "OUT": "Call out"
+      },
+      "TRACKING": "Trace call",
+      "SETUP_TIME": "Call date",
+      "CONNECT_TIME": "Connected time",
+      "DISCONNECT_TIME": "Disconnected time",
+      "DISCONNECT_CAUSE": "Cause",
+      "FROM_NETWORK_IP": "From IP",
+      "TO_NETWORK_IP": "To IP",
+      "DURATION": "Duration",
+      "CLI": "Callee number",
+      "CLD": "Called number",
+      "CHARGE_STATUS": "Charge status",
+      "CHARGE_STATUS_VAL": {
+        "0": "New",
+        "1": "Processing",
+        "2": "Done",
+        "-1": "Error",
+        "-2": "Send but Error"
+      },
+      "ID": "ID ",
+      "QUALITY_MOS": "Quality mos",
+      "QUALITY_LARGEST_JB": "Quality largest jb",
+      "QUALITY_JITTER_BURST_RATE": "Quality jitter burst rate"
+    }
+  },
+  "REPORT": {
+    "TITLE": "Report",
+    "CHART": "Chart",
+    "FLOW": {
+      "CALL": "Call",
+      "CALL_DURATION": "Quantity",
+      "DAY": "Day",
+      "AMOUNT": "Amount"
+    },
+    "QUANTITY": {
+      "CALL_FEE": "Call fee",
+      "SMS_FEE": "SMS fee",
+      "SUB_FEE": "Sub fee",
+      "TOTAL_FEE": "Total"
+    },
+    "NAV": {
+      "QUANTITY": "Quantity",
+      "FLOW": "Total time",
+      "CUSTOMER": "Customer"
+    }
+  },
+  "NORMAL_CLEARING": "Normal clearing",
+  "NORMAL_UNSPECIFIED": "Normal but unspecified",
+  "ORIGINATOR_CANCEL": "Originator cancel",
+  "USER_BUSY": "User busy",
+  "UNALLOCATED_NUMBER": "Unable to located number",
+  "CALL_REJECTED": "Called rejected",
+  "BILLING": {
+    "000002": "Call",
+    "000001": "Sub",
+    "000003": "SMS",
+    "TYPE": "Billing type",
+    "AMOUNT": "Amount",
+    "COUNT": "Count",
+    "TOTAL": "Total",
+    "CALL": {
+      "1": "Internal",
+      "2": "Local",
+      "":"Sub"
+    }
+  },
+  "--------------NOTE----------":"Cập nhật ngôn ngữ bổ sung 2018 31 July",
+
+  "DASHBOARD": {
+    "HOUR": "Hour",
+    "CALL_SUCCESS": "Call success",
+    "CALL_FAIL": "No answer call",
+    "FROM": "From",
+    "TO": "To",
+    "TOTAL_CALL": "Total call",
+    "TOTAL_TIME": "Total time",
+    "SYSTEM_SUMMARY": "System summary",
+    "CUSTOMER": {
+      "TOTAL": "Total",
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "CANCELED": "Cancelled",
+      "ERROR_CHARGE_IN_MONTH":"Error charge in this month"
+    },
+    "HOTLINE": {
+      "TOTAL": "Total",
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "CANCELED": "Cancelled"
+    },
+    "MONTHLY": {
+      "CALL": "Call",
+      "QUANTITY": "Quantity",
+      "CALL_SUCCESS": "Call success",
+      "CALL_FAIL": "No answer call",
+      "CALL_DURATION": "Call duration"
+    },
+    "AMOUNT": {
+      "SUMMARY": "Summary",
+      "CALL": "Calls",
+      "SMS": "SMS",
+      "SUB": "Sub"
+    }
+  },
+  "CUSTOMER_VIEW":
+  {
+    "SEARCH_PLACEHOLDER":"Input something to search",
+    "DISPLAY_ONLY_ERROR_CHARGE":"Display only error charging",
+    "BY_STATUS":"By status",
+    "CREATED_AT":"Created at",
+    "UPDATED_AT":"Updated at",
+    "BILLING":"Billing",
+    "CONFIG":{
+      "TITLE":"Configuration",
+      "EDIT":"Edit customer information",
+      "DEFAULT_SETTING":"Default SIP configuration setting",
+      "CLOSE":"Close",
+      "PACKAGE":"Package",
+      "HOTLINE_CONFIG":"Hot-line config",
+      "QUANTITY_CONFIG":"Quantity config",
+      "FEE_LIMIT":"Fee limit config",
+      "SET_FEE_LIMIT_TO":"Set fee limit to Enterprise number",
+      "SET_FEE_LIMIT_TITLE":"Set fee limit",
+      "RESTORE":"Restore",
+      "PAUSE":"Pause",
+      "DELETE":"Delete"
+    }
+  },
+  "USER":{
+    "CLOSE":"Close",
+    "HELLO":"Hi",
+    "CONFIG":"Configuration"
+  },
+  "BILLING_VIEW":
+  {
+    "CUSTOMER":"Customer",
+    "ENTERPRISE_NUMBER":"Enterprise number",
+    "TEL":"Tel",
+    "EMAIL":"Email",
+    "TOTAL_HOTLINE":"Total hot-lines",
+    "LIST_HOTLINE":"List hot-lines",
+    "ALL":"All hot-lines",
+    "TRACE_BILLING":"View bill ",
+    "TRACE_BILLING_OF":"of hot-line",
+    "FROM":"From",
+    "AMOUNT":"Amount",
+    "TO":"To",
+    "RATIO":"Ratio",
+    "STATUS":"Status",
+    "SUMMARY":"Summary",
+    "VIEW_QUANTITY":"View quantity",
+    "DATE_RANGE":"Date range",
+    "TYPE":"Type",
+    "BY_HOTLINE":"By hot-line",
+    "NO_DATA":"No data found",
+    "EXPORT_EXCEL":"Export Excel",
+    "NOTICE_45_DAYS_PERIOD":"Data display within 45 days",
+    "QUANTITY":{
+      "TOTAL_DURATION":"Total duration",
+      "REVERSE_DURATION":"Reverse duration",
+      "USED":"Used",
+      "UNUSE":"Un-use",
+      "INTERNAL":"Internal",
+      "LOCAL":"Local"
+    },
+    "TABLE":{
+      "DATE":"Date",
+      "TYPE":"Type",
+      "HOTLINE":"Hotline",
+      "DISPLAY_NUMBER":"Display number",
+      "CALLED_NUMBER":"Called number",
+      "ENTERPRISE_NUMBER":"Enterprise number",
+      "STATUS":"Status",
+      "DESCRIPTION":"Description",
+      "DURATION":"Duration",
+      "AMOUNT":"Amount",
+      "TOTAL_DURATION":"Total duration",
+      "TOTAL_AMOUNT":"Total amount",
+      "UN_CHARGE":"Un charge",
+      "CHARGED":"Charged",
+      "ERROR_CHARGE":"Error charge"
+    },
+ "POPUP":{
+   "CHARGE_DETAIL":"Charge detail",
+      "DATE":"Date",
+      "CHARGE_DATE":"Charge Date",
+      "TYPE":"Type",
+      "HOTLINE":"Hotline",
+      "DISPLAY_NUMBER":"Display number",
+      "CALLED_NUMBER":"Called number",
+      "ENTERPRISE_NUMBER":"Enterprise number",
+      "STATUS":"Status",
+      "DESCRIPTION":"Description",
+      "DURATION":"Duration",
+      "AMOUNT":"Amount",
+      "TOTAL_DURATION":"Total duration",
+      "TOTAL_AMOUNT":"Total amount",
+      "UN_CHARGER":"Un charge",
+      "CHARGED":"Charged",
+      "ERROR_CHARGE":"Error charge"
+    }
+
+
+
+  },
+  "SETTING":{
+    "DEFAULT_OPTION":
+    {
+      "TITLE":"Setup default option",
+      "LAST_CHARGE_DATE":"Last charge date",
+      "LAST_TRY_CHARGE_DATE":"Last try to charge date",
+      "LAST_CHARGE_SUB_STATUS":"Last charge sub status",
+
+      "BEGIN_CHARGE_DATE":"Begin charge date",
+      "EXTENSION_COUNT":"Extension count",
+      "NUM_AGENT":"Num agent",
+      "CALL_RECORD_STORAGE_COUNT":"Call record storage count",
+      "DATA_STORAGE_COUNT":"Data storage count",
+      "API_COUNT":"Api count",
+      "SOFTPHONE_3C_COUNT":"Softphone count"
+    },
+    "QUANTITY":
+    {
+      "BEGIN_USE":"Begin use date",
+      "PACKAGE":"Package",
+      "AUTO_RENEWAL":"Auto renewal",
+      "STATUS":"Status",
+      "ACTION":"Action",
+      "NO_AUTO_RENEW":"No",
+      "SELECT":"Select"
+    },
+    "HOTLINE":{
+      "NUMBER":"Hot-line number",
+      "STATUS":"Status",
+      "CREATED_AT":"Created at",
+      "UPDATED_AT":"Updated at"
+    },
+    "USER":{
+      "TITLE":"User setting",
+      "PASSWORD_HIND":"Password must have minimum 8 charters  including special text, number, normal and uppercase, "
+    }
+  },
+  "EDIT":{
+    "CURRENT":"currently",
+    "NEW":" new",
+    "CUSTOMER":{},
+    "ENTERPRISE_NUMBER":{
+      "TITLE":"Edit customer enterprise number"
+    },
+    "PACKAGE":{
+      "TITLE":"Change packet for customer",
+      "SELECT":"Select",
+      "NEW":"new",
+      "CURRENT":"currently",
+      "TO_ACCOUNT":"Account will change "
+    },
+    "FEE_LIMIT":{
+      "TO_ACCOUNT":"To account",
+      "TITLE":"Set fee limitation to this account",
+      "OK":"OK",
+      "CANCEL":"Cancel"
+
+    }
+  },
+  "LBL_NO_DATA_FOUND":"No data found",
+  "STATE":{
+    "ALL":"All"
+  },
+
+  "LBL_ERROR_CHARGE_FROM":"Error charge from:",
+  "LBL_ERROR_CODE":"Error code:",
+  "UPDATE_20180908":"Cập nhật dữ liệu",
+  "THIS_MONTH_TOTAL_CHARGE":"This month accumulate charge",
+  "CHARGE_STATUS":"Charge status",
+  "CALL_DIRECTION":"Direction"
+
+
+}
+
+
+
+
+
+
+

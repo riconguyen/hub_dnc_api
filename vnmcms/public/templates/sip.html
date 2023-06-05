@@ -1,0 +1,465 @@
+<div class="container-fluid">
+    <div class="row mt-2">
+        <div class="col">
+            <h4 class="display-4 mt-2 pl-1 ">KIỂM TRA THÔNG TIN HOTLINE</h4>
+            <form class="form-group" ng-submit="onSearchSip();">
+                <div class="form-group">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" ng-model="sbcSipParam.q" placeholder="Tìm kiếm hotline"
+                               aria-label="Recipient's username" aria-describedby="basic-addon2">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="button" ng-click="onSearchSip()">
+                                <i class="fa fa-search"></i> Lọc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+           <div class="pt2"  ng-if="!currentSip">
+     {{sipPage.count?"Có "+sipPage.count+" Kết quả đã tìm thấy" :""}}
+
+
+
+
+
+
+               <table ng-table-dynamic="sbcSip with sipCols"
+
+                      class="tickets table table-condensed table-bordered table-striped small"
+                      style="margin-top: 10px;" template-header="sipTableParams_template">
+
+
+
+                   <tr ng-if="$data.length == 0 || $data == undefined">
+                       <td colspan="100" style="display:table-cell !important;text-align:center">
+                           {{'LBL_NO_DATA_FOUND'|translate}}
+                       </td>
+                   </tr>
+                   <!-- // FIX 20180905 -->
+                   <tr ng-repeat="row in $data track by $index" ng-if="$data.length > 0" >
+                       <td ng-repeat="col in sipCols" >
+
+                <div ng-if="col.field=='action'">
+                    <button title="Xem lịch sử " class="btn btn-outline-primary " ng-click="viewSip(row); "><i class="fa fa-eye"></i>  </button>
+                    <button title="Xem thiết lập"   class="btn btn-default btn-outline-secondary " ng-click="setupBlockRule(row.caller);"><i class="fa fa-cogs"></i>  </button>
+                </div>
+
+                           <span ng-if="col.field !='action'" >{{row[col.field]}}</span>
+
+                       </td>
+                   </tr>
+
+
+
+               </table>
+           </div>
+
+
+
+
+            <div ng-if="currentSip">
+            <span class="pull-right">
+
+            </span>
+                <table class="table table-sm small"  >
+                    <tr>
+                        <th>Action</th>
+                        <th>Hotline</th>
+                        <th>Customer</th>
+                        <th>Phone 1</th>
+                        <th>Ip Proxy</th>
+                        <th>IP Auth</th>
+                        <th>Destination</th>
+                        <th>Updated at</th>
+                    </tr>
+                    <tr ng-alias="sip as currentSip">
+                        <td>
+
+                            <button class="btn btn-outline-secondary" ng-click="closeSip()"><i class="fa fa-close"></i></button>
+                        </td>
+                        <td><b>{{sip.caller}}</b><br> <span class="text-muted"> {{sip.brand_name}}</span></td>
+                        <td><span  > {{sip.companyname}}</span>
+                            <br>
+                            <b>{{sip.firstname}} </b> {{sip.midinit}} {{sip.lastname}} <span class="text-muted">
+                            {{sip.city}} - {{sip.country}}
+                        </span>
+                        </td>
+                        <td>{{sip.phone1}}</td>
+                        <td>{{sip.ip_proxy}}</td>
+                        <td>{{sip.ip_auth}}</td>
+                        <td>{{sip.destination}}</td>
+                        <td>{{sip.updated_at}}</td>
+                    </tr>
+                </table>
+                <hr>
+                <div class="pull-right">
+                    <div class="input-group input-group-sm mb-2">
+                           <span class="input-group-prepend">
+                                <span class="input-group-text">{{'SIP.CALL.SEARCH_IN'|translate}}  </span>
+                           </span>
+                        <input type="text" class="form-control input-sm " ng-model="sipLogParam.q" placeholder="Từ khóa">
+
+
+                            <!--<input class="form-control input-sm" datetimepicker ng-model="sipLogParam.start_date"-->
+                                   <!--datetimepicker-options="{{optionsDateTime}}" placeholder="Từ ngày"-->
+                                   <!--ng-change="campParam.export=false;"/>-->
+
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">Từ ngày</div>
+                        </div>
+                        <div class="input-group-prepend">
+                            <div class="input-group input-sm  date" datetimepicker-options="{{optionsDate}}" datetimepicker=""
+                                 ng-model="sipLogParam.start_date">
+
+                                <input type="text" class="form-control form-control-sm">
+                                <span class="input-group-append input-group-addon">
+                          <span class="input-group-text"><i class="fa fa-clock-o"></i></span>
+                            </span>
+                            </div>
+
+                        </div>
+
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">Đến ngày</div>
+                        </div>
+                        <div class="input-group-prepend ">
+                            <div class="input-group input-sm date  " datetimepicker-options="{{optionsDate}}" datetimepicker=""
+                                 ng-model="sipLogParam.end_date">
+
+                                <input type="text" class="form-control form-control-sm">
+                                <span class="input-group-append input-group-addon">
+                          <span class="input-group-text"><i class="fa fa-clock-o"></i></span>
+                            </span>
+                            </div>
+
+                        </div>
+                        <!---->
+                        <!--<input type="text" class="form-control input-sm " ng-model="sipLogParam.start_date"-->
+                               <!--datetimepicker-->
+                               <!--datetimepicker-options="{{optionsDateTime}}"-->
+
+                               <!--placeholder="Start date">-->
+                        <!--<input type="date" class="form-control input-sm" ng-model="sipLogParam.end_date" placeholder="End Date date">-->
+                        <span class="input-group-append">
+                            <button class="btn btn-primary btn-sm" ng-click="onSearchSipLog(currentSip); ">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                <h5 class="display-4">{{'SIP.CALL.HISTORY'|translate}} </h5>
+
+                <div class="btn-group btn-group-sm mb-1">
+                    <!--<button class="btn"  ng-class="sipParam.direction==''|| !sipParam.direction ?'btn-primary':'btn-default'" ng-click="filterView('');">All <span ng-show="sipParam.direction==''|| !sipParam.direction">({{currentSip.call_history.length}})</span> </button>-->
+
+                    <button class="btn " ng-class="sipLogParam.direction=='in'?'btn-primary':'btn-default'" ng-click="filterView('in');" >{{'SIP.CALL.DIRECTION.IN'|translate}}  <span ng-show="sipLogParam.direction=='in'">({{lstLogCount}})</span></button>
+                    <button class="btn " ng-class="sipLogParam.direction=='out'?'btn-primary':'btn-default'"  ng-click="filterView('out');">{{'SIP.CALL.DIRECTION.OUT'|translate}}  <span ng-show="sipLogParam.direction=='out'">({{lstLogCount}})</span></button>
+                    <!--<button class="btn btn-outline-primary" ng-click="exportToExcel('#table_sip')">-->
+                        <!--<i class="fa fa-download"></i> Xuất ra file Excel-->
+                    <!--</button>-->
+   <button class="btn btn-outline-primary" ng-click="exportExcelSip()">
+                        <i class="fa fa-download"></i> Xuất ra file Excel
+                    </button>
+
+                </div>
+
+
+                <!--<p class="small text-info mb-2" ng-if="!sipParam.paramEnable">Dữ liệu hiển thị 500 cuộc gọi gần đây nhất trong ngày hôm nay, sử dụng ô tìm kiếm và điều kiện ngày giờ để có dữ liệu chi tiết </p>-->
+                <p class="small text-warning mb-2" >
+                    Dữ liệu đang hiển thị theo bộ lọc
+
+                    <span ng-if="sipLogParam.direction" class="font-bold">
+                        <span ng-show="sipLogParam.direction=='in'">{{'SIP.CALL.DIRECTION.IN'|translate}}</span>
+                        <span ng-show="sipLogParam.direction=='out'">{{'SIP.CALL.DIRECTION.OUT'|translate}}</span>
+                    </span>
+                    <span ng-if="sipLogParam.q" >
+                        Tìm từ khóa: <b>{{sipLogParam.q}}</b>
+                    </span>
+                    <span ng-if="sipLogParam.start_date" >
+                        Từ ngày: <b>{{sipLogParam.start_date}}</b>
+                    </span>
+                    <span ng-if="sipLogParam.end_date">
+                        Tới ngày: <b>{{sipLogParam.end_date}}</b>
+                    </span>
+
+
+                </p>
+
+            <!--<table class="table-striped table table-sm small" id="table_sip">-->
+                <!--<tr>-->
+                    <!--<th>{{'SIP.CALL.SETUP_TIME'|translate}}</th><th>#</th><th>{{'SIP.CALL.CLI'|translate}}</th><th>{{'SIP.CALL.CLD'|translate}}</th><th>{{'SIP.CALL.DURATION'|translate}}</th><th>{{'SIP.CALL.DISCONNECT_CAUSE'|translate}}</th><th>{{'SIP.CALL.CHARGE_STATUS'|translate}}</th>-->
+                <!--</tr>-->
+                <!--<tr ng-repeat="call in currentSip.call_history| orderBy:'-setup_time'" ng-if="currentSip.call_history.length>0" ng-class="!call.duration?'text-danger':''">-->
+                    <!--<td class="link" ng-click="viewCallDebugPython(call);">{{call.setup_time}}</td>-->
+                    <!--<td  >-->
+                        <!--<span ng-if="currentSip.caller==call.CLI"><i class="fa fa-sign-out"  ng-class="call.duration?'text-success':'text-danger'" title="{{'SIP.CALL.DIRECTION.OUT'|translate}}"></i>  {{'SIP.CALL.DIRECTION.OUT'|translate}} {{call.duration?'':'không gặp'}}</span>-->
+                        <!--<span ng-if="currentSip.caller==call.CLD"><i class="fa fa-sign-in " ng-class="call.duration?'text-primary':'text-danger'"  title="{{'SIP.CALL.DIRECTION.IN'|translate}}"></i> {{'SIP.CALL.DIRECTION.IN'|translate}} {{call.duration?'':'không gặp'}}</span>-->
+
+                    <!--</td>-->
+                    <!--<td>{{call.CLI}}</td>-->
+                    <!--<td>{{call.CLD}}</td>-->
+                    <!--<td>{{call.duration?call.duration:'N/A'}}</td>-->
+                    <!--<td>{{call.disconnect_cause}}</td>-->
+
+                    <!--<td>-->
+                        <!--<span ng-if="call.charge_status">-->
+                            <!--{{'SIP.CALL.CHARGE_STATUS_VAL.'+call.charge_status|translate}}-->
+                        <!--</span>-->
+                        <!--<span ng-if="!call.charge_status">N/A </span></td>-->
+
+                <!--</tr>-->
+                <!--<tr ng-if="currentSip.call_history.length==0"><td colspan="100" class="text-center text-muted display-4 pt-5 pb-5">-->
+                  <!--{{'SIP.CALL.NO_HISTORY'|translate}}-->
+
+                <!--</td> </tr>     <tr ng-if="currentSip.emptySip"><td colspan="100" class="text-center text-muted display-4 pt-5 pb-5">-->
+                <!--{{currentSip.emptySip|translate}}-->
+
+                <!--</td> </tr>-->
+            <!--</table>-->
+
+
+                <table ng-table-dynamic="sbcSipLog with sipLogCols"
+
+                       class="tickets table table-condensed table-bordered table-striped small"
+                       style="margin-top: 10px;" template-header="sipLogTableParams_template">
+
+
+
+                    <tr ng-if="$data.length == 0 || $data == undefined">
+                        <td colspan="100" style="display:table-cell !important;text-align:center">
+                            {{'LBL_NO_DATA_FOUND'|translate}}
+                        </td>
+                    </tr>
+                    <!-- // FIX 20180905 -->
+                    <tr ng-repeat="row in $data track by $index" ng-if="$data.length > 0" >
+                        <td ng-repeat="col in sipLogCols"  ng-class="col.field=='duration'?'text-right':''"  >
+                            <div ng-if="col.field=='nbr'">
+                                <button class="btn btn-sm btn-outline-secondary" ng-class="row.checkedInfo.state?'btn-outline-success':'btn-outline-secondary'"
+                                        ng-click="onCheckNumberRouting(row);" title="{{row.checkedInfo.state?row.checkedInfo.placeHolder:'Kiểm tra chuyển mạng giữ số'}}">
+                                    <i ng-if="!row.checkedInfo.state" class="fa"
+                                       ng-class="row.checkedInfo.loading?'fa-refresh fa-spin':'fa-check'"
+                                    ></i>
+                                        <i ng-if="row.checkedInfo.state" class="fa  {{row.checkedInfo.icon}}"          ></i>
+                                </button>
+                            </div>
+                            <div ng-if="col.field=='direction'">
+
+                            <span ng-if="currentSip.caller==row.CLI">
+                                <i class="fa fa-sign-out"  ng-class="call.duration?'text-success':'text-danger'" title="{{'SIP.CALL.DIRECTION.OUT'|translate}}"></i>
+                                {{'SIP.CALL.DIRECTION.OUT'|translate}} {{row.duration?'':'không gặp'}}</span>
+                            <span ng-if="currentSip.caller==row.CLD">
+                                <i class="fa fa-sign-in " ng-class="call.duration?'text-primary':'text-danger'"  title="{{'SIP.CALL.DIRECTION.IN'|translate}}"></i>
+                                {{'SIP.CALL.DIRECTION.IN'|translate}} {{row.duration?'':'không gặp'}}</span>
+
+                            </div>
+
+
+                            <span ng-if="col.field =='charge_status'"  class="text-info">
+                                {{'SIP.CALL.CHARGE_STATUS_VAL.'+row.charge_status|translate}}
+                            </span>
+                            <span ng-if="col.field =='reject_cause'"  class="text-info"
+                                  title="{{'SIP_ERRORCODE.'+row[col.field]|translate}}">{{'SIP_ERRORCODE.'+row[col.field]|translate}} </span>
+                            <a href="" ng-if="col.field =='setup_time'" ng-click="viewCallDebugPython(row);"   >{{row[col.field]}}</a>
+                            <span ng-if="col.field !='charge_status' && col.field !='reject_cause' && col.field !='setup_time' && col.field!='direction'&& col.field!='nrb'"  >{{row[col.field]}}</span>
+
+                        </td>
+                    </tr>
+
+
+
+
+                </table>
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Modal call setup -->
+<div class="modal" id="modal_setup_sip" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <h5 class="modal-title">Thiết lập sip của: {{sipSetup.caller}}</h5>
+
+
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-header m-0 p-0 bg-light">
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="nav-link hand link"  ng-class="sipSetup.nav=='info'?'active':''"  ng-click="selectSipSetupNav('info');">Thông tin </a>
+                    </li>
+                    <li class="nav-item " hidden ng-if="userRole ==1">
+                        <a class="nav-link  hand link" ng-class="sipSetup.nav=='config'?'active':''"  ng-click="selectSipSetupNav('config');" >Chặn/Cho phép</a>
+                    </li>
+
+                    <!--<li class="nav-item" ng-if="userRole ==1">-->
+                        <!--<a class="nav-link   hand link text-danger"  ng-click="selectSipSetupNav('delete');" >Xóa số</a>-->
+                    <!--</li>-->
+                </ul>
+
+            </div>
+            <div class="modal-body call_config" ng-if="sipSetup.nav=='info'">
+
+                <B>THÔNG SỐ CÀI ĐẶT</B>
+
+                <table class="table table-bordered table-sm mt-2 small">
+                    <tr><th colspan="100">ROUTING</th></tr>
+                    <tr><th>Direction</th><th>Caller/Callee</th><th>Destination</th><th>Priority</th><th>Vendor</th><th>ACL ID</th><th>Sip profile</th></tr>
+                    <tr ng-repeat="route in sipSetup.sip.routing">
+                        <td>{{route.direction}}</td>
+                        <td><span ng-if="route.caller"> Caller: {{route.caller}}</span><span ng-if="route.callee"> Callee: {{route.callee}}</span></td>
+                        <td>{{route.destination}}</td>
+                        <td>{{route.priority}}</td>
+                        <td>{{route.i_vendor}}</td>
+                        <td>{{route.i_acl}}</td>
+                        <td>{{route.i_sip_profile}}</td>
+                    </tr>
+
+
+                </table>
+                <table class="table table-sm table-bordered small mt-2">
+                    <tr><th colspan="100">ALC</th></tr>
+                    <tr><th>ID</th>
+                        <th>IP Auth</th>
+                        <th>IP Proxy</th>
+                        <th>block_regex_caller</th>
+                        <th>block_regex_callee</th>
+                        <th>allow_regex_caller</th>
+                        <th>allow_regex_callee</th>
+                        <th>description</th>
+                    </tr>
+                    <tr  ng-if="sipSetup"sipSetup.sip.acl>
+                        <td>{{sipSetup.sip.acl.i_acl}}</td>
+                        <td>{{sipSetup.sip.acl.ip_auth}}</td>
+                        <td>{{sipSetup.sip.acl.ip_proxy}}</td>
+                        <td>{{sipSetup.sip.acl.block_regex_caller}}</td>
+                        <td>{{sipSetup.sip.acl.block_regex_callee}}</td>
+                        <td>{{sipSetup.sip.acl.allow_regex_caller}}</td>
+                        <td>{{sipSetup.sip.acl.allow_regex_callee}}</td>
+                        <td>{{sipSetup.sip.acl.description}}</td>
+                    </tr>
+
+                </table>
+
+
+            </div>
+            <div class="modal-body call_config" ng-if="sipSetup.nav=='config'">
+                <b>Thiết lập thông số Chặn cuộc gọi và cho phép cuộc gọi</b>
+                <div class="form-group">
+                    <label>
+                        Chặn cuộc gọi
+                    </label>
+                    <div class="input-group">
+                        <input type="text" placeholder="Gọi đến" class="form-control">
+                        <input type="text" placeholder="Gọi Đi" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        Cho phép cuộc gọi
+                    </label>
+                    <div class="input-group">
+                        <input type="text" placeholder="Gọi đến" class="form-control">
+                        <input type="text" placeholder="Gọi Đi" class="form-control">
+                    </div>
+                </div>
+                <b> Chỉnh sửa IP</b>
+                <div class="form-group">
+                    <label>IP Proxy</label>
+                    <input type="text" class="form-control" ng-bind="sipSetup.sip.acl.ip_proxy"/>
+                </div>
+                <div class="form-group">
+                    <label>IP Auth</label>
+                    <input type="text" class="form-control" ng-model="sipSetupEdit.ip_auth"  ng-bind="sipSetup.sip.acl.ip_auth"/>
+                </div>
+            </div>
+
+            <div class="modal-body call_config" ng-if="sipSetup.nav=='delete'">
+                <B>Xóa thiết lập cho số máy :{{sipSetup.caller}}</B>
+                <p class="small text-info">Xóa số máy này đồng thời sẽ chuyển số hotline của khahcs hàng về chưa thiết lập sip và xóa các lịch sử
+                cuộc gọi, không bao gồm lịch sử tính cước</p>
+
+                <button class="btn btn-danger" ng-click="deleteSip(sipSetup.caller);"><i class="fa fa-trash"></i> Xóa</button>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" ng-if="sipSetup.nav=='config'">Save changes</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!--Modal call tracking -->
+<div class="modal fade" id="callDialogDebug" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="exampleModalLabel" >
+                 {{'SIP.CALL.TRACKING'|translate}}<br>
+                    <B>{{currentCall.CLI}} <i class="fa " ng-class="currentCall.duration?'text-success fa-arrow-right':'text-danger fa-times'"></i>  {{currentCall.CLD}}</B>
+                    </span>
+
+
+                <button type="button" class="close" data-dismiss="modal" ng-click="currentCall===null" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+            </div>
+            <div class="modal-body call-tracking">
+
+
+
+             <table class="table-sm table table-striped small table-bordered" ng-class="currentCall.duration?'':'table-danger'">
+                 <tr><th>{{'SIP.CALL.SETUP_TIME'|translate}}</th><td>{{currentCall.setup_time}}</td><th>{{'SIP.CALL.CONNECT_TIME'|translate}}</th><td>{{currentCall.connect_time}}</td><th>{{'SIP.CALL.DISCONNECT_TIME'|translate}}</th><td>{{currentCall.disconnect_time}}</td></tr>
+                 <tr><th>{{'SIP.CALL.DURATION'|translate}}</th><td>{{currentCall.duration}}</td><th>{{'SIP.CALL.DISCONNECT_CAUSE'|translate}}</th><td >{{currentCall.disconnect_cause|translate}}</td><th>{{'SIP.CALL.CHARGE_STATUS'|translate}}</th>
+                     <td > <span ng-if="currentCall.charge_status">{{'SIP.CALL.CHARGE_STATUS_VAL.'+currentCall.charge_status|translate}} </span></td></tr>
+                 <tr><th>{{'SIP.CALL.FROM_NETWORK_IP'|translate}}</th><td>{{currentCall.from_network_ip}}</td><th>{{'SIP.CALL.TO_NETWORK_IP'|translate}}</th><td colspan="3">{{currentCall.des_network_ip}}</td></tr>
+                 <tr><th>{{'SIP.CALL.QUALITY_MOS'|translate}}</th><td>{{currentCall.quality_mos}}</td><th>{{'SIP.CALL.QUALITY_LARGEST_JB'|translate}}</th><td  >{{currentCall.quality_largest_jb}}</td><th>{{'SIP.CALL.QUALITY_JITTER_BURST_RATE'|translate}}</th><td  >{{currentCall.quality_jitter_burst_rate}}</td></tr>
+
+             </table>
+                <div class="mt-1 small">  {{'SIP.CALL.ID'|translate}} <abbr class="text-muted">{{currentCall.call_id}}</abbr></div>
+             <div class="card mt-2" ng-if="userRole==-1">
+                 <div class="card-header">CALL DEBUGGING</div>
+                 <div class="card-body pt-5 pb-5 text-center" ng-if="!currentCall.loading">
+                     <div class="loader"></div>
+
+                 </div>
+                 <div class="card-body small" ng-show="currentCall.loading">
+                     <div id="sipData"></div>
+
+
+                 </div>
+             </div>
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="sipTableParams_template" type="text/ng-template">
+    <tr>
+        <th ng-repeat="column in sipCols" class="header text-muted"
+        >
+            {{ column.title | translate }}
+        </th>
+    </tr>
+</script>
+
+<script id="sipLogTableParams_template" type="text/ng-template">
+    <tr>
+        <th ng-repeat="column in sipLogCols" class="header text-muted"  ng-class="column.field=='duration'?'text-right':''"  >
+            {{ column.title|translate}}  </th>
+    </tr>
+</script>

@@ -1,0 +1,1603 @@
+<div style="position: fixed; bottom: 10px; right: 10px; z-index: 10" ng-if="entity.ADD_CUSTOMER">
+    <button class="btn btn-primary" ng-click="addNewCustomerForm()">
+        <i class="fa fa-plus"></i>
+    </button>
+</div>
+<div class="container-fluid mt-2">
+    <div class="row">
+        <div class="col  d-flex justify-content-between">
+            <h4 class="display-4 mt-2 pl-1">QUẢN LÝ KHÁCH HÀNG
+            </h4>
+            <button class="btn btn-secondary" ng-if="currentCustomer" ng-click="closeCustomer(); "><i class="fa fa-times"></i> Trở về  </button>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="container-fluid mt-2">
+    <div class="row" ng-show="!currentCustomer">
+        <div  class="col">
+            <form>
+            <div class="form-group mb-2">
+            <div class="input-group">
+                <input type="text" class=" form-control" ng-model="sbcCusParam.q" placeholder="Tìm kiếm khách hàng">
+                <div class="input-group-append">
+                    <div class="input-group-text">
+                       Lọc tình trạng
+                    </div>
+                </div>
+
+                <select ng-model="sbcCusParam.blocked"
+                        ng-options="value.id as value.title for (key, value) in lstBlockState"><option value="">{{'STATE.ALL'|translate}}</option> </select>
+
+
+                <div class="input-group-append">
+                    <div class="input-group-text">
+                        <input type="checkbox"  ng-true-value="1" ng-false-value="0" ng-model="sbcCusParam.charge_error" >
+                      Chỉ hiển thị đang lỗi cước
+                    </div>
+                </div>
+
+
+                <div class="input-group-append">
+                    <button class="btn btn-primary" ng-click="searchCus();">
+                        <i class="fa fa-search"></i> Lọc
+                    </button>
+                </div>
+                <div class="input-group-append">
+                </div>
+
+                <div class="input-group-append">
+                    <button class="btn btn-secondary" ng-click="downCus();">
+                        <i class="fa fa-download"></i> Tải về
+                    </button>
+                </div>
+            </div>
+
+            </div>
+            </form>
+
+
+
+            <table ng-table-dynamic="sbcCusTable with customerCols"
+
+                   class="tickets table table-condensed table-bordered table-striped small"
+                   style="margin-top: 10px;" template-header="cusTableParams_template">
+
+
+
+
+                <tr ng-if="$data.length == 0 || $data == undefined">
+                    <td colspan="100" style="display:table-cell !important;text-align:center">
+                         {{'LBL_NO_DATA_FOUND'|translate}}
+                    </td>
+                </tr>
+                <!-- // FIX 20180905 -->
+                <tr ng-repeat="row in $data track by $index" ng-if="$data.length > 0" >
+                    <td ng-repeat="col in customerCols"  ng-class="cssCustomerTableCols(col)">
+                        <span ng-if="col.field=='status'">
+
+
+                                                    <!--<span class="badge" ng-class="row.status==0?'badge-success':'badge-warning'">{{'LBL.STATUS.'+row[col.field]|translate}}</span>-->
+                        <span class="badge badge-success text-uppercase  p-1" ng-if="row.status==0"> {{'LBL.STATUS.'+row.status|translate}}</span>
+
+                        <span class="badge badge-secondary text-uppercase  p-1" ng-if="row.status==2"> {{'LBL.STATUS.'+row.status|translate}}</span>
+
+                        <span ng-if="row.status==1" class="badge badge-warning text-uppercase p-1">
+                        {{"PAUSE_STATE."+row.pause_state|translate}}              </span>
+
+<br>
+            <span class="badge badge-info" ng-if="row.cfu==1" title="Mở call forward">Mở gọi call forward <i class="fa fa-share"></i> </span>
+
+                        </span>
+
+
+
+
+
+                        <span ng-if="col.field=='total'" class="h6" ng-class="row.total>0?' text-success':''" >{{row.total|number:0}}</span>
+                        <span ng-if="col.field=='companyname'">
+                            <span ng-class="row.charge_result?'text-warning':''">{{row.companyname}}  <sup class="text-info" title="{{row.server_profile==SERVER_PROFILE?'':'Đang hoạt động trên server khác '}}">[{{row.server_profile}}]</sup>
+
+
+
+
+                            <span ng-if="row.charge_result && row.charge_result > 0 " class="text-danger"><br>
+                            {{'LBL_ERROR_CHARGE_FROM'|translate}} {{row.event_occur_time}},
+                             {{'LBL_ERROR_CODE'|translate}} {{row.charge_result}}
+                            </span>
+                            <br>
+                            <span class="text-muted"><i class="fa fa-phone-square"></i> {{row.phone1}}</span>
+
+                        </span>
+
+
+
+                        </span>
+
+                        <span ng-if=" col.field =='charge_result'">
+
+
+                            <span ng-if="row.charge_result == 409|| row.charge_result == 404|| row.charge_result == 401">
+                                <a href="" class="text-danger" ng-if="row.charge_result  && !row.recharge_send " title="Charge bù cước"
+                                        ng-click="sendRechargeCustomer(row);">{{row.charge_result}}  </a>
+
+                            </span>
+                            <span ng-if="row.charge_result != 409 && row.charge_result != 404 && row.charge_result != 401"> {{row.charge_result}}</span>
+
+                        </span>
+
+
+
+                        <div class="btn-group" ng-if="col.field=='action' && row.blocked!=2">
+
+
+                        <button class="btn btn-primary btn-sm"  ng-if="entity.VIEW_BILLING|| entity.VIEW_BILLING_CUSTOMER" ng-click="viewBilling(row); "><i class="fa fa-line-chart"></i> Xem cước</button>
+                        <button class="btn btn-default btn-outline-secondary btn-sm" ng-click="viewCustomer(row);" ng-if="entity.CONFIG_CUSTOMER "><i class="fa fa-cogs"></i> Thiết lập</button>
+                        </div>
+
+                        <span ng-if = "col.field !='status' && col.field !='action' && col.field !='companyname'&& col.field !='total'&& col.field !='charge_result'">{{row[col.field]}}</span>
+
+                    </td>
+                </tr>
+
+
+
+            </table>
+
+        </div>
+    </div>
+    <div class="row" ng-show="currentCustomer">
+        <div class="col-md-4 border-dark border-bottom-0 border-left-0 border-right-0">
+
+
+            <div class="float-right mr-1  btn-group btn-group-sm">
+
+                <button class="btn btn-info"  ng-if="(entity.CHANGE_SERVER_CUSTOMER)  && currentCustomer.status!=2 && SERVER_PROFILE== currentCustomer.server_profile"   ng-click="openModalChangeSite(currentCustomer);"> <span class="hand"><i class="fa fa-external-link"></i></span> {{'CRUD.M'|translate}}
+                </button>
+                <button class="btn btn-default"  ng-if="currentCustomer.status!=2 && entity.UPDATE_CUSTOMER"   ng-click="editCustomerForm(currentCustomer); "><i class="fa fa-edit"></i> {{'CRUD.E'|translate}}
+                </button>
+
+            </div>
+
+
+            <h6 class=" mt-2">Thông tin chi tiết</h6>
+
+            <table class="table table-sm table-responsive-sm table-striped  mt-3 mb-2">
+                <tr><td colspan="100" class=" p-3 ">
+                    <span class="h5 text-primary">{{currentCustomer.companyname}}</span>
+                    <br>
+
+
+
+                    <span class="badge badge-success text-uppercase p-1" ng-if="currentCustomer.status==0"> {{'LBL.STATUS.'+currentCustomer.status|translate}}</span>
+
+                    <span class="badge badge-secondary text-uppercase p-1 " ng-if="currentCustomer.status==2"> {{'LBL.STATUS.'+currentCustomer.status|translate}}</span>
+
+                    <span ng-if="currentCustomer.status==1" class="badge badge-warning text-uppercase p-1 ">
+                        {{"PAUSE_STATE."+currentCustomer.pause_state|translate}}
+                    </span>
+
+                    <div class="float-right">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-info"  ng-if="entity.UPDATE_CFU_FLAG && currentCustomer.status!=2 && currentCustomer.cfu !=1 " ng-click="changeCfuStatus(currentCustomer,1);"> <i class="fa fa-share"></i> Mở call forward  </button>
+                            <button class="btn btn-info"  ng-if="entity.UPDATE_CFU_FLAG && currentCustomer.status!=2 && currentCustomer.cfu ==1 " ng-click="changeCfuStatus(currentCustomer,0);"> <i class="fa fa-unlink"></i> Tắt call forward  </button>
+
+
+                            <button class="btn btn-danger"  ng-if="entity.REMOVE_CUSTOMER && currentCustomer.status!=2  " ng-click="removeCustomer();"> <i class="fa fa-unlink"></i> Hủy  </button>
+                            <!--
+                            STOP BAO DO
+                            <button class="btn" ng-disabled="currentCustomer.cog.baodo_pending" ng-if="userAgent.role ==1"-->
+                                    <!--ng-class="currentCustomer.cog.baodo==1?'btn-success':'btn-warning'" ng-click="changeRedAlert(currentCustomer.cog)">-->
+                                <!--<i class="fa"-->
+                                <!--ng-class="currentCustomer.cog.baodo_pending?'fa-spin':'fa-info'"-->
+                                <!--&gt;</i>-->
+
+                                <!--{{currentCustomer.cog.baodo==1?'Khôi phục báo đỏ':'Tạm ngưng báo đỏ'}}</button>-->
+
+
+                            <div class="btn-group" role="group" ng-if="currentCustomer.status!=2">
+                                <button id="btnGroupDrop1" type="button" class="btn  dropdown-toggle" ng-class="currentCustomer.status==1?'btn-warning':'btn-success'" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span ng-if="currentCustomer.status==1">
+                                        <i ng-if="currentCustomer.pause_state==11 " class="fa fa-sign-out"></i>
+                                        <i ng-if=" currentCustomer.pause_state==12 " class="fa fa-sign-in"></i>
+
+
+                                        {{"PAUSE_STATE."+currentCustomer.pause_state|translate}}</span>
+                                    <span ng-if="currentCustomer.status==0">{{'LBL.STATUS.'+currentCustomer.status|translate}}</span>
+
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" ng-if="entity.CHANGE_CUSTOMER_STATUS" >
+
+
+                                    <!--// Nút chặn gọi vào nếu trạng thái hiện tại là 1 chặn gọi ra Hoặc đang mở,-->
+                                    <a class="dropdown-item"
+                                       ng-if="(currentCustomer.pause_state==10 && currentCustomer.status==0) ||currentCustomer.pause_state==11 "
+                                       ng-click="changePauseState(12, 1);" href=""><i class="fa fa-sign-in"></i> Chặn gọi vào</a>
+
+
+
+                                    <!--// Nút chặn gọi ra nếu trangj thái hiện tại là 1 chặn gọi ra hoặc Đang mở-->
+                                    <a class="dropdown-item"
+                                       ng-if="(currentCustomer.pause_state==10 && currentCustomer.status==0)||currentCustomer.pause_state==12"
+                                       ng-click="changePauseState(11,1);" href=""><i class="fa fa-sign-out"></i> Chặn gọi ra</a>
+
+
+
+
+                                    <!--// Nút mở gọi ra  nếu trạng thái hiện tại đang là chặn gọi ra hoặc đang đóng-->
+                                    <a class="dropdown-item"
+                                       ng-if="(currentCustomer.pause_state==10||currentCustomer.pause_state==12) && currentCustomer.status==1 "
+                                       ng-click="changePauseState(12,0);" href=""><i class="fa fa-sign-in"></i> Mở gọi vào</a>
+
+
+
+
+                                    <!--// Nút mở gọi vào  nếu trạng thái hiện tại đang là chặn gọi vào hoặc đang đóng-->
+                                    <a class="dropdown-item"
+                                       ng-if="(currentCustomer.pause_state==10||currentCustomer.pause_state==11) && currentCustomer.status==1 "
+                                       ng-click="changePauseState(11,0);" href=""><i class="fa fa-sign-out"></i> Mở gọi ra</a>
+
+
+
+
+                                    <!--// Nút mở 2 chiều nếu trạng thái hiện tại là bị chặn bất cứ chiều nào hoặc đang đóng-->
+                                    <!--// Nút chặn 2 chiều nếu trạng thái hiện tại là bị chặn 1 chiều hoặc đang mở-->
+
+
+
+
+
+
+                                    <a class="dropdown-item" ng-if=" currentCustomer.status !=1 " ng-click="changeStatus(currentCustomer.status);" href=""><i class="fa fa-key"></i> Chặn hai chiều</a>
+                                    <a class="dropdown-item" ng-if=" currentCustomer.status ==1 "  ng-click="changeStatus(currentCustomer.status);" href=""><i class="fa fa-key"></i> Mở hai chiều</a>
+
+
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </td></tr>
+                <tr><td class="text-muted" width="30%">{{'CUSTOMER.CUS_NAME'|translate}}</td><td>{{currentCustomer.cus_name}}</td></tr>
+
+                <tr><td class="text-muted">{{'CUSTOMER.ADDR'|translate}}</td><td>{{currentCustomer.addr}}</td></tr>
+                <tr><td class="text-muted">{{'CUSTOMER.ENTERPRISE_NUMBER'|translate}}</td><td>{{currentCustomer.enterprise_number}}
+                           <span class="text-secondary hand  pull-right mr-2"  ng-if="entity.CHANGE_CUSTOMER_ENTERPRISE_NUMBER" ng-click="editCustomerEnterprise(currentCustomer.enterprise_number);"><i class="fa fa-edit"></i>  </span></td></tr>
+                <tr><td class="text-muted">{{'CUSTOMER.PHONE1'|translate}}</td><td>{{currentCustomer.phone1}}</td></tr>
+                <tr><td class="text-muted">{{'CUSTOMER.EMAIL'|translate}}</td><td>{{currentCustomer.email}}</td></tr>
+                <tr><td class="text-muted">{{'CUSTOMER.PRODUCT_CODE'|translate}}</td><td>{{currentCustomer.product_code}}
+                    <span class="text-secondary hand  pull-right mr-2" ng-if="entity.CHANGE_PRODUCT_CODE " ng-click="editCustomerService(currentCustomer);"><i class="fa fa-edit"></i>  </span>
+
+                </td></tr>
+                <tr><td class="text-muted">{{'LBL.CREATED_AT'|translate}}</td><td>{{currentCustomer.created_at}}</td></tr>
+                <tr><td class="text-muted">{{'LBL.UPDATED_AT'|translate}}</td><td>{{currentCustomer.updated_at}}</td></tr>
+            </table>
+
+
+
+
+            <div class="card   mb-2 mt-2">
+                <div class="card-header" ng-click="showPackage =!showPackage"> GÓI CƯỚC
+                    {{serviceConfig.service.service_name}}
+                </div>
+                <div class="card-body" ng-show="showPackage">
+                    <ul class="list-group">
+                       <li class="list-group-item text-right">  <span class="text-muted float-left">
+                        {{'CUSTOMER.PRODUCT_CODE'|translate}}
+                        </span>
+                        <span>{{serviceConfig.service.product_code}}</span>
+                        </li>
+
+
+                        <li class="list-group-item text-right">
+                        <span class="text-muted float-left">
+                        {{'LBL.STATUS.TITLE'|translate}}
+                        </span>
+                            {{'LBL.STATUS.'+serviceConfig.service.status|translate}}
+                        </li>
+    
+                        <li class="list-group-item text-right">
+                            <span class="text-muted float-left">      Tính cước qua OCS                   </span>                    {{serviceConfig.service.ocs_charge==1?'Có':'Không'}}
+                        </li>
+
+                        <li class="list-group-item text-right">
+                        <span class="text-muted float-left">
+                        {{'LBL.UPDATED_AT'|translate}}
+                        </span>
+                            <span>{{serviceConfig.service.updated_at}}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div ng-if="serviceConfig.config_price.length>0" class="card mb-2" ng-show="showPackage">
+                <div class="card-header">{{'SERVICE.PRICE.USER.TITLE'|translate}}
+
+                </div>
+                <div class="card-body small">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>{{'SERVICE.PRICE.USER.FROM_USER'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.USER.TO_USER'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.USER.PRICE'|translate}}</th>
+
+                            <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                        </tr>
+                        <tr ng-repeat="config in serviceConfig.config_price" ng-class="config.status==2?'text-muted':''">
+                            <td>{{config.from_user}}</td>
+                            <td>{{config.to_user}}</td>
+                            <td>{{config.price}}</td>
+
+                            <td>{{config.updated_at}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div ng-if="serviceConfig.hotline_price.length>0" class=" card mb-2" ng-show="showPackage">
+                <div class="card-header">{{'SERVICE.PRICE.HOTLINE.TITLE'|translate}}
+                </div>
+                <div class="card-body small">
+                    <table class="table table-bordered table-sm">
+                        <tr>
+                            <th>{{'SERVICE.PRICE.HOTLINE.FROM_HOTLINE_NUM'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.HOTLINE.TO_HOTLINE_NUM'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.HOTLINE.PRICE'|translate}}</th>
+
+                            <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                        </tr>
+                        <tr ng-repeat="hotline in serviceConfig.hotline_price"  ng-class="hotline.status==2?'text-muted':''">
+                            <td>{{hotline.from_hotline_num}}</td>
+                            <td>{{hotline.to_hotline_num}}</td>
+                            <td>{{hotline.price}}</td>
+
+                            <td>{{hotline.updated_at}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div ng-if="serviceConfig.call_price.length>0" class=" card mb-2" ng-show="showPackage">
+                <div class="card-header">{{'SERVICE.PRICE.CALL.TITLE'|translate}}
+                </div>
+                <div class="card-body small">
+                    <table class="table table-bordered table-sm">
+                        <tr>
+                            <th>{{'SERVICE.PRICE.CALL.FROM_MIN'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.CALL.TO_MIN'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.CALL.CALL_FEES'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.CALL.TYPE'|translate}}</th>
+                            <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                        </tr>
+                        <tr ng-repeat="hotline in serviceConfig.call_price" ng-class="hotline.status==2?'text-muted':''">
+                            <td>{{hotline.from_min}}</td>
+                            <td>{{hotline.to_min}}</td>
+                            <td>{{hotline.call_fees}}</td>
+                            <td>{{quantityTypeString[hotline.type]}}</td>
+                            <td>{{hotline.updated_at}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div ng-if="serviceConfig.sms_price.length>0" class=" card mb-2" ng-show="showPackage" >
+                <div class="card-header">{{'SERVICE.PRICE.SMS.TITLE'|translate}}
+                </div>
+                <div class="card-body small">
+                    <table class="table table-bordered table-sm">
+                        <tr>
+                            <th>{{'SERVICE.PRICE.SMS.FROM_SMS'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.SMS.TO_SMS'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.SMS.SMS_FEES'|translate}}</th>
+                            <th>{{'SERVICE.PRICE.SMS.TYPE'|translate}}</th>
+                            <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                        </tr>
+                        <tr ng-repeat="hotline in serviceConfig.sms_price"  ng-class="hotline.status==2?'text-muted':''">
+                            <td>{{hotline.from_sms}}</td>
+                            <td>{{hotline.to_sms}}</td>
+                            <td>{{hotline.sms_fees}}</td>
+                            <td>{{'SERVICE.CALL_TYPE.'+ hotline.type|translate}}</td>
+                            <td>{{hotline.updated_at}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+
+            <div ng-if="serviceConfig.option_price.length>0" class=" card mb-2" ng-show="showPackage">
+                    <div class="card-header">{{'SERVICE.PRICE.OPTION.TITLE'|translate}}
+                    </div>
+                    <div class="card-body small">
+                        <table class="table table-bordered table-sm">
+                            <tr>
+                                <th>{{'SERVICE.PRICE.OPTION.TYPE'|translate}}</th>
+                                <th>{{'SERVICE.PRICE.OPTION.FROM'|translate}}</th>
+                                <th>{{'SERVICE.PRICE.OPTION.TO'|translate}}</th>
+                                <th>{{'SERVICE.PRICE.OPTION.PRICE'|translate}}</th>
+
+                                <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                            </tr>
+                            <tr ng-repeat="option in serviceConfig.option_price"  ng-class="option.status==2?'text-muted':''">
+                                <td>{{'SERVICE.OPTION_TYPE.'+option.type|translate}}</td>
+                                <td>{{option.from}}</td>
+                                <td>{{option.to}}</td>
+                                <td>{{option.price}}</td>
+
+                                <td>{{option.updated_at}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            <div ng-if="serviceConfig.quantity_price.length>0" class=" card mb-2" ng-show="showPackage">
+                    <div class="card-header">{{'SERVICE.PRICE.QUANTITY.TITLE'|translate}}
+                    </div>
+                    <div class="card-body small">
+                        <table class="table table-bordered table-sm">
+                            <tr>
+                                <th>{{'SERVICE.PRICE.QUANTITY.DESCRIPTION'|translate}}</th>
+                                <th>{{'SERVICE.PRICE.QUANTITY.MIN'|translate}}</th>
+                                <th>{{'SERVICE.PRICE.QUANTITY.PRICE'|translate}}</th>
+                                <th>{{'SERVICE.PRICE.QUANTITY.TYPE'|translate}}</th>
+                                <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                            </tr>
+                            <tr ng-repeat="option in serviceConfig.quantity_price"   ng-class="option.status==2?'text-muted':''">
+                                <td>{{option.description}}</td>
+                                <td>{{option.min}}</td>
+                                <td>{{option.price}}</td>
+                                <td>{{'SERVICE.QUANTITY_TYPE.'+option.type|translate}}</td>
+
+                                <td>{{option.updated_at}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            <div  class=" card mb-2" >
+                <div class="card-header">Dịch vụ Giá trị gia tăng
+                    <div class="pull-right" ng-if="entity.CONFIG_CUSTOMER &&currentCustomer.status==0 ">
+                        <button class="btn btn-sm btn-outline-primary" ng-click="tosServiceLinked()"><i class="fa fa-plus"></i> Thêm</button>
+                    </div>
+                </div>
+
+                <div class="card-body small" ng-if="currentCustomer.cog.service_linked.length>0">
+                    <table class="table table-bordered table-sm">
+                        <tr>
+                            <th>Mã gói cước</th>
+                            <th>Tên gói cước</th>
+                            <th>Tình trạng</th>
+                            <th>Ngày tạo</th>
+                            <th>Ngày cập nhật</th>
+                            <th>Hành động</th>
+                        </tr>
+                        <tr ng-repeat="apps in currentCustomer.cog.service_linked">
+                            <td>{{apps.service_key}}</td>
+                            <td>{{apps.service_name}}</td>
+                            <td>{{apps.active == 1?"ACTIVE" : "Inactive"}}</td>
+                            <td>{{apps.created_at}}</td>
+                            <td>{{apps.updated_at}}</td>
+                            <td>
+                                <button
+                                        class="btn btn-outline-warning btn-sm"
+                                        ng-click="deActiveApps(apps)" ng-if="userAgent.role ==1 && currentCustomer.status==0 && apps.active==1">Hủy</button>
+                                <button
+                                        class="btn btn-outline-success btn-sm"
+                                        ng-click="activeApps(apps)" ng-if="userAgent.role ==1 && currentCustomer.status==0 && apps.active==0">Kích hoạt</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!--- SIDE BAR COLUMN -->
+
+        <div class="col-md-8">
+            <div class="card mb-2"  >
+                <div class="card-body">
+                    <div class="btn-group">
+
+                        <button ng-if="(entity.CONFIG_HOTLINE) && currentCustomer.cog.options.length <1 " class="btn btn-primary" ng-click="activeAccountOption()"><i class="fa fa-server"></i> {{'CRUD.COG'|translate}}
+                            {{'SERVICE.NAME.OPTION'|translate}}
+                        </button>
+                        <button   ng-if="entity.CONFIG_HOTLINE && currentCustomer.cog.quantities.length <1 && serviceConfig.quantity_price.length >0 " class="btn btn-default" ng-click="activeAccountQuantity()"><i class="fa fa-barcode"></i> {{'CRUD.COG'|translate}}
+                            {{'SERVICE.NAME.QUANTITY'|translate}}
+                            ({{'LBL.OPTIONAL'|translate}})
+                        </button>
+                        <button class="btn btn-outline-success"  ng-if="entity.CONFIG_FEE_LIMIT" ng-click="openQuantityLimit()">
+                            <i class="fa fa-bar-chart"></i> Thiết lập hạn mức <span ng-show="fee.limit_amount">({{fee.limit_amount|number:0}})</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config customer hotline -->
+
+                <div class="card mt-2"  >
+                    <div class="card-header">
+                      Thiết lập hotline ({{listHotlinesCount}})
+                        <button class="btn btn-primary  btn-sm pull-right"  ng-if="entity.CONFIG_HOTLINE"  ng-click="addHotline();" ng-hide="newHotlines_show">
+                            <i class="fa fa-plus"></i> {{'CRUD.C'|translate}}
+
+                        </button>
+
+                        <button class="btn btn-default btn-sm pull-right"  ng-show="newHotlines_show"  ng-click="newHotlines_show=false" title="Thu nhỏ form tạo hotline"><i class="fa fa-angle-double-up"></i> </button>
+                    </div>
+                    <div class="card-body small" ng-show="newHotlines_show">
+
+                        <div class="form-group">
+                        <label>Thêm mới hotline</label>
+                        <div class="input-group">
+
+                            <input type="text" class="form-control" ng-model="newHotlines.hotline_numbers" placeholder="Có thể thêm nhiều hotline, cách nhau bởi dấu phảy"
+                                   ng-class="newHotlines.error.hotline_numbers?'is-invalid':''"
+                                    class="form-control">
+
+
+
+
+
+
+                            <div class="input-group-append">
+                            <button class="btn btn-warning" ng-click="onSaveHotline(newHotlines)"><i class="fa fa-save"></i> Thêm  </button>
+                            </div>
+
+                            <div class="invalid-feedback"> {{newHotlines.error.hotline_numbers[0]}}</div>
+                        </div>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="card-body small">
+
+                        <table ng-table="CusHotlineTable"
+
+                               class="tickets table table-condensed table-bordered table-striped small"
+                               style="margin-top: 10px;" template-header="CusHotlineTable_template">
+
+
+
+
+                            <tr ng-if="$data.length == 0 || $data == undefined">
+                                <td colspan="100" style="display:table-cell !important;text-align:center">
+                                    {{'LBL_NO_DATA_FOUND'|translate}}
+                                </td>
+                            </tr>
+
+
+
+
+                            <tr ng-repeat="line in $data"  ng-class="line.status ==2?'text-muted':''">
+                                <th>{{line.group_call_status == 1?"GROUP":"-"}}
+                                    <span ng-show="line.group_call_status" class="text-muted small">
+                                        <br>{{line.caller_group_master}}
+                                    </span>
+                                </th>
+                                <td ng-if="!line.edit" >
+                                    <i class="fa fa-circle" ng-if="line.status !=2" ng-class="line.status==0 && line.status !=2?'text-success':'text-warning'"></i>
+                                    <i class="fa fa-circle text-muted" ng-if="line.status ==2"></i>
+
+                                    <b>{{line.hotline_number}}</b>
+
+                                    <br>
+                                    <span class="badge badge-success text-uppercase p-1" ng-if="line.status==0"> {{'LBL.STATUS.'+line.status|translate}}</span>
+
+                                    <span class="badge badge-secondary text-uppercase p-1 " ng-if="line.status==2"> {{'LBL.STATUS.'+line.status|translate}}</span>
+
+                                    <span ng-if="line.status==1" class="badge badge-warning text-uppercase p-1 ">
+                        {{"PAUSE_STATE."+line.pause_state|translate}}
+                    </span>
+
+
+
+                                </td>
+
+
+
+
+
+
+
+                                <td ng-if="line.edit">
+                                    <input type="text"
+                                           ng-class="line.error.hotline_numbers?'is-invalid':''"
+                                           ng-model="line.hotline_numbers" class="form-control">
+
+                                    <div class="invalid-feedback"> {{line.error.hotline_numbers[0]}}</div>
+
+
+
+                                </td>
+
+                                <td ng-if="line.edit"> </td>
+                                <td >{{line.created_at}}</td>
+                                <td >{{line.updated_at}}</td>
+                                <td class="text-right">
+
+
+                                    <button  ng-if="entity.CONFIG_HOTLINE && line.edit" class="btn btn-sm btn-warning" ng-click="onSaveHotline(line); "><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+
+
+
+                                    <div title="Chặn mở hướng cuộc gọi" class="btn-group btn-group-sm" role="group" ng-if="line.status!=2">
+                                        <button id="btnGroupDrop12" type="button" class="btn  dropdown-toggle"
+                                                ng-class="line.status==1?'btn-warning':'btn-success'" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                         <span ng-if="line.status==1">
+                                        <i ng-if="line.pause_state==11 " class="fa fa-sign-out"></i>
+                                        <i ng-if=" line.pause_state==12 " class="fa fa-sign-in"></i>
+
+
+                                        {{"PAUSE_STATE."+line.pause_state|translate}}</span>
+                                            <span ng-if="line.status==0">{{'LBL.STATUS.'+line.status|translate}}</span>
+
+                                        </button>
+                                        <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" ng-if="entity.CHANGE_HOTLINE_STATUS">
+
+                                            <!--// Chặn gọi vào ==> nếu đang mở hoặc chặn gọi ra-->
+                                            <a class="dropdown-item"
+                                               ng-if="(line.pause_state==10 && line.status==0) ||line.pause_state==11 "
+                                               ng-click="changePauseStateHotline(line,12, 1);" href=""><i class="fa fa-sign-in"></i> Chặn gọi vào</a>
+
+                                            <!--// Chặn gọi ra ==> nếu đang mở hoặc chặn gọi vào-->
+                                            <a class="dropdown-item"
+                                               ng-if="(line.pause_state==10 && line.status==0)||line.pause_state==12"
+                                               ng-click="changePauseStateHotline(line,11,1);" href=""><i class="fa fa-sign-out"></i> Chặn gọi ra</a>
+
+                                            <!--// Mở gọi vào ==> nếu đang chặn hoặc chặn gọi ra-->
+                                            <a class="dropdown-item"
+                                               ng-if="(line.pause_state==10||line.pause_state==12) && line.status==1 "
+                                               ng-click="changePauseStateHotline(line,12,0);" href=""><i class="fa fa-sign-in"></i> Mở gọi vào</a>
+
+                                            <!--// Mở gọi ra ==> nếu đang chặn hoặc chặn gọi vào-->
+                                            <a class="dropdown-item"
+                                               ng-if="(line.pause_state==10||line.pause_state==11) && line.status==1 "
+                                               ng-click="changePauseStateHotline(line,11,0);" href=""><i class="fa fa-sign-out"></i> Mở gọi ra</a>
+
+
+
+
+                                            <a class="dropdown-item" ng-if=" line.status !=1 " ng-click="changeHotlineStatus(line);" href=""><i class="fa fa-key"></i> Chặn hai chiều</a>
+                                            <a class="dropdown-item" ng-if=" line.status ==1 "  ng-click="changeHotlineStatus(line);" href=""><i class="fa fa-key"></i> Mở hai chiều</a>
+                                        </div>
+                                    </div>
+
+
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                            ng-if=" line.status !=2"
+                                            title="{{'CRUD.COG'|translate}} sip" ng-click="sipConfig(line);">
+                                        <i class="fa fa-cog hand"></i>
+                                    </button>
+
+                                    <button  ng-if="(entity.REMOVE_HOTLINE) &&  !line.edit &&   line.status !=2" class="btn btn-sm btn-danger" ng-click="deleteHotline(line); "><i class="fa fa-trash"></i> {{'CRUD.D'|translate}} </button>
+
+
+
+                                </td>
+                            </tr>
+
+
+
+
+                        </table>
+
+
+
+                    </div>
+                </div>
+
+
+
+
+            <!--Option conffig-->
+
+            <div class="card mt-2" ng-if="currentCustomer.cog.options.length>0">
+                <div class="card-header">
+                    Thiết lập thông số cơ bản
+                    <button class="btn btn-primary  btn-sm pull-right"   ng-click="addOption(currentCustomer);" ng-if="currentCustomer.cog.options.length< 1">
+                        <i class="fa fa-plus"></i> {{'CRUD.C'|translate}}
+
+                    </button>
+                </div>
+                <div class="card-body small">
+                    <table class="table table-sm table-striped " ng-repeat="option in currentCustomer.cog.options track by $index">
+                         <tr ng-if="!option.edit"><td>Ngày bắt đầu tính cước</td><td>{{option.begin_charge_date}}</td></tr>
+                         <tr ng-if="!option.edit"><td>Ngày tính cước gần nhất</td><td>{{option.last_charge_date}}</td></tr>
+                         <tr ng-if="!option.edit"><td>Ngày cố gắng tính cước gần nhất</td><td>{{option.last_try_charge_date}}</td></tr>
+                         <tr ng-if="!option.edit"><td>Ngày tính cước sub gần nhất</td><td>{{option.last_charge_sub_status}}</td></tr>
+                         <tr ng-if="!option.edit"><td>Số máy nhánh</td><td>{{option.extension_count}}</td></tr>
+                         <tr ng-if="!option.edit"><td>Số lượng Agent</td><td>{{option.num_agent}}</td></tr>
+                         <tr ng-if="!option.edit"><td>Dung lượng gọi</td><td>{{option.call_record_storage_count}}</td></tr>
+                         <tr ng-if="!option.edit"><td>Dung lượng dữ liệu</td><td>{{option.data_storage_count}}</td></tr>
+                         <tr ng-if="!option.edit"><td>Số lượng SDK</td><td>{{option.api_count}}</td></tr>
+                         <tr ng-if="!option.edit"><td>Số lượng tài khoản softphone</td><td>{{option.softphone_3c_count}}</td></tr>
+
+                         <tr ng-if="option.edit"><td>Ngày bắt đầu tính cước</td><td><input
+                             type="date" class="form-control"  id="{{$index}}_begin_charge_date"  ng-model="option.begin_charge_date"></td></tr>
+
+
+                         <tr ng-if="option.edit"><td>Số máy nhánh</td><td><input
+                             type="number"class="form-control"  string-to-number ng-model="option.extension_count"></td></tr>
+                        <tr ng-if="option.edit"><td>Số lượng Agent</td><td><input
+                            type="number" class="form-control" string-to-number ng-model="option.num_agent"></td></tr>
+
+
+
+                         <tr ng-if="option.edit"><td>Dung lượng gọi</td><td><input
+                             type="number" class="form-control" string-to-number ng-model="option.call_record_storage_count"></td></tr>
+                         <tr ng-if="option.edit"><td>Dung lượng dữ liệu</td><td><input
+                             type="number" class="form-control"  string-to-number ng-model="option.data_storage_count"></td></tr>
+                         <tr ng-if="option.edit"><td>Số lượng SDK</td><td><input
+                             type="number" class="form-control"  string-to-number  ng-model="option.api_count"></td></tr>
+
+                         <tr ng-if="option.edit"><td>Số lượng tài khoản softphone</td><td><input
+                             type="number" class="form-control"  string-to-number ng-model="option.softphone_3c_count"></td></tr>
+                        <tr ng-if="option.edit"><td>Tình trạng</td><td><input
+                             type="number" class="form-control"  max="1" min="0" ng-model="option.status"></td></tr>
+                        <tr ><td colspan="100">
+
+                            <button  ng-if="option.edit" class="btn btn-warning" ng-click="saveOption(option);" ><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+                            <button  ng-if="!option.edit" class="btn btn-default" ng-click="editOption(option);"  ><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>
+
+                        </td> </tr>
+
+
+                    </table>
+                </div>
+            </div>
+
+
+            <!--Quantities-->
+            <div class="card mt-2" ng-if="currentCustomer.cog.quantities.length>0 && serviceConfig.quantity_price.length >0 ">
+                <div class="card-header">
+                    Thiết lập sản lượng ({{currentCustomer.cog.quantities.length}})
+                    <button class="btn btn-primary  btn-sm pull-right"   ng-click="addQuantity(currentCustomer);">
+                        <i class="fa fa-plus"></i> {{'CRUD.C'|translate}}
+
+                    </button>
+                </div>
+                <div class="card-body small" ng-if="serviceConfig.quantity_price.length >0">
+                    <table class="table table-sm table-striped">
+                        <tr><th>Ngày bắt đầu dùng</th>
+                            <th>Gói sản lượng</th>
+
+
+                            <th>Tự gian hạn</th>
+                            <th>Tình trạng</th>
+
+                            <th>Cập nhật</th>
+                            <th><i class="fa facog"></i> </th></tr>
+
+                        <tr ng-repeat="quantity in currentCustomer.cog.quantities"  ng-class="quantity.status==2?'text-muted':''">
+                            <td ng-if="!quantity.edit">{{quantity.begin_use_date|date:'yyyy-mm-dd'}}</td>
+
+                            <td ng-if="!quantity.edit">{{quantity.description}}</td>
+
+
+                            <td ng-if="!quantity.edit">{{'SERVICE.QUANTITY_RESUB.'+quantity.resub|translate}}</td>
+                            <td ng-if="!quantity.edit">{{'LBL.STATUS.'+quantity.status|translate}}</td>
+
+
+
+                            <td ng-if="quantity.edit"><input type="date" ng-model="quantity.begin_use_date" class="form-control"> </td>
+                            <td ng-if="quantity.edit"><select ng-model="quantity.quantity_config_id" class="form-control">
+                                <option value="">Chọn</option>
+                                <option ng-repeat="quan in serviceConfig.quantity_price track by $index" value="{{quan.id}}" ng-if="quan.status !=2">{{quan.description}}</option>
+
+                            </select> </td>
+
+
+
+                            <td ng-if="quantity.edit"><select ng-model="quantity.resub" class="form-control">
+                                <option value="">Chọn</option>
+                                <option value="0">Không</option>
+                                <option value="1">Tự gia hạn</option>
+                            </select>
+                            </td>    <td ng-if="quantity.edit"><select ng-model="quantity.status" class="form-control">
+                                <option value="">Chọn</option>
+                                <option value="0">Kích hoạt</option>
+                                <option value="1">Tạm ngưng</option>
+                                <option value="2">Hủy</option>
+                            </select>
+                            </td>
+
+                            <td >{{quantity.updated_at}}</td>
+                            <td class="text-right"  >
+                                <div class="input-group">
+                                    <div class="input-group-append">
+
+
+                                <button  ng-if="!quantity.edit && quantity.status!=2 " class="btn btn-sm btn-default" ng-click="editQuantity(quantity); "><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>
+                                <button  ng-if="quantity.edit" class="btn btn-sm btn-warning" ng-click="saveQuantity(quantity); "><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+                                <button  ng-if="quantity.edit" class="btn btn-sm btn-default" ng-click="cancelQuantity(quantity, $index); "><i class="fa fa-close"></i>  </button>
+                                    </div>
+                                </div>
+
+
+                                <!--<button class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}}-->
+                                <!--</button>-->
+                            </td>
+                        </tr>
+
+                    </table>
+                </div>
+            </div>
+
+
+
+
+            <!--<div class="mt-2">-->
+                <!--<div class="card">-->
+                    <!--<div class="card-header"  ng-click="viewLog =! viewLog">-->
+                      <!--Xem log chỉnh sửa khách hàng-->
+                    <!--</div>-->
+                    <!--<div class="card-body" ng-show="viewLog">-->
+
+                        <!--<ul class="list-group">-->
+                            <!--<li class="list-group-item" ng-repeat="activity in currentCustomer.log"  ng-click="activity.display = ! activity.display">-->
+                                <!--<b>{{activity.name}} </b> {{activity.action}} -     {{activity.created_at}}-->
+                                <!--<p class="small text-muted" ng-show="activity.display==true">-->
+                                <!--{{activity.raw_log}}</p>-->
+                            <!--</li>-->
+                        <!--</ul>-->
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+    </div>
+    </div>
+</div>
+<!-- Modal -->
+
+<div class="modal fade" id="changeSiteCustomerForm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeSiteCustomerFormx">
+             Chuyển khách hàng sang server mới</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="card">
+                    <div class="card-header">
+                        Chuyển khách hàng: {{changeServer.cus_name}} / {{changeServer.enterprise_number}} sang cụm máy chủ mới
+                    </div>
+                    <div class="card-body">
+
+                        <div class="form-group">
+                            <label>Cụm máy chủ</label>
+                            <select class="form-control" ng-model="changeServer.site_id" ng-options="item.id as   item.server_name for item in lstServers">
+                                <option value="">Chọn </option>
+
+                            </select>
+                        </div>
+
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" ng-click="onChangeServerCustomer(changeServer)"><i class="fa fa-arrow-right"></i> {{'CRUD.M'|translate}}</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="sipConfigForm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">
+                    {{'CRUD.COG'|translate}} Sip
+
+                    {{sip.hotline}}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>Chọn hướng kết nối</label><select ng-model="sip.profile_id_backup"
+                                                                                             class="form-control"
+                                                                                 ng-options="value.id as value.title for (key, value) in lstSipProfile"                >
+
+
+                </select>
+                </div>
+                <div class="form-group">
+                    <label>{{"SIP.ACL.IP_AUTH"|translate}}</label>
+                    <div class="form-row">
+                        <div class="col">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">Primary</span> </div>
+                                <input type="text"  class="form-control" ng-model="sip.ip_auth">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">Backup</span> </div>
+                                <input type="text"  class="form-control" ng-model="sip.ip_auth_backup">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="form-group">
+                    <label>{{"SIP.ACL.IP_PROXY"|translate}}</label>
+                    <div class="form-row">
+                        <div class="col">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">Primary</span> </div>
+                                <input type="text"  class="form-control" ng-model="sip.ip_proxy">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">Backup</span> </div>
+                                <input type="text"  class="form-control" ng-model="sip.ip_proxy_backup">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="form-group"><label>{{"SIP.ACL.DESCRIPTION"|translate}}</label><input type="text"
+                                                                                                 class="form-control"
+                                                                                                 ng-model="sip.description">
+                </div>
+                <h5>{{"SIP.ROUTING.TITLE"|translate}}</h5>
+                <div class="form-group"><label>{{"SIP.ROUTING.CALLER"|translate}}</label><input type="text" readonly
+                                                                                                ng-model="sip.hotline"
+                                                                                                class="form-control">
+                </div>
+                <div class="form-group"><label>{{"SIP.ROUTING.DESTINATION"|translate}}</label><input type="text"
+                                                                                                     class="form-control"
+                                                                                                     ng-model="sip.destination">
+                </div>
+                <div class="form-group"><label>{{"SIP.ACL.BLOCK_REGEX_CALLEE"|translate}}</label><input type="text"
+                                                                                                     class="form-control"
+                                                                                                     ng-model="sip.block_regex_callee">
+
+                    <small  class="form-text text-muted">
+                        Biểu thức chính quy dạng ^(00|\\+84|1900|1800).*
+                    </small>
+                </div>
+                <div class="form-group"><label>{{"SIP.ACL.ALLOW_REGEX_CALLEE"|translate}}</label><input type="text"
+
+                                                                                                     class="form-control"
+                                                                                                     ng-model="sip.allow_regex_callee">
+
+                    <small  class="form-text text-muted">
+                        Biểu thức chính quy dạng ^[0-9]{8,16}.*
+                    </small>
+                </div>
+                <!--<div class="form-group"><label>Prefix</label>-->
+
+
+                    <!--<select ng-model="sip.vendor_id"-->
+                            <!--class="form-control"-->
+                            <!--ng-options="value.i_vendor as value.name for (key, value) in lstVendor">-->
+                        <!--<option value="">&#45;&#45; Chọn&#45;&#45;</option>-->
+                    <!--</select>-->
+
+
+                <!--</div>-->
+
+
+
+                <div class="form-group"><label>Nhóm cuộc gọi</label>
+
+                    <input type="hidden" ng-model="sip.vendor_id"  value="1">
+                    <input type="checkbox" ng-true-value="1" ng-false-value="2" ng-model="sip.caller_group">
+
+
+                </div>
+
+                <div class="form-group" ng-show="sip.caller_group==1"><label>Chọn số chủ </label>
+                    <input type="text" ng-model="sip.caller_group_master"
+                           class="form-control">
+
+
+                    <!--<select ng-model="sip.caller_group_master"-->
+                            <!--class="form-control"-->
+                            <!--ng-options="value.hotline_number  as value.hotline_number for (key, value) in currentCustomer.cog.hotlines|filter:{group_call_status:'!1'}">-->
+                        <!--<option value="">&#45;&#45; Chọn&#45;&#45;</option>-->
+                    <!--</select>-->
+
+
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" ng-if="userAgent.role==1 || userAgent.role==6" class="btn btn-primary" ng-click="saveSip(sip)"><i class="fa fa-save"></i> {{'CRUD.U'|translate}}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editCustomerForm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCustomerForm1">
+                CHỈNH SỬA THÔNG TIN KHÁCH HÀNG </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>{{'CUSTOMER.ENTERPRISE_NUMBER'|translate}}</label>
+                    <b ng-model="editCustomer.enterprise_number">{{currentCustomer.enterprise_number}}</b>
+
+                </div>
+                <div class="form-group">
+                    <label>{{'CUSTOMER.CUS_NAME'|translate}}</label>
+                    <input type="text" class="form-control" ng-model="editCustomer.cus_name"
+
+                           ng-class="currentCustomer.error.cus_name   ?'is-invalid':''"       />
+                    <div class="invalid-feedback">
+                        {{currentCustomer.error.cus_name}}
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+                    <label>{{'CUSTOMER.COMPANYNAME'|translate}}</label>
+                    <input  ng-class="currentCustomer.error.companyname   ?'is-invalid':''"   type="text" class="form-control" ng-model="editCustomer.companyname"/>
+                    <div class="invalid-feedback">
+                        {{currentCustomer.error.companyname}}
+                    </div>
+
+                </div>
+                <div class="form-group">
+                    <label>{{'CUSTOMER.ADDR'|translate}}</label>
+                    <input    ng-class="currentCustomer.error.addr   ?'is-invalid':''"  type="text" class="form-control" ng-model="editCustomer.addr"/>
+                    <div class="invalid-feedback">
+                        {{currentCustomer.error.addr}}
+                    </div>
+                </div>  <div class="form-group">
+                    <label>{{'CUSTOMER.EMAIL'|translate}}</label>
+                    <input type="text"  class="form-control" ng-model="editCustomer.email"
+                           ng-class="currentCustomer.error.email   ?'is-invalid':''"
+                    />
+                <div class="invalid-feedback">
+                    {{currentCustomer.error.email}}
+                </div>
+                </div>
+                <div class="form-group">
+                    <label>{{'CUSTOMER.PHONE1'|translate}}</label>
+                    <input type="text" class="form-control" ng-model="editCustomer.phone1"
+                           ng-class="currentCustomer.error.phone1   ?'is-invalid':''"
+                    />
+                    <div class="invalid-feedback">
+                    {{currentCustomer.error.phone1}}
+                </div>
+
+                </div>
+                <B> THÔNG TIN THIẾT LẬP MẶC ĐỊNH CHO HOTLINE </B>
+                <div class="form-group ">
+                    <label> {{'CUSTOMER.SIP.IP_AUTH'|translate}}</label>
+                    <div class="form-row">
+                        <div class=" col">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">Primary</span></div>
+                                <input type="text"
+                                       class="form-control"
+                                       ng-class="currentCustomer.error.ip_auth           ?'is-invalid':''"
+                                       ng-model="editCustomer.ip_auth"/>
+                                <div class="invalid-feedback">
+                                    {{currentCustomer.error.ip_auth[0]}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">Backup</span></div>
+                                <input type="text"
+                                       class="form-control"
+                                       ng-class=" currentCustomer.error.ip_auth_backup?'is-invalid':''"
+                                       ng-model="editCustomer.ip_auth_backup"/>
+                                <div class="invalid-feedback">
+                                    {{currentCustomer.error.ip_auth_backup[0]}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label> {{'CUSTOMER.SIP.IP_PROXY'|translate}}</label>
+                    <div class="form-row">
+                        <div class="col">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Primary</span></div>
+                                <input type="text"
+                                       class="form-control"
+                                       ng-class="currentCustomer.error.ip_proxy          ?'is-invalid':''"
+                                       ng-model="editCustomer.ip_proxy"/>
+                                <div class="invalid-feedback">
+                                    {{currentCustomer.error.ip_proxy[0]}}
+                                </div>
+                            </div>
+
+
+                        </div>
+                        <div class="col">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Backup</span></div>
+                                <input type="text"
+                                       class="form-control"
+                                       ng-class="currentCustomer.error.ip_proxy_backup         ?'is-invalid':''"
+                                       ng-model="editCustomer.ip_proxy_backup"/>
+                                <div class="invalid-feedback">
+                                    {{currentCustomer.error.ip_proxy_backup[0]}}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+           <div class="form-group">
+                            <label>{{'CUSTOMER.SIP.DESTINATION'|translate}}</label>
+                            <input type="text" class="form-control" ng-model="editCustomer.destination"
+                                   ng-class="currentCustomer.error.destination   ?'is-invalid':''"
+                            />
+               <div class="invalid-feedback">{{currentCustomer.error.destination}}  </div>
+                        </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" ng-if="userAgent.role ==1 ||  userAgent.role ==6" ng-click="onEditCustomer(editCustomer)"><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCustomerEnterpriseNumberForm" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    CHỈNH SỬA SỐ ĐẠI DIỆN KHÁCH HÀNG </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>{{'CUSTOMER.ENTERPRISE_NUMBER'|translate}} hiện thời </label>
+                    <b ng-model="editCustomerEnterPrise.enterprise_number">{{currentCustomer.enterprise_number}}</b>
+                </div>
+                <div class="form-group">
+                    <label>{{'CUSTOMER.ENTERPRISE_NUMBER'|translate}} mới</label>
+                    <input type="text" class="form-control"
+                           ng-class="editCustomerEnError.new_enterprise_number?'is-invalid':''"
+                           ng-model="editCustomerEnterPrise.new_enterprise_number"/>
+                    <div class="invalid-feedback">
+                        {{editCustomerEnError.new_enterprise_number[0]}}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary"
+                        ng-click="onEditCustomerEnterprise(editCustomerEnterPrise)"><i class="fa fa-save"></i>
+                    {{'CRUD.U'|translate}}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCustomerServiceCodeForm" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    THAY ĐỔI GÓI CƯỚC KHÁCH HÀNG </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h6 class="text-uppercase">KHÁCH HÀNG: {{currentCustomer.cus_name}}</h6>
+                <B class="text-muted">{{currentCustomer.enterprise_number}}</B>
+
+
+                <div class="form-group mt-2">
+                    <label>{{'CUSTOMER.SERVICE_NAME'|translate}} hiện thời </label>
+                    <br>
+                    <b >{{currentCustomer.product_code}}</b>
+                    <span class="text-muted">{{currentCustomer.service_name}}</span>
+
+                </div>
+                <div class="form-group">
+                    <label>{{'CUSTOMER.PRODUCT_CODE'|translate}} mới</label>
+                    <select ng-model="newCustomerServiceCode.new_product_code" class="form-control"
+                            ng-class="editCustomerSCError.new_product_code?'is-invalid':''">
+                        <option value="">Chọn</option>
+                        <option ng-repeat="service in lstServices" ng-if="service.status==0" value="{{service.product_code}}">{{service.service_name}} -  {{'LBL.STATUS.'+service.status|translate}}</option>
+                    </select>
+                    <div class="invalid-feedback">
+                        {{editCustomerSCError.new_product_code}}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary"
+                        ng-click="onEditCustomerService(newCustomerServiceCode)"><i class="fa fa-save"></i>
+                    {{'CRUD.U'|translate}}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="tosServiceAdded" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                   Dịch vụ giá trị gia tăng</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="form-group">
+                    <label>{{'CUSTOMER.PRODUCT_CODE'|translate}} mới</label>
+                    <select ng-model="tosService.service_key" class="form-control"  >
+                        <option value="">Chọn</option>
+                        <option ng-repeat="service in lstServices" ng-if="service.status==0" value="{{service.product_code}}">{{service.service_name}} -  {{'LBL.STATUS.'+service.status|translate}}</option>
+                    </select>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-default"
+                        ng-click="onAddTosService(tosService)"><i class="fa fa-save"></i>    {{'CRUD.U'|translate}}
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script id="cusTableParams_template" type="text/ng-template">
+    <tr>
+        <th ng-repeat="column in customerCols" class="header text-muted"
+            ng-click="sbcCusTable.sorting(column.sortable, sbcCusTable.isSortBy(column.sortable, 'asc') ? 'desc' : 'asc')"
+            ng-class="{'sort-asc': sbcCusTable.isSortBy(column.sortable, 'asc'), 'sort-desc': sbcCusTable.isSortBy(column.sortable, 'desc'), 'sortable': column.sortable}"
+            >
+             {{ column.title | translate }}
+        </th>
+    </tr>
+</script>
+
+
+
+
+
+<div class="modal" id="quantityLimitForm">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Thiết lập hạn mức cước  </h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                  <div class="form-group">
+                      <label>Thiết lập hạn mức cho tài khoản {{currentCustomer.enterprise_number}}</label>
+                      <input type="text" ng-model="fee.limit_amount" class="form-control">
+                  </div>
+                <p class="small text-info">Để xóa hạn mức vui lòng điền giá trị -1 </p>
+
+
+            </div>
+
+
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group">
+                    <button class="btn btn-outline-success " ng-click="saveFeeLimit(fee);">
+                        Đồng ý
+                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal" id="changePauseStateModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Lý do thay đổi trạng thái </h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                  <div class="form-group">
+                      <label>Lý do thay đổi trạng thái của tài khoản {{currentCustomer.enterprise_number}}</label>
+                      <textarea ng-model="changePauseStateCustomer.reason" class="form-control"></textarea>
+                  </div>
+
+
+            </div>
+
+
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group">
+                    <button class="btn btn-outline-success " ng-click="onChangePauseState(changePauseStateCustomer);">
+                        Đồng ý
+                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal" id="changePauseStateHotlineModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Lý do chặn/mở 1 chiều hotline </h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                  <div class="form-group">
+                      <label>Lý do chặn/mở 1 chiều hotline {{changePauseStateHotlineData.hotline_number}}</label>
+                      <textarea ng-model="changePauseStateHotlineData.reason" class="form-control"></textarea>
+                  </div>
+
+
+            </div>
+
+
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group">
+                    <button class="btn btn-outline-success " ng-click="onChangePauseStateHotline(changePauseStateHotlineData);">
+                        Đồng ý
+                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal" id="removeCustomerModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Lý do hủy khách hàng </h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                  <div class="form-group">
+                      <label>Lý do hủy khách: {{currentCustomer.enterprise_number}}</label>
+                      <textarea ng-model="removeCustomerModalData.reason" class="form-control"></textarea>
+                  </div>
+
+
+            </div>
+
+
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group">
+                    <button class="btn btn-outline-success " ng-click="onRemoveCustomer(removeCustomerModalData);">
+                        Đồng ý
+                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal" id="removeHotlineModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Lý do hủy hotline</h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                  <div class="form-group">
+                      <label>Lý do hủy hotline: {{removeHotlineModalData.hotline_number}}</label>
+                      <textarea ng-model="removeHotlineModalData.reason" class="form-control"></textarea>
+                  </div>
+
+
+            </div>
+
+
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group">
+                    <button class="btn btn-outline-success " ng-click="onRemoveHotline(removeHotlineModalData);">
+                        Đồng ý
+                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal" id="changeCustomerStatusModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Lý do kích hoạt/ tạm ngưng khách hàng</h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                  <div class="form-group">
+                      <label>Lý do kích hoạt/ tạm ngưng khách hàng: {{changeCustomerStatusData.enterprise_number}}</label>
+                      <textarea ng-model="changeCustomerStatusData.reason" class="form-control"></textarea>
+                  </div>
+
+
+            </div>
+
+
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group">
+                    <button class="btn btn-outline-success " ng-click="onChangeStatus(changeCustomerStatusData);">
+                        Đồng ý
+                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal" id="changeHotlineStatusModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Lý do kích hoạt/ tạm ngưng hotline</h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                  <div class="form-group">
+                      <label>Lý do kích hoạt/ tạm ngưng  hotline: {{changeHotlineStatusData.hotline_number}}</label>
+                      <textarea ng-model="changeHotlineStatusData.reason" class="form-control"></textarea>
+                  </div>
+
+
+            </div>
+
+
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group">
+                    <button class="btn btn-outline-success " ng-click="onChangeHotlineStatus(changeHotlineStatusData);">
+                        Đồng ý
+                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+
+<script id="CusHotlineTable_template" type="text/ng-template">
+
+    <tr><th>
+        <button class="btn btn-outline-secondary btn-sm" ng-click="viewCustomer(currentCustomer); ">
+            <i class="fa fa-refresh"></i></button>
+
+    </th><th>
+
+        <div class="input-group input-group-sm  w-100">
+            <div class="input-group-prepend"><span class="input-group-text">Hotline</span> </div>
+            <input placeholder="Tìm hotline" class="form-control form-control-sm"  ng-model="sbcHotlineTableParam.query"><div class="input-group-append"><button
+                ng-click="getListHotline()" class="btn btn-sm btn-default"><i class="fa fa-search"></i> </button> </div>
+        </div>
+    </th>  <th>Tạo</th><th>Cập nhật</th><th><i class="fa facog"></i> </th></tr>
+
+
+</script>

@@ -1,0 +1,334 @@
+<div class="container-fluid">
+
+    <div class="row mt-3 ">
+        <div class="col-md-3">
+            <table class=" bg-white table table-sm small table-striped table-bordered mb-2" ng-alias="customer as billing.customer">
+
+                <tr><th>Khách hàng</th><td>{{customer.cus_name}}
+                    <span class="small text-muted"><br>{{customer.companyname}}</span>
+                    </td></tr>
+
+                <tr><th>Đầu số tính cước</th><td>{{customer.enterprise_number}}</td></tr>
+                <tr><th>Điện thoại liên hệ</th><td>{{customer.phone1}} </td></tr>
+                <tr><th>Email liên hệ</th><td>{{customer.email}} </td></tr>
+                <tr><th>Số lượng hotline</th><td>{{listHotlinesCount}} </td></tr>
+
+
+            </table>
+            <div class="card mb-2">
+                <div class="card-header">
+                    Danh sách các đầu số hotline ({{listHotlinesCount}})
+                </div>
+                <div class="card-body">
+
+
+                    <table ng-table-dynamic="sbcHotlineTable with sbcBillCols"
+
+                           class="tickets table table-condensed table-bordered table-striped small"
+                           style="margin-top: 10px;" template-header="sbcHotlineTable_template">
+
+
+
+
+                        <tr ng-if="$data.length == 0 || $data == undefined">
+                            <td colspan="100" style="display:table-cell !important;text-align:center">
+                                {{'LBL_NO_DATA_FOUND'|translate}}
+                            </td>
+                        </tr>
+                        <tr ng-repeat="hotline in $data track by $index" >
+                            <td style="justify-content: space-between; display: flex">
+                                <a href="" ng-click="viewBillLogByHotline(hotline.hotline_number)"        >{{hotline.hotline_number}}</a>
+                                <span class="small text-muted">{{hotline.created_at}}</span>
+                            </td>
+                        </tr>
+
+
+
+                    </table>
+
+                </div>
+            </div>
+
+
+
+
+        </div>
+        <div class="col-md-9">
+
+            <div class="card mb-2 bg-white" >
+                <div class="card-header">
+                    <div class="pull-right mb-2">
+                        <button class="btn btn-default btn-sm" ng-click="closeBillingView();">
+                            <i class="fa fa-close"></i>
+                        </button>
+                    </div>
+
+
+                    <h4 class="display-4">  Tra soát cước dịch vụ  <b ng-if="billParam.hotline_number"> của hotline: {{billParam.hotline_number}} </b> </h4>
+                    <div class="input-group pull-right input-sm input-group-sm">
+                        <span class="input-group-append"><span class="input-group-text">Từ ngày</span> </span>
+                        <input type="date"   placeholder="Start date" ng-model="billParam.start_date" class="form-control input-sm " >
+                        <span class="input-group-append"><span class="input-group-text">Tới ngày</span> </span>
+                        <input type="date"  placeholder="End date date" ng-model="billParam.end_date"  class="form-control">
+                        <span class="input-group-append">
+                            <button class="btn btn-sm btn-default" ng-click="viewLogBilling();"><i class="fa fa-search"></i> </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="input-group">
+                        <span class="input-group-append">
+                        <button class="btn btn-outline-light" ng-class="!viewBy|| viewBy=='summary'?'text-primary':'text-muted'" ng-click="viewBy='summary'">Xem tóm tắt</button>
+                        <button class="btn btn-outline-light"  ng-class="viewBy=='history'?'text-primary':'text-muted'"  ng-click="viewBy='history'">Xem sản lượng</button>
+                            </span>
+                    </div>
+                </div>
+                <div class="card-body row" ng-show="viewBy=='history'">
+
+                    <div class="col-md">
+
+
+                        <div ng-show="!viewHistoryBy || viewHistoryBy=='quan'">
+
+                            <table class="table-striped table small">
+                                <tr>
+                                    <th>Tổng số giây</th>
+                                    <th>Thời lượng còn lại (giây)</th>
+                                    <th>Từ</th><th>Tới</th>
+                                    <th>Tình trạng</th><th>Loại</th></tr>
+                                <tr ng-repeat="quans in billing.data.quan">
+                                    <td>{{quans.total_reserve}}</td>
+                                    <td>{{quans.reserve_duration}}</td>
+                                     <td>{{quans.cycleFrom}}</td>
+                                    <td>{{quans.cycleTo}}</td>
+
+                                    <td>{{quans.activated==1?"Đã dùng":"Chưa dùng"}}</td>
+                                    <td>{{quans.type==1?"Trong nước":"Nội mạng"}}</td>
+
+                                </tr>
+
+                            </table>
+
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="card-body row" ng-show="!viewBy || viewBy=='summary'">
+
+                    <div class="col-md-6">
+
+                        <div class="chart-container" id="chart_billing">
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <table class="table table-sm table-striped table-bordered small">
+                            <tr  ng-if="billParam.hotline_number"><th>HOTLINE </th><td colspan="100" class="text-center"> {{billParam.hotline_number}} </td> </tr>
+                            <tr><th>Thời điểm </th><td colspan="100" class="text-center">
+                            Từ: {{billingParamData.start_date}}
+                            Tới: {{billingParamData.end_date}}
+                            </td> </tr>
+                            <tr><th>Loại cước</th><th class="text-right">Tỷ lệ</th><th class="text-right">Số tiền</th></tr>
+
+                            <tr ng-repeat="bill in billing.data.chart">
+                                <td>{{'REPORT.QUANTITY.'+ bill.name|translate}}</td>
+                                <td class="text-right" ng-if="bill.name !='TOTAL_FEE'">{{bill.per|number:2}} <sup>%</sup></td>
+                                <td class="text-right" colspan="100">{{bill.sum|number:0}} <sup>đ</sup></td>
+                            </tr>
+                        </table>
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-2 bg-white">
+                <div class="card-body"  >
+                    <p>  Cước dịch vụ từ ngày: {{billDateRange.start}} tới ngày:
+                        {{billDateRange.end}}
+                        <span ng-if="billParam.hotline_number"> Theo đầu số {{sbcBillParam.hotline_number}}</span>
+
+
+
+                    </p>
+                    <button class="btn btn-secondary" ng-click="downBilling(lstLinks[0])" ng-if="lstLinks.length==1 && lstBillLogCount!=-1  ">
+                        <i class="fa fa-download"></i> Tải về ({{lstLinks[0].to|number:0}})
+                    </button>
+
+                    <div class="btn-group btn-group-sm" ng-if="lstLinks.length>1">
+                        <div class="input-group-text"><i class="fa fa-download"></i> ({{lstBillLogCount|number:0}})</div>
+                        <button title="First List" ng-if=" lstLinks.length >5" class="btn btn-success"  ng-click="jumpFistList()"><i class="fa fa-angle-double-left"></i> </button>
+                        <button ng-if="lstLinks.length >5" class="btn btn-default"  ng-click="jumpPreviousList()"><i class="fa fa-angle-left"></i></button>
+
+
+                        <button title="Last List" class="btn btn-secondary"
+                                ng-repeat="link in lstLinks" ng-click="downBilling(link)" ng-if="lstBillLogCount!=-1 &&link.display"
+                        ng-class="link.active?'active':''"
+
+                        >
+                      Từ {{link.from|number:0}} - {{link.to|number:0}}
+                    </button>
+
+
+                        <button ng-if="lstLinks.length >5" class="btn btn-default"  ng-click="jumpNextList()"><i class="fa fa-angle-right"></i></button>
+
+                        <button ng-if="lstLinks.length >5" class="btn btn-success"  ng-click="jumpLastList()"><i class="fa fa-angle-double-right"></i></button>
+
+
+                    </div>
+
+
+                    <!--- New with ntable 2018-09-05  -->
+                    <table ng-table-dynamic="sbcBillTable with sbcBillCols"
+
+                           class="tickets table table-condensed table-bordered table-striped small"
+                           style="margin-top: 10px;" template-header="sbcBillTableParams_template">
+
+
+
+
+                        <tr ng-if="$data.length == 0 || $data == undefined">
+                            <td colspan="100" style="display:table-cell !important;text-align:center">
+                                {{'LBL_NO_DATA_FOUND'|translate}}
+                            </td>
+                        </tr>
+                        <tr ng-repeat="row in $data track by $index" ng-if="lstBillLogCount!=-1  && $data.length > 0 " >
+                            <td ng-repeat="col in sbcBillCols" >
+
+                                <span ng-if="col.field =='event_type'">
+                               {{'BILLING.'+row.event_type|translate}}
+                                </span>
+                                <span ng-if="col.field =='destination_type'">
+                                {{quantityTypes[row.destination_type]}}
+                                </span>
+                                <span ng-if="col.field =='charge_status'">
+                                 <span ng-if="row.charge_status==0">Chưa trừ tiền</span>
+                                    <span ng-if="row.charge_status==1">Đã trừ tiền</span>
+                                    <span ng-if="row.charge_status==-1">Cước lỗi</span>
+                                </span>
+                                <span ng-if="col.field != 'event_type' && col.field != 'destination_type' && col.field != 'charge_status' ">
+                                    {{row[col.field]}}
+                                </span>
+
+
+
+
+                            </td>
+                        </tr>
+
+
+
+                    </table>
+
+
+                </div>
+                <div class="card-body text-muted text-center pb-5" style="background: #f2e6c4" ng-if="billing.data.logs.data.length ==0">
+                   <b ng-if="billParam.hotline_number"> Theo đầu số: {{billParam.hotline_number}}<br></b>
+                  <span ng-if="billing.data">  Từ ngày: {{billing.data.logs.date.start_date| date:'medium'}} <br></span>
+                    <span ng-if="billing.data">    Tới ngày: {{billing.data.logs.date.end_date}}<br></span>
+                    <p> Không có dữ liệu </p>
+
+                </div>
+
+
+  <div class="card-body alert-info text-center pb-5"    ng-if="billing.data.logs.status==false">
+                  <P> Dữ liệu cuộc gọi chỉ truy xuất trong khoảng thời gian 45 ngày, hãy thu hẹp khoảng thời gian để có dữ liệu</P>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+<div class="modal fade" id="logBillingDetail" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            CHI TIẾT TÍNH CƯỚC
+            </div>
+            <div class="modal-body mt-0 mb-0 p-1" >
+                <table class="table table-sm small table-striped table-bordered mt-0 mb-0">
+                    <tr><td>{{'BILLING.TYPE'|translate}}</td><td>{{'BILLING.'+currentLogBilling.event_type|translate}}</td></tr>
+                    <tr><td>Loại</td><td>{{'BILLING.CALL.'+currentLogBilling.destination_type|translate}}  </td></tr>
+
+                    <tr><td>Số hiển thị</td><td>{{currentLogBilling.display_num}}</td></tr>
+                    <tr><td>Tình trạng </td><td>
+                        <span ng-if="currentLogBilling.charge_status==0">Chưa trừ tiền</span>
+                        <span ng-if="currentLogBilling.charge_status==1">Đã trừ tiền</span>
+                        <span ng-if="currentLogBilling.charge_status==-1">Cước lỗi</span>
+
+                    </td></tr>
+                    <tr><td>Mã kết quả tính cước</td><td>{{currentLogBilling.charge_result}}</td></tr>
+                    <tr><td>Chi tiết kết quả tính cước</td><td>{{currentLogBilling.charge_description}}</td></tr>
+                    <tr><td>Số gọi đến</td><td>{{currentLogBilling.called_num}}</td></tr>
+                    <tr><td>Số Hotline</td><td>{{currentLogBilling.hotline_num}}</td></tr>
+                    <tr><td>Số thuê bao đại diện</td><td>{{currentLogBilling.enterprise_num}}</td></tr>
+                    <tr><td>Thời điểm phát sinh cước</td><td>{{currentLogBilling.event_occur_time}}</td></tr>
+                    <tr><td>Thời điểm tính phí</td><td>{{currentLogBilling.charge_time}}</td></tr>
+
+
+                    <tr><td>Số lượng (giây)</td><td>{{currentLogBilling.count}}</td></tr>
+                    <tr><td>Thành tiền (đồng)</td><td>{{currentLogBilling.amount}}</td></tr>
+
+
+
+
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"  ng-click="currentLogBilling=nulll;" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<script id="sbcBillTableParams_template" type="text/ng-template">
+    <tr>
+        <th ng-repeat="column in sbcBillCols" class="header text-muted"
+            ng-click="sbcBillTable.sorting(column.sortable, sbcBillTable.isSortBy(column.sortable, 'asc') ? 'desc' : 'asc')"
+            ng-class="{'sort-asc': sbcBillTable.isSortBy(column.sortable, 'asc'), 'sort-desc': sbcBillTable.isSortBy(column.sortable, 'desc'), 'sortable': column.sortable}"
+        >
+            {{ column.title | translate }}
+        </th>
+    </tr>
+</script>
+
+
+
+
+
+
+<script id="sbcHotlineTable_template" type="text/ng-template">
+    <tr>
+        <th >
+
+            <div class="input-group input-group-sm  w-100">
+                <div class="input-group-prepend"><span class="input-group-text">Hotline</span> </div>
+                <input placeholder="Tìm hotline" class="form-control form-control-sm"  ng-model="sbcHotlineTableParam.query"><div class="input-group-append"><button
+                    ng-click="getListHotline()" class="btn btn-sm btn-default"><i class="fa fa-search"></i> </button> </div>
+            </div>
+
+        </th>
+    </tr>
+</script>

@@ -1,0 +1,80 @@
+
+
+<div class="container">
+    <div class="row mt-lg-4 mt-md-2">
+        <div class="col pt-lg-2">
+
+        </div>
+
+    </div>
+    <form class="form-horizontal" role="form" name="myForm">
+        <div class="row">
+            <div class="col-md-4 offset-md-4">
+                <div class="card login-form ">
+                    <div class="card-body text-center mb-0">
+                        <H4 class="text-muted  pt-2">Đăng nhập V-Connect</H4>
+                        <img src="/lock.png">
+
+
+
+                    </div>
+
+                    <div class="card-body" ng-class="!login.message?'pt-lg-1':'mt-0'"  id="loginForm" >
+
+                        <div class="alert-warning alert" ng-if="login.message" >{{login.message}}</div>
+
+                        <div class="form-group">
+                            <label  class="text-muted "  > Enterprise number </label>
+                            <input class="form-control "   required="true"   type="text" ng-model="login.email" placeholder="Email">
+
+
+                        </div>
+                        <div class="form-group">
+                            <label  class="text-muted ">Mật khẩu</label>
+                            <input class="form-control" type="password"  min="5" required="true" ng-model="login.password" placeholder="Mật khẩu">
+
+
+                        </div>
+                        <div class="form-group text-center  pl-1">
+
+                            <img src="/images/captcha" id="sbccaptcha" class="img rounded" style="width: 98%;">
+
+
+                        </div>
+                        <!--<div class="form-row">-->
+                            <!--<div class="form-group col-5">-->
+
+                            <!--</div>-->
+                            <!--<div class="form-group  col-7 text-right">-->
+                                <!--<button class="btn btn-primary   btn-lg" ng-click="loginMe()"> Tiếp tục-->
+                                <!--</button>-->
+                            <!--</div>-->
+                        <!--</div>-->
+                        <div class="form-row">
+                            <div class="form-group col-6">
+                                <div class="form-group ">
+                                    <input class="form-control " ng-class="loginErrorCaptcha?'is-invalid':''"
+                                           required="false" ng-model="login.captcha" placeholder="Mã xác nhận">
+                                    <div class="invalid-feedback">
+                                        Mã xác nhận không khớp
+                                    </div>
+                                    <a href="" ng-click="notShowCapcha()" class="small text-muted pl-2">Không hiển thị
+                                        ảnh ?</a>
+                                </div>
+                            </div>
+                            <div class="form-group  col-6 text-right">
+                                <button class="btn btn-primary  btn-block btn-lg " ng-click="loginMe()"> Tiếp tục
+                                </button>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+

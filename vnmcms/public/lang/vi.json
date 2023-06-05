@@ -1,0 +1,353 @@
+{
+  "LBL":{
+    "SELECT":"Chọn",
+    "CREATED_AT":"Ngày tạo",
+    "UPDATED_AT":"Ngày cập nhật",
+    "SIGN_OUT":"Thoát",
+    "FROM_DATE":"Từ ngày",
+    "TO_DATE":"Tới ngày",
+    "OPTIONAL":"Tùy chọn",
+    "CHANGE_PASS":"Đổi mật khẩu",
+    "TIME_RANGE":{
+      "TITLE":"Khoảng thời gian",
+      "DAY":"Hôm nay",
+      "WEEK":"1 tuần",
+      "MONTH":"1 tháng",
+      "QUARTER":"3 tháng",
+      "YEAR":"1 năm",
+      "Y2D":"Từ đầu năm",
+      "MANUAL":"Chọn ngày"
+    },
+    "STATUS":{"TITLE":"Tình trạng","0":"Kích hoạt", "1":"Tạm ngưng","2":"Hủy"},
+    "USER":{"EMAIL":"Email",
+      "NAME":"Họ tên",
+      "ROLE":"Quyền",
+      "ADD":"Thêm mới người dùng",
+
+      "EDIT":"Chỉnh sửa thông tin người dùng",
+      "PASSWORD":"Mật khẩu",
+      "PASSWORD_HIN":"Mật khẩu ngẫu nhiên và không gửi qua email",
+      "LIST":"Danh sách tài khoản",
+      "RESET_PASSWORD":"Đổi lại mật khẩu"
+
+    }
+  },
+  "CRUD":{
+    "TITLE":"Hành động",
+    "COG":"Thiết lập",
+    "C":"Thêm mới",
+    "U":"Cập nhật",
+    "R":"Xem",
+    "E":"Sửa",
+    "D":"Xóa",
+
+    "M":"Chuyển",
+    "OK":"Xong",
+    "NO":"Hủy",
+    "STATUS":{"TITLE":"Tình trạng","0":"Tạm ngưng", "1":"Kích hoạt"}
+  },
+  "NAV":{
+    "HOME":"Trang chủ",
+    "CUSTOMER":"Khách hàng",
+    "REPORT":"Báo cáo",
+    "USERS":"Người dùng",
+    "SEARCH_BTN":"Tìm kiếm",
+    "SERVICES":"Gói cước",
+    "SIP_TRUNK":"Call tracking",
+    "USER":"Quản lý tài khoản",
+    "SETTING":"Cài đặt",
+    "CHARGING":"Charge bù cước",
+    "BLACK_LIST":"Chặn DNC"
+  },
+  "ARTICLE":{
+    "HEADER":{"TITLE":"Article","DESC":"Article description"},
+    "NAV":{"LIST":"List article", "CREATE":"Add new article", "MOD":"Manager article"}
+  },
+  "LOGIN":{
+    "invalid_email_or_password":"Sai mật khẩu hoặc email, xin thử lại",
+    "you_have_no_permission_to_access":"Tài khoản của bạn đã bị khóa, xin liên hệ quản trị để biết thêm chi tiết",
+    "COMPLETE":"Đăng nhập thành công, vui lòng chờ lát để thiết lập hệ thống",
+    "captcha_verify_failed":"Xác nhận captcha không khớp. Xin thử lại",
+    "captcha_empty":"Bạn chưa điền captcha",
+    "password_empty":"Bạn chưa điền mật khẩu",
+    "email_empty":"Bạn chưa điền email"
+  },
+  "CUSTOMER": {
+    "ADD":{"TITLE":"Thêm mới khách hàng","STATUS":"Tình trạng khách hàng"},
+    "STATUS":{"1":"Tạm ngưng", "2":"Hủy", "0":"Đang hoạt động"},
+    "INFO":"Thông tin khách hàng",
+    "LIST":"Quản lý khách hàng",
+    "ID":"ID",
+    "CUS_NAME":"Tên khách hàng",
+    "COMPANYNAME":"Tên công ty",
+    "TAXCODE":"Mã số thuế",
+    "LICENSENO":"Số ĐK Kinh doanh",
+    "ISSUEDBY":"Nơi cấp",
+    "DATEOFISSUE":"Ngày cấp",
+      "FIRSTNAME":"Họ",
+    "MIDINIT":"đệm",
+    "LASTNAME":"Tên",
+    "ADDR":"Địa chỉ",
+    "ENTERPRISE_NUMBER":"Số đại diện",
+    "CITY":"Thành phố",
+    "STATE":"Bang/Vùng",
+    "ZIP":"Mã Zipcode",
+    "COUNTRY":"Quốc gia",
+    "PHONE1":"Số điện thoại 1",
+    "PHONE2":"Số điện thoại 2 ",
+    "EMAIL":"Email",
+    "BCC":"Email BCC",
+    "SEND_STATISTICS":"Gửi báo cáo",
+    "BLOCKED":"Khóa",
+    "CAPACITY":"Dung lượng",
+    "DESCRIPTION":"Ghi chú",
+    "SERVICE_ID":"ID Gói cước",
+    "SERVICE_NAME":"Gói cước",
+    "PRODUCT_CODE":"Mã gói cước",
+    "SIP":{
+      "IP_AUTH":"IP Auth",
+      "IP_PROXY":"IP Proxy",
+      "DESTINATION":"IP Destination",
+      "HOTLINE_NUMBERS":"Hotline number(s)",
+      "SPLIT_CONTRACT":"Tách hợp đồng từ",
+      "FEE_LIMIT":"Hạn mức mặc định",
+      "USE_TOS":"Có dùng TOS (tùy chọn), cách nhau bởi dấu phẩy ",
+      "TOS_PRODUCT_CODE":"Mã gói cước TOS theo từng số hotlines, cách nhau bởi dấu phẩy"
+
+    }
+  },
+  "SERVICE":{
+    "NAME":{"HOTLINE":"Hotline", "USER":"Tài khoản", "OPTION":"Cơ bản","QUANTITY":"Sản lượng", "SMS":"Tin nhắn"},
+    "TITLE":"Quản lý gói cước",
+    "DESCRIPTION":"Quản lý các gói cước trên hệ thống",
+    "SERVICE_NAME":"Tên gói cước",
+    "ID":"ID",
+    "PRODUCT_CODE":"Mã gói cước",
+    "LIST":"Danh sách các gói cước",
+    "ADD":"Thêm mới gói cước",
+    "EDIT":"Chỉnh sửa gói cước",
+    "TYPE":{"TITLE":"Loại cước", "0":"Trọn gói","1":"Tính theo User"},
+    "STATUS":{"TITLE":"Trạng thái", "0":"Đang sử dụng","1":"Tạm ngưng","2":"Hủy"},
+    "CALL_TYPE":{"TITLE":"Loại cước", "1":"Nội mạng","2":"Ngoại mạng"},
+    "OPTION_TYPE":{"1": "EXTENSION", "2": "CALL_RECORD", "3": "DATA_STORAGE", "4": "API", "5": "SOFTPHONE_3C"},
+    "QUANTITY_TYPE":{"0":"Nội mạng","1":"Ngoại mạng","2":"Quốc tế"},
+    "QUANTITY_RESUB":{"0":"Không","1":"Tự gia hạn"},
+    "PRICE":{
+      "ZONE":{
+        "TITLE":"Cấu hình liên mạng"
+      },
+      "TYPE":{"TITLE":"Loại",
+        "1":"Nội mạng",
+        "2":"Ngoại mạng",
+        "3":"Quốc tế"
+         },
+      "CALL_TYPE":{"TITLE":"Kiểu",
+        "0":"Ra ngoài",
+        "1":"Nội bộ",
+        "2":"Ngoại mạng"
+         },
+      "SMS_TYPE":{"TITLE":"Loại giá",
+        "0":"MO",
+        "1":"MT"
+
+         },
+      "USER":{
+        "TITLE":"Cước phí theo user",
+        "FROM_USER":"Từ người dùng thứ",
+        "TO_USER":"Tới ",
+        "PRICE":"Giá"},
+      "HOTLINE":{
+        "TITLE":"Cước phí hotline",
+        "FROM_HOTLINE_NUM":"Từ hotline thứ",
+        "TO_HOTLINE_NUM":"Tới",
+        "PRICE":"Giá",
+      "INIT_PRICE":"Phí khởi tạo"},
+      "CALL":{
+
+        "TITLE":"Cước cuộc gọi",
+        "FROM_MIN":"Từ giây thứ",
+        "TO_MIN":"Tới giây",
+        "TYPE":"Kiểu",
+        "CALL_FEES":"Giá (đ)",
+        "CALL_TYPE":"Loại"
+
+      }, "SMS":{
+        "TITLE":"Cước tin nhắn",
+        "FROM_SMS":"Từ sms thứ",
+        "TO_SMS":"Tới sms thứ",
+        "TYPE":"Kiểu",
+        "SMS_FEES":"Giá (đ)",
+        "SMS_TYPE":"Loại"
+
+      },"QUANTITY":{
+        "TITLE":"Cước sản lượng",
+        "MIN":"Số giây",
+        "PRICE":"Giá",
+        "TYPE":"Kiểu",
+        "DESCRIPTION":"Ghi chú",
+        "STATUS":"Tình trạng"
+
+      },
+      "OPTION":{
+        "TITLE":"Dịch vụ cơ bản",
+       "FROM":"Từ",
+        "TO":"Tới",
+        "PRICE":"Giá",
+        "TYPE":"Kiểu",
+        "DESCRIPTION":"Dịch vụ",
+
+      "WARNING":"Sửa thông tin này có thể ảnh hưởng đến các khách hàng khác do dùng chung dữ liệu"}
+
+    }
+
+  },
+  "SIP":{
+    "TITLE":"Giám sát cuộc gọi",
+    "SIP_NOT_SET":"Chưa thiết lập sip cho khách hàng này",
+    "ACL":{"TITLE":"ALC",
+      "IP_AUTH":"Ip Auth",
+      "IP_PROXY":"Ip Proxy",
+      "BLOCK_REGEX_CALLER":"Block Regex Caller",
+      "BLOCK_REGEX_CALLEE":"Block Regex Callee",
+      "ALLOW_REGEX_CALLER":"Allow Regex Caller",
+      "ALLOW_REGEX_CALLEE":"Allow Regex Callee",
+      "DESCRIPTION":"Ghi chú"
+    },
+    "ROUTING":{"TITLE":"Routing",
+      "DIRECTION":"Direction",
+      "CALLER":"Hotline",
+      "CALLEE":"Callee",
+      "DESTINATION":"Destination",
+      "PRIORITY":"Ưu tiên",
+      "DESCRIPTION":"Ghi chú",
+      "VENDOR_ID":"Vendor id",
+      "SIP_PROFILE_ID":"Sip profile id",
+      "ACL_BACKUP_ID":"Acl backup id"
+    },
+    "CALL":{
+      "HISTORY":"Lịch sử cuộc gọi",
+      "NO_HISTORY":"Không có cuộc gọi nào",
+      "SEARCH_IN":"Tìm kiếm cuộc gọi",
+      "DIRECTION":{"IN":"Gọi vào", "OUT":"Gọi ra"},
+      "TRACKING":"Tra soát cuộc gọi",
+      "SETUP_TIME":"Ngày gọi",
+      "CONNECT_TIME":"Cuộc gọi bắt đầu",
+      "DISCONNECT_TIME":"Cuộc gọi kết thúc",
+      "DISCONNECT_CAUSE":"Lý do",
+      "FROM_NETWORK_IP":"Từ IP mạng",
+      "TO_NETWORK_IP":"Tới IP mạng",
+      "DURATION":"Thời lượng",
+      "CLI":"Số máy gọi",
+      "CLD":"Số máy nhận",
+      "CHARGE_STATUS":"Tình trạng tính phí",
+      "CHARGE_STATUS_VAL":{
+        "null":"--",
+        "0":"Mới",
+        "1":"Đang xử lý",
+        "2":"Đã xong",
+        "-1":"Lỗi",
+        "-2":"Đã gửi nhưng lỗi"
+      },
+      "ID":"ID cuộc gọi",
+      "QUALITY_MOS":"Quality mos",
+      "QUALITY_LARGEST_JB":"Quality largest jb",
+      "QUALITY_JITTER_BURST_RATE":"Quality jitter burst rate"
+
+    }
+
+  },
+  "REPORT":{
+    "TITLE":"Báo cáo",
+    "CHART":"Biểu đồ",
+    "FLOW":{
+      "CALL":"Cuộc gọi",
+      "CALL_DURATION":"Sản lượng",
+      "DAY":"Ngày",
+      "AMOUNT":"Số lượng"
+    },
+
+    "QUANTITY":{
+      "CALL_FEE":"Cuộc gọi",
+      "SMS_FEE":"Tin nhắn",
+      "SUB_FEE":"Cước Sub",
+      "TOTAL_FEE":"Tổng cộng"},
+    "NAV":{
+      "QUANTITY":"Sản lượng",
+      "FLOW":"Lưu lượng",
+      "CUSTOMER":"Khách hàng",
+      "MONTHLY_AUDIT":"Thống kê tháng"
+    }
+  },
+  "NORMAL_CLEARING":"Bình thường",
+  "NORMAL_UNSPECIFIED":"Lỗi không rõ ràng",
+  "ORIGINATOR_CANCEL":"Người gọi hủy máy",
+  "USER_BUSY":"Người nhận bận",
+  "UNALLOCATED_NUMBER":"Không tìm thấy số",
+  "CALL_REJECTED":"Người nhận từ chối",
+  "BILLING":{
+    "000002":"Thoại",
+    "000001":"Sub",
+    "000003":"Tin nhắn",
+    "TYPE":"Loại cước",
+    "AMOUNT":"Đơn giá",
+    "COUNT":"Số lượng",
+    "TOTAL":"Thành tiền",
+    "CALL":{
+      "1":"Nội mạng",
+      "2":"Ngoại mạng"
+    }
+  },
+  "STATE":{
+    "ALL":"Tất cả"
+  },
+  "LBL_NO_DATA_FOUND":"Không tìm thấy dữ liệu",
+  "LBL_ERROR_CHARGE_FROM":"Lỗi tính cước từ:",
+  "LBL_ERROR_CODE":"Mã lỗi:",
+  "PREFIX":{
+    "TITLE":"Thiết lập prefix",
+    "ADD":"Thêm mới prefix",
+    "EDIT":"Chỉnh sửa prefix",
+    "SERVICE_CONFIG_ID":"ID gói cước",
+    "PREFIX_TYPE_ID":"Loại",
+    "DESCRIPTION":"Nội dung",
+    "PREFIX_CALLER":"Prefix Hotline",
+    "PREFIX_CALLED":"Prefix số bị gọi",
+    "PREFIX_CALLER_MATCH_SWITCH":"Kiểu so sánh số hotline",
+    "PREFIX_CALLED_MATCH_SWITCH":"Kiểu so sánh số bị gọi",
+    "PREFIX_MATCH_CONSTRAINT":"Điều kiện giữa prefix hotline và số bị gọi",
+    "CHARGE_BLOCK_TYPE":"Kiểu block cước",
+    "PRIORITY":"Độ ưu tiên (Ưu tiên số nhỏ trước)"
+
+  },
+  "PAUSE_STATE":{
+    "10":"Admin chặn 2 chiều",
+    "11":"Admin chặn gọi ra",
+    "12":"Admin chặn gọi vào",
+    "13":"BCCS Api chặn 2 chiều",
+    "14":"Payment chặn 2 chiều"
+  },
+  "SIP_ERRORCODE":{
+    "100":"Thành công",
+    "400":"ROUTING_AUTHEN_CODE_ERROR",
+    "401":"ROUTING_AUTHEN_CODE_BLOCK_CALLER",
+    "402":"ROUTING_AUTHEN_CODE_BLOCK_CALLEE",
+    "403":"ROUTING_AUTHEN_CODE_BLOCK_IP",
+    "404":"ROUTING_AUTHEN_CODE_BLOCK_FEE",
+    "500":"ND91-ERROR",
+    "501":"ND91-DNC",
+    "502":"ND91-197",
+    "503":"ND91-CM",
+    "504":"ND91-QUOTA",
+    "506":"ND91-QLTTTT",
+    "505":"ND91-TIME_RANGE",
+    "507":"ND91-ERROR_QUOTA_DAY",
+    "508":"ND91-ERROR_QUOTA_MONTH",
+    "711":"ND91-BLACKLIST",
+    "480":"480",
+    "486":"486",
+    "0":"0",
+    "null":"--"
+
+  }
+
+}

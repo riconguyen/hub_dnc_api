@@ -1,0 +1,109 @@
+<div class="container-fluid" ng-if="entity.VIEW_DASHBOARD">
+    <div class="row mt-2">
+        <div class="col mt-2">
+            <table class="table table-bordered small bg-white">
+                <tr>
+                    <th>Giờ</th>
+                    <th class="text-muted small" ng-repeat="hour in dailyFlow.hour">{{hour < 10?"0"+hour:hour}}</th>
+                </tr>
+                <tr class="bg-light">
+                    <td>Gọi thành công</td>
+                    <td ng-repeat="hour in dailyFlow.hour" class="text-center">
+                        <span ng-repeat="d in dailyFlow.call_success" ng-if="d.hour==hour">
+                            <B class="text-success">{{d.num_of_call}}</B>
+                            <p class="small text-muted">{{d.total_minute}} (s)</p>
+
+                        </span>
+                    </td>
+                <tr   >
+                    <td>Gọi  không gặp khách</td>
+                    <td ng-repeat="hour in dailyFlow.hour"  class="text-center">
+                        <span ng-repeat="d in dailyFlow.call_failed" ng-if="d.hour==hour" class="text-warning">{{d.num_of_call}}</span>
+                    </td>
+                </tr>
+                <tr>
+                <td colspan="100" class="text-right">
+
+                    <ul class="list-inline justify-content-center">
+                        <li class="list-inline-item"><span class="text-muted"> TỪ: </span>{{dailyFlow.date.start}}</li>
+                        <li class="list-inline-item"><span class="text-muted"> TỚI:</span> {{dailyFlow.date.end}}</li>
+                        <li class="list-inline-item"><span class="text-muted"> TỔNG CUỘC GỌI:</span> {{dailyFlow.total.failed+ dailyFlow.total.success}}</li>
+                        <li class="list-inline-item text-success"><span class="text-muted"> GỌI THÀNH CÔNG:</span> {{dailyFlow.total.success}}</li>
+                        <li class="list-inline-item text-danger"><span class="text-muted"> GỌI KHÔNG GẶP KHÁCH:</span> {{dailyFlow.total.failed}}</li>
+                        <li class="list-inline-item"><span class="text-muted"> LƯU LƯỢNG:</span> {{dailyFlow.total.success_time}} (GIÂY)</li>
+
+                    </ul>
+                </td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col pt-2">
+
+
+            <div class="card">
+                <div class="card-header">Toàn hệ thống đang có</div>
+                <div class="card-body row">
+                    <div class="col-md-3 col-sm-4 ">
+                        <label> <i class="fa fa-users"></i> TỔNG KHÁCH HÀNG </label>
+                        <div>
+                        <h4 class="text-primary">
+                        {{dashboard.customer.all|number:0}} khách</h4><hr>
+                        <h6 class="text-success"> {{dashboard.customer.active|number:0}} đang hoạt động</h6>
+                        <h6 class="text-warning"> {{dashboard.customer.inactive|number:0}} tạm ngưng</h6>
+                        <h6 class="text-secondary"> {{dashboard.customer.cancel|number:0}} đã hủy</h6>
+                        <h6 class="text-danger" ng-if="dailyFlow.overcharge> 0"> {{dailyFlow.overcharge|number:0}} lỗi cước (tính từ đầu tháng)</h6>
+                        <h6 class="text-info" ng-if="dailyFlow.overcharge== 0"> {{dailyFlow.overcharge|number:0}} lỗi cước (tính từ đầu tháng)</h6>
+                        </div>
+
+                    </div>
+                    <div class="col-md-3 col-sm-4 ">
+                        <hr class="d-md-none d-sm-none d-block">
+                        <label> <i class="fa fa-mobile"></i> TỔNG SỐ HOTLINE</label>
+                        <div >
+                        <h4 class="text-primary">
+                            {{dashboard.hotline.all|number:0}} hotline</h4><hr>
+                        <h6 class="text-success">   {{dashboard.hotline.active|number:0}} đang hoạt động</h6>
+                        <h6 class="text-warning">   {{dashboard.hotline.inactive|number:0}} tạm ngưng</h6>
+                        <h6 class="text-secondary"> {{dashboard.hotline.cancel|number:0}} đã hủy</h6>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-4  ">
+                        <hr class="d-md-none d-sm-none d-block">
+                        <label> <i class="fa fa-phone"></i> SẢN LƯỢNG TRONG THÁNG</label>
+                        <div>
+                        <h4  class="text-primary"> {{dashboard.call.all|number:0}} cuộc gọi</h4><hr>
+                        <h6 class="text-success">   {{dashboard.call.success|number:0}}  cuộc gọi gặp khách</h6>
+                        <h6 class="text-warning">   {{dashboard.call.failed|number:0}}  cuộc gọi không gặp khách</h6>
+                        <h6 class="text-secondary"> {{dashboard.call.duration|number:0}}  phút gọi</h6>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-12   text-sm-left ">
+                        <hr class="d-md-none d-sm-block d-block">
+                        <label> <i class="fa fa-dollar"></i> TỔNG DOANH SỐ TRONG THÁNG</label>
+                        <div >
+                            <h4 class="text-primary">{{dashboard.amount.all|number:0}} <sup class="small text-muted">(đ)</sup>   </h4>
+                            <hr>
+                            <h6 class="text-secondary">     {{dashboard.amount.call|number:0}} <sup class="small text-muted">(đ)</sup>  Cước thoại</h6>
+                              <h6 class="text-secondary">   {{dashboard.amount.sms|number:0}}  <sup class="small text-muted">(đ)</sup> Cước sms</h6>
+                            <h6 class="text-secondary">    {{dashboard.amount.sub|number:0}} <sup class="small text-muted">(đ)</sup> Cước sub </h6>
+                        </div>
+
+                    </div>
+
+
+
+
+                </div>
+            </div>
+           <p class="pt-5">
+
+           </p>
+
+        </div>
+    </div>
+
+</div>

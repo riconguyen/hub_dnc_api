@@ -1,0 +1,55 @@
+<div class="container-fluid">
+<div class="row mt-2">
+    <div class="col-md-8 offset-2">
+        <div class="card">
+
+        <div class="card-header"> {{"SIP.TITLE"|translate}}: {{sipCustomer.companyname}}</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                <h5>{{"SIP.ACL.TITLE"|translate}}</h5>
+                <div class="form-group"><label>{{"SIP.ACL.IP_AUTH"|translate}}</label><input type="text" class="form-control" ng-model="sip.acl.ip_auth"> </div>
+                <div class="form-group"><label>{{"SIP.ACL.IP_PROXY"|translate}}</label><input type="text" class="form-control" ng-model="sip.acl.ip_proxy"> </div>
+                <!--<div class="form-group"><label>{{"SIP.ACL.BLOCK_REGEX_CALLER"|translate}}</label><input type="text" class="form-control" ng-model="sip.acl.block_regex_caller"> </div>-->
+                 <!--<div class="form-group"><label>{{"SIP.ACL.ALLOW_REGEX_CALLER"|translate}}</label><input type="text" class="form-control" ng-model="sip.acl.allow_regex_caller"> </div>-->
+                 <div class="form-group"><label>{{"SIP.ACL.DESCRIPTION"|translate}}</label><input type="text" class="form-control" ng-model="sip.acl.description"> </div>
+                </div>
+                <div class="col-md-6">
+                <h5>{{"SIP.ROUTING.TITLE"|translate}}</h5>
+                <div class="form-group"><label>{{"SIP.ROUTING.CALLER"|translate}}</label><input type="text" class="form-control" ng-model="sip.routing.caller"> </div>
+                <!--<div class="form-group"><label>{{"SIP.ROUTING.CALLEE"|translate}}</label><input type="text" class="form-control" ng-model="sip.routing.callee"> </div>-->
+                <div class="form-group"><label>{{"SIP.ROUTING.DESTINATION"|translate}}</label><input type="text" class="form-control" ng-model="sip.routing.destination"> </div>
+                <!--<div class="form-group"><label>{{"SIP.ROUTING.PRIORITY"|translate}}</label><input type="text" class="form-control" ng-model="sip.routing.priority"> </div>-->
+                <!--<div class="form-group"><label>{{"SIP.ROUTING.ACL_BACKUP_ID"|translate}}</label><input type="text" class="form-control" ng-model="sip.routing.acl_backup_id"> </div>-->
+
+                <div class="form-group">
+
+                    <button ng-if="!sipCustomer.sip.acl" class="btn btn-primary" ng-click="saveSip()"><i class="fa fa-cog"></i> {{"CRUD.C"|translate}} </button>
+                    <button ng-if="sipCustomer.sip.acl" class="btn btn-warning" ng-click="saveSip()"><i class="fa fa-save"></i> {{"CRUD.U"|translate}} </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+</div>
+
+
+
+</div>
+
+
+
+<!--set @ip_auth = '1.1.1.10';-->
+<!--set @ip_proxy = '2.2.2.10';-->
+<!--set @pbx_ip_destination = '1.1.1.10:5060';-->
+<!--set @hotline = '0900000000';-->
+<!--set @description = 'caresoft demo pbx';-->
+<!--set @name = 'cus19';-->
+<!--set @ip_auth = '1.1.1.10';-->
+<!--set @ip_proxy = '2.2.2.10';-->
+<!--set @pbx_ip_destination = '1.1.1.10:5060';-->
+<!--set @hotline = '0900000000';-->
+<!--set @description = 'caresoft demo pbx';-->

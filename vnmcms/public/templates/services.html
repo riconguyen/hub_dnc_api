@@ -1,0 +1,712 @@
+<div class="container-fluid mt-2">
+    <div class="row">
+        <div class="col  d-flex justify-content-between">
+            <h4 class="display-4 mt-2 pl-1">QUẢN LÝ GÓI CƯỚC
+            </h4>
+            <button class="btn btn-secondary" ng-show="serviceConfig" ng-click="serviceConfig=null"><i class="fa fa-times"></i> Trở về  </button>
+        </div>
+    </div>
+</div>
+
+
+
+<div style="position: fixed; bottom: 10px; right: 10px; z-index: 10" ng-if="entity.ADD_SERVICE_CONFIG ==1">
+    <a class="btn btn-primary"  href="/#!/addService" >
+        <i class="fa fa-plus"></i>
+    </a>
+</div>
+<div class="container-fluid">
+
+    <div class="row mt-2"  ng-show="!serviceConfig" >
+        <div class="col-12">
+
+            <div class="form-group mb-2">
+                <div class="input-group">
+                    <input type="text" class=" form-control" ng-model="servicesParam.query" placeholder="Tìm kiếm gói cước">
+
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" ng-click="getAllServices();">
+                            <i class="fa fa-search"></i> Lọc
+                        </button>
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+            <table ng-table-dynamic="serviceTableParams with serviceTableCols"
+
+                   class="tickets table table-condensed table-bordered table-striped small"
+                   style="margin-top: 10px;" template-header="serviceTableParams_template">
+
+
+                <tr ng-if="$data.length == 0 || $data == undefined">
+                    <td colspan="100" style="display:table-cell !important;text-align:center">
+                        {{'LBL_NO_DATA_FOUND'|translate}}
+                    </td>
+                </tr>
+                <!-- // FIX 20180905 -->
+                <tr ng-repeat="row in $data track by $index" ng-if="$data.length > 0">
+                    <td ng-repeat="col in serviceTableCols">
+
+                        <span ng-if="col.field !='status' &&col.field !='type' &&col.field !='action' && col.field !='service_name'"> {{row[col.field]}}</span>
+                        <span ng-if="col.field=='action' ">
+                            <div class="btn-group btn-group-sm btn-group-justified">
+                            <button class="btn btn-default btn-outline-secondary"  ng-if="entity.UPDATE_SERVICE_CONFIG" ng-click="viewServiceConfig(row,$index); "><i
+                                    class="fa fa-cogs"></i> Thiết lập </button>
+                            <button class="btn btn-secondary"  ng-if="entity.UPDATE_SERVICE_CONFIG" ng-click="editServiceTable(row); "><i
+                                    class="fa fa-edit"></i> Sửa </button>
+                        </div>
+                        </span>
+                        <span  ng-click="viewServiceConfig(row, $index); " ng-if="col.field=='service_name' "> {{row.service_name}}</span>
+                        <span  ng-if="col.field=='type' "> {{'SERVICE.TYPE.'+row.type|translate}}</span>
+                        <span  ng-if="col.field=='status' ">
+                        <span class="badge badge-success text-uppercase  p-1" ng-if="row.status==0">
+   {{'SERVICE.STATUS.'+row.status|translate}}
+                        </span>
+                             <span class="badge badge-warning text-uppercase  p-1" ng-if="row.status==1">
+   {{'SERVICE.STATUS.'+row.status|translate}}
+                        </span>
+    <span class="badge badge-secondary text-uppercase  p-1" ng-if="row.status==2">
+   {{'SERVICE.STATUS.'+row.status|translate}}
+                        </span>
+
+
+                        </span>
+
+                    </td>
+                </tr>
+
+
+            </table>
+
+
+            <!--<table   class="mt-1 table table-condensed table-bordered table-striped table-sm small table-responsive-sm bg-white">-->
+                <!--<tr>-->
+                    <!--<th class="header bg-white">{{"SERVICE.SERVICE_NAME"|translate}}</th>-->
+                    <!--<th class="header bg-white">{{"SERVICE.PRODUCT_CODE"|translate}}</th>-->
+                    <!--<th class="header bg-white">{{"SERVICE.TYPE.TITLE"|translate}}</th>-->
+                    <!--<th class="header bg-white">{{"LBL.STATUS.TITLE"|translate}}</th>-->
+                    <!--<th class="header bg-white" ng-show="!currentService">{{"LBL.CREATED_AT"|translate}}</th>-->
+                    <!--<th class="header bg-white" ng-show="!currentService">{{"LBL.UPDATED_AT"|translate}}</th>-->
+                <!--</tr>-->
+                <!--<tr ng-repeat="service in lstServices">-->
+                    <!--<th class="text-primary" ng-click="viewServiceConfig(service)"><a href=""> {{service.service_name}}</a>-->
+
+                    <!--</th>-->
+                    <!--<td class="text-primary" ng-click="viewServiceConfig(service)"> {{service.product_code}}</td>-->
+                    <!--<td>-->
+                        <!--<span >{{'SERVICE.TYPE.'+service.type|translate}}</span>-->
+                    <!--</td>-->
+                    <!--<td class="app-status-color-{{service.status}}">-->
+
+                        <!--{{'LBL.STATUS.'+service.status|translate}}-->
+                    <!--</td>-->
+                    <!--<td ng-show="!currentService">{{service.created_at}}</td>-->
+                    <!--<td ng-show="!currentService">{{service.updated_at}}</td>-->
+                <!--</tr>-->
+            <!--</table>-->
+
+
+        </div>
+    </div>
+
+
+
+
+    <script id="serviceTableParams_template" type="text/ng-template">
+        <tr>
+            <th ng-repeat="column in serviceTableCols" class="header text-muted"
+                ng-click="serviceTableParams.sorting(column.sortable, serviceTableParams.isSortBy(column.sortable, 'asc') ? 'desc' : 'asc')"
+                ng-class="{'sort-asc': serviceTableParams.isSortBy(column.sortable, 'asc'), 'sort-desc': serviceTableParams.isSortBy(column.sortable, 'desc'), 'sortable': column.sortable}"
+            >
+                {{ column.title | translate }}
+            </th>
+        </tr>
+    </script>
+
+<div class="row mt-1" ng-show="serviceConfig"  >
+
+
+    <div  class="col-md-4 ">
+
+
+        <div class="card  mb-2">
+            <div class="card-header">
+                <span class="">THÔNG TIN GÓI CƯỚC: {{currentService.service_name}}   </span>
+            </div>
+            <div class="card-header"> {{currentService.product_code}}
+                <br>
+                <span class="badge" ng-class="currentService.status==0?'badge-success':'badge-warning'"
+                      ng-if="currentService.status==0 || currentService.status==1"> {{'LBL.STATUS.'+ currentService.status|translate}}</span>
+                <span class="badge badge-secondary" ng-if="currentService.status==2"> {{'LBL.STATUS.'+currentService.status|translate}}</span>
+                <!--<button class="btn btn-default btn-sm pull-right" ng-if="entity.UPDATE_SERVICE_CONFIG" ng-click="editService(); "><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>-->
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item text-right">
+                        <span class="text-muted float-left">
+                        {{'SERVICE.TYPE.TITLE'|translate}}
+                        </span>
+
+                        {{'SERVICE.TYPE.'+currentService.type|translate}}
+                    </li>
+                    <li class="list-group-item text-right">
+                        <span class="text-muted float-left">
+                        {{'LBL.CREATED_AT'|translate}}
+                        </span>
+                        <span >{{currentService.created_at}}</span>
+                    </li>  <li class="list-group-item text-right">
+                        <span class="text-muted float-left">
+                        {{'LBL.UPDATED_AT'|translate}}
+                        </span>
+                        <span  style="color:blue" ng-click="viewActivity(currentService.id);">{{currentService.updated_at}}</span>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+    <div class="col-md-8 ">
+        <!--<div class="card mb-2" ng-if="serviceConfig.hotline_price.length==0 || serviceConfig.config_price.length==0 || serviceConfig.call_price.length==0 ||  serviceConfig.sms_price.length==0 ||  serviceConfig.option_price.length==0 ">-->
+            <!--<div class="card-header">CẤU HÌNH GÓI CƯỚC</div>-->
+            <!--<div class="card-body">-->
+
+            <!--<div class="btn-group btn-group-vertical">-->
+                <!--<button ng-if="entity.SET_SERVICE_CONFIG" class="btn btn-primary btn-sm text-left" ng-if="serviceConfig.config_price.length==0" ng-click="activeConfigPrice(); "><i class="fa fa-user"></i> {{'CRUD.COG'|translate}} {{'SERVICE.PRICE.USER.TITLE'|translate}} </button>-->
+                <!--<button ng-if="entity.SET_SERVICE_CONFIG" class="btn btn-primary btn-sm text-left" ng-if="serviceConfig.hotline_price.length==0" ng-click="activeConfigHotlinePrice();"><i class="fa fa-tablet"></i> {{'CRUD.COG'|translate}} {{'SERVICE.PRICE.HOTLINE.TITLE'|translate}} </button>-->
+                <!--<button ng-if="entity.SET_SERVICE_CONFIG" class="btn btn-primary btn-sm text-left" ng-if="serviceConfig.call_price.length==0" ng-click="activeCallPrice();"><i class="fa fa-phone"></i> {{'CRUD.COG'|translate}} {{'SERVICE.PRICE.CALL.TITLE'|translate}} </button>-->
+                <!--<button ng-if="entity.SET_SERVICE_CONFIG" class="btn btn-primary btn-sm text-left" ng-if="serviceConfig.sms_price.length==0" ng-click="activeSmsPrice();"><i class="fa fa-comment"></i> {{'CRUD.COG'|translate}} {{'SERVICE.PRICE.SMS.TITLE'|translate}} </button>-->
+                <!--<button ng-if="entity.SET_SERVICE_CONFIG" class="btn btn-primary btn-sm text-left" ng-if="serviceConfig.option_price.length==0" ng-click="activeOptionPrice();"><i class="fa fa-server"></i> {{'CRUD.COG'|translate}} {{'SERVICE.PRICE.OPTION.TITLE'|translate}} </button>-->
+                <!--<button ng-if="entity.SET_SERVICE_CONFIG" class="btn btn-primary btn-sm text-left" ng-if="serviceConfig.quantity_price.length==0" ng-click="activeQuantityPrice();"><i class="fa fa-barcode"></i> {{'CRUD.COG'| translate}} {{'SERVICE.PRICE.QUANTITY.TITLE'|translate}}  </button>-->
+            <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+        <div class="card mb-2">
+            <div class="card-header">
+                {{"PREFIX.TITLE"|translate}}
+                <button  ng-if="entity.SET_SERVICE_CONFIG" ng-click="addNewPrefixType(currentService)" class="float-right  btn btn-primary"><i class=" fa fa-plus"></i> Thêm mới </button>
+            </div>
+            <div class="card-body">
+                <table class="small table">
+                    <tr><th> {{"PREFIX.PREFIX_TYPE_ID"|translate}}</th>
+                        <th>{{"PREFIX.DESCRIPTION"|translate}}</th>
+                        <th>{{"PREFIX.PREFIX_CALLER"|translate}}</th>
+                        <th>{{"PREFIX.PREFIX_CALLED"|translate}}</th>
+                        <th>{{"PREFIX.PRIORITY"|translate}}</th>
+                        <th>#</th>
+                    </tr>
+                    <tr ng-repeat="zone in currentService.lstServicePrefix" >
+                        <td>{{quantityTypeString[zone.prefix_type_id]}}</td>
+                        <td>{{zone.description}}</td>
+                        <td><span class="prefixcaller" data-toggle="tooltip" data-html="true" title="{{zone.prefix_caller}}">{{zone.prefix_caller}}</span> </td>
+                        <td><span class="prefixcaller" data-toggle="tooltip" data-html="true" title="{{zone.prefix_called}}">{{zone.prefix_called}}</span></td>
+                        <td class="text-right">{{zone.priority}}</td>
+                        <td>
+                        <div class="btn-group-sm btn-group">
+                            <button ng-if="entity.SET_SERVICE_CONFIG" class="btn  btn-link btn-sm" ng-click="editPrefixType(zone)" ng-if="zone.priority !=999"> <i class="fa fa-edit"></i> </button>
+                            <button ng-if="entity.SET_SERVICE_CONFIG" class="btn  btn-link btn-sm" ng-click="deletePrefixType(zone)" ng-if="zone.priority !=999"> <i class="fa fa-trash"></i> </button>
+                        </div>
+
+                        </td>
+                    </tr>
+                </table>
+
+
+             </div>
+            <div class="card-footer text-right">
+
+            </div>
+        </div>
+
+
+
+        <div   class="card mb-2">
+            <div class="card-header">{{'SERVICE.PRICE.USER.TITLE'|translate}}
+                <button class="btn btn-sm btn-primary float-right" ng-click="addConfigPrice()"
+                ng-if="entity.SET_SERVICE_CONFIG && serviceConfig.config_price[serviceConfig.config_price.length-1].to_user!=-1"
+                ><i class="fa fa-plus"></i> {{'CRUD.C'|translate}}</button>
+            </div>
+            <div class="card-body small">
+                <table class="table table-bordered table-sm ">
+                    <tr>
+                        <th   >{{'SERVICE.PRICE.USER.FROM_USER'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.USER.TO_USER'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.USER.PRICE'|translate}}</th>
+                        <th>{{'LBL.UPDATED_AT'|translate}}</th>
+
+                        <th class="text-right" style="width: 180px ">{{'CRUD.TITLE'|translate}}</th>
+                    </tr>
+                    <tr ng-repeat="config in serviceConfig.config_price" ng-class="config.status ==2?'text-muted':''" >
+                        <td class="text-right"  ng-if="!config.edit">{{config.from_user}}</td>
+                        <td class="text-right"  ng-if="!config.edit">{{config.to_user}}</td>
+                       <td  class="text-right" ng-if="!config.edit">{{config.price|number:0}}</td>
+
+                        <td ng-if="config.edit"><input type="number" string-to-number  ng-model="config.from_user" class="form-control"> </td>
+                        <td ng-if="config.edit"><input type="number"  string-to-number ng-model="config.to_user" class="form-control"></td>
+                        <td ng-if="config.edit"><input type="text"  ng-model="config.price" class="form-control"></td>
+
+
+
+
+                        <td >{{config.updated_at}}</td>
+
+
+                        <td class="text-right"  >
+                            <button  ng-if="!config.edit && entity.SET_SERVICE_CONFIG" class="btn btn-sm btn-default" ng-click="editConfigPrice(config); "><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>
+                            <button  ng-if="!config.edit && config.status !=2 && entity.SET_SERVICE_CONFIG" class="btn btn-sm btn-danger" ng-click="deleteConfigPrice(config); "><i class="fa fa-trash"></i> {{'CRUD.D'|translate}} </button>
+                            <button  ng-if="config.edit&& (config.from_user < config.to_user || config.to_user==-1) && entity.SET_SERVICE_CONFIG " class="btn btn-sm btn-warning" ng-click="saveConfigPrice(config); "><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+
+
+                            <!--<button class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}}-->
+                            <!--</button>-->
+                        </td>
+                    </tr>
+
+
+
+                </table>
+            </div>
+        </div>
+        <div   class=" card mb-2">
+            <div class="card-header">{{'SERVICE.PRICE.HOTLINE.TITLE'|translate}}
+                <button class="btn btn-sm btn-primary float-right" ng-if="entity.SET_SERVICE_CONFIG && serviceConfig.hotline_price[serviceConfig.hotline_price.length-1].to_hotline_num !=-1" ng-click="addConfigHotlinePrice()"><i class="fa fa-plus"></i> {{'CRUD.C'|translate}}</button>
+            </div>
+            <div class="card-body small">
+                <table class="table table-bordered table-sm">
+                    <tr>
+                        <th>{{'SERVICE.PRICE.HOTLINE.FROM_HOTLINE_NUM'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.HOTLINE.TO_HOTLINE_NUM'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.HOTLINE.PRICE'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.HOTLINE.INIT_PRICE'|translate}}</th>
+
+
+                        <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                        <th class="text-right" style="width: 180px ">{{'CRUD.TITLE'|translate}}</th>
+                    </tr>
+                    <tr ng-repeat="hotline in serviceConfig.hotline_price">
+                        <td class="text-right" ng-if="!hotline.edit">{{hotline.from_hotline_num}}</td>
+                        <td class="text-right" ng-if="!hotline.edit">{{hotline.to_hotline_num}}</td>
+                        <td class="text-right" ng-if="!hotline.edit">{{hotline.price}}</td>
+                        <td class="text-right" ng-if="!hotline.edit">{{hotline.init_price}}</td>
+
+
+                        <td ng-if="hotline.edit"><input class="form-control" type="number" string-to-number    ng-model="hotline.from_hotline_num"></td>
+                        <td ng-if="hotline.edit"><input class="form-control" type="number" string-to-number   ng-model="hotline.to_hotline_num"/></td>
+                        <td ng-if="hotline.edit"><input class="form-control" type="text"  ng-model="hotline.price"/></td>
+                        <td ng-if="hotline.edit"><input class="form-control" type="text"   ng-model="hotline.init_price"/></td>
+
+
+
+                        <td>{{hotline.updated_at}}</td>
+                        <td class="text-right" >
+                            <button  ng-if="!hotline.edit && entity.SET_SERVICE_CONFIG " class="btn btn-sm btn-default"  ng-click="editConfigHotlinePrice(hotline);"><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>
+                            <button  ng-if="!hotline.edit && hotline.status !=2 && entity.SET_SERVICE_CONFIG " class="btn btn-sm btn-danger" ng-click="deleteConfigHotlinePrice(hotline); "><i class="fa fa-trash"></i> {{'CRUD.D'|translate}} </button>
+
+                            <button  ng-if="hotline.edit && entity.SET_SERVICE_CONFIG && (hotline.from_hotline_num < hotline.to_hotline_num || hotline.to_hotline_num==-1)  "   class="btn btn-sm btn-warning" ng-click="saveConfigHotlinePrice(hotline)"><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+
+                            <!--<button class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}}-->
+                            <!--</button>-->
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+
+
+        <div  class=" card mb-2">
+            <div class="card-header">{{'SERVICE.PRICE.CALL.TITLE'|translate}}
+                <button ng-if="entity.SET_SERVICE_CONFIG" class="btn btn-sm btn-primary float-right" ng-click="addCallPrice()"><i class="fa fa-plus"></i> {{'CRUD.C'|translate}}</button>
+            </div>
+            <div class="card-body small">
+                <table class="table table-bordered table-sm">
+                    <tr>
+                        <th>{{'SERVICE.PRICE.CALL.CALL_TYPE'|translate}}</th>
+                        <th>{{'SERVICE.PRICE.CALL.TYPE'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.CALL.FROM_MIN'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.CALL.TO_MIN'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.CALL.CALL_FEES'|translate}}</th>
+
+
+                        <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                        <th class="text-right" style="width: 180px ">{{'CRUD.TITLE'|translate}}</th>
+                    </tr>
+                    <tr ng-repeat="call in serviceConfig.call_price" ng-class="call.status ==2?'text-muted':''">
+                        <!--<td ng-if="!call.edit">{{"SERVICE.PRICE.CALL_TYPE."+call.call_type|translate}}</td>-->
+                        <td ng-if="!call.edit">{{"SERVICE.PRICE.CALL_TYPE."+call.call_type|translate}}</td>
+                        <td ng-if="!call.edit">{{quantityTypeString[call.type]}}</td>
+                        <td class="text-right" ng-if="!call.edit">{{call.from_min}}</td>
+                        <td class="text-right" ng-if="!call.edit">{{call.to_min}}</td>
+                        <td class="text-right" ng-if="!call.edit">{{call.call_fees}}</td>
+
+
+                        <td ng-if="call.edit"><select class="form-control"   ng-model="call.call_type"
+                                                      ng-options="value.id as value.title for (key, value) in lstCallType">
+
+                            <option value="">Chọn </option>
+                        </select>
+
+                        </td>
+
+
+
+                        <td ng-if="call.edit">
+
+
+                            <select class="form-control  " ng-model="call.type"
+                                    ng-class="serviceConfigPrefixError.errors.prefix_type_id ?'is-invalid':''"
+                                    ng-options="item.id as item.name for item in  quantityTypes ">
+                                <option value="">Chọn</option>
+
+                            </select>
+
+                        </td>
+
+                        <td ng-if="call.edit">
+                            <input class="form-control"
+                                   ng-class="call.error.from_min?'is-invalid':''"
+
+                                   type="number" string-to-number  ng-model="call.from_min">
+                        <div class="is-invalid">
+                            {{call.error.from_min}}
+                        </div>
+                        </td>
+                        <td ng-if="call.edit">
+
+                            <input class="form-control"
+                                   ng-class="call.error.to_min?'is-invalid':''"
+                                   type="number" string-to-number  ng-model="call.to_min"/>
+                        <div class="is-invalid">
+                            {{call.error.to_min}}
+                        </div>
+                        </td>
+                        <td ng-if="call.edit">
+                            <input class="form-control"  type="text"
+                                   ng-class="call.error.call_fees?'is-invalid':''"
+                                   ng-model="call.call_fees"/>
+                        <div class="is-invalid">
+                            {{call.error.call_fees}}
+                        </div>
+                        </td>
+
+
+
+
+                        <td>{{call.updated_at}}</td>
+                        <td class="text-right"   >
+                            <button  ng-if="entity.SET_SERVICE_CONFIG &&  !call.edit" class="btn btn-sm btn-default"  ng-click="editCallPrice(call);"><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>
+                            <button  ng-if="entity.SET_SERVICE_CONFIG &&  !call.edit && call.status !=2" class="btn btn-sm btn-danger"  ng-click="deleteCallPrice(call);"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}} </button>
+                            <button  ng-if="entity.SET_SERVICE_CONFIG &&  call.edit " class="btn btn-sm btn-warning" ng-click="saveCallPrice(call)"><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+
+                            <!--<button class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}}-->
+                            <!--</button>-->
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+ <div  class=" card mb-2">
+            <div class="card-header">{{'SERVICE.PRICE.SMS.TITLE'|translate}}
+                <button ng-if="entity.SET_SERVICE_CONFIG"  class="btn btn-sm btn-primary float-right" ng-click="addSmsPrice()"><i class="fa fa-plus"></i> {{'CRUD.C'|translate}}</button>
+            </div>
+            <div class="card-body small">
+                <table class="table table-bordered table-sm">
+                    <tr>
+                        <th>{{'SERVICE.PRICE.SMS.TYPE'|translate}}</th>
+
+                        <th class="text-right" >{{'SERVICE.PRICE.SMS.FROM_SMS'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.SMS.TO_SMS'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.SMS.SMS_FEES'|translate}}</th>
+
+
+                        <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                        <th class="text-right" style="width: 180px ">{{'CRUD.TITLE'|translate}}</th>
+                    </tr>
+                    <tr ng-repeat="sms in serviceConfig.sms_price" ng-class="sms.status ==2?'text-muted':''">
+                        <td ng-if="!sms.edit">{{"SERVICE.CALL_TYPE."+sms.type|translate}}</td>
+
+                        <td class="text-right" ng-if="!sms.edit">{{sms.from_sms}}</td>
+                        <td class="text-right" ng-if="!sms.edit">{{sms.to_sms}}</td>
+                        <td class="text-right" ng-if="!sms.edit">{{sms.sms_fees}}</td>
+
+
+                        <td ng-if="sms.edit"><select class="form-control"     ng-model="sms.type"
+                    ng-options="value.id as value.title for (key, value) in lstSmsType"
+                        >
+                            <option value="">Chọn</option>
+
+
+                        </select></td>
+
+
+                        <td ng-if="sms.edit"><input class="form-control"  type="number" string-to-number   ng-model="sms.from_sms"></td>
+                        <td ng-if="sms.edit"><input class="form-control"  type="number" string-to-number   ng-model="sms.to_sms"/></td>
+                        <td ng-if="sms.edit"><input class="form-control" type="text"   ng-model="sms.sms_fees"/></td>
+
+
+
+                        <td>{{sms.updated_at}}</td>
+                        <td class="text-right"   >
+                            <button  ng-if="!sms.edit" class="btn btn-sm btn-default"  ng-click="editSmsPrice(sms);"><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>
+                            <button  ng-if="!sms.edit && sms.status !=2" class="btn btn-sm btn-danger"  ng-click="deleteSmsPrice(sms);"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}} </button>
+                            <button  ng-if="sms.edit &&(sms.from_sms < sms.to_sms || sms.to_sms==-1 )"  class="btn btn-sm btn-warning" ng-click="saveSmsPrice(sms)"><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+
+                            <!--<button class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}}-->
+                            <!--</button>-->
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+
+
+        <div   class=" card mb-2">
+            <div class="card-header">{{'SERVICE.PRICE.OPTION.TITLE'|translate}}
+                <button ng-if="entity.SET_SERVICE_CONFIG"  class="btn btn-sm btn-primary float-right"  ng-click="addOptionPrice()"><i class="fa fa-plus"></i> {{'CRUD.C'|translate}}</button>
+            </div>
+            <div class="card-body small">
+                <table class="table table-bordered table-sm">
+                    <tr>
+                        <th>{{'SERVICE.PRICE.OPTION.TYPE'|translate}}</th>
+                        <th class="text-right">{{'SERVICE.PRICE.OPTION.FROM'|translate}}</th>
+                        <th class="text-right">{{'SERVICE.PRICE.OPTION.TO'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.OPTION.PRICE'|translate}}</th>
+
+                        <th>{{'LBL.UPDATED_AT'|translate}}</th>
+                        <th class="text-right" style="width: 180px ">{{'CRUD.TITLE'|translate}}</th>
+                    </tr>
+                    <tr ng-repeat="option in serviceConfig.option_price" ng-class="option.status ==2?'text-muted':''">
+                        <td ng-if="!option.edit">{{optionType[option.type]}}</td>
+                        <td class="text-right" ng-if="!option.edit">{{option.from}}</td>
+                        <td class="text-right" ng-if="!option.edit">{{option.to}}</td>
+                        <td class="text-right" ng-if="!option.edit">{{option.price}}</td>
+
+                        <td ng-if="option.edit"><select class="form-control" ng-model="option.type" ng-options="key as value for (key , value)  in optionType"></select>
+                        </td>
+                        <td ng-if="option.edit"><input class="form-control"   type="number" string-to-number   ng-model="option.from"/></td>
+                        <td ng-if="option.edit"><input class="form-control"   type="number" string-to-number   ng-model="option.to"/></td>
+                        <td ng-if="option.edit"><input class="form-control"  type="text"    ng-model="option.price"/></td>
+
+
+
+                        <td>{{option.updated_at}}</td>
+                        <td class="text-right"  >
+                            <button  ng-if="entity.SET_SERVICE_CONFIG &&  !option.edit" class="btn btn-sm btn-default"  ng-click="editOptionPrice(option);"><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>
+                            <button  ng-if="entity.SET_SERVICE_CONFIG && !option.edit && option.status !=2" class="btn btn-sm btn-danger"  ng-click="deleteOptionPrice(option);"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}} </button>
+                            <button  ng-if="entity.SET_SERVICE_CONFIG && option.edit && (option.from < option.to || option.to==-1)" class="btn btn-sm btn-warning" ng-click="saveOptionPrice(option)"><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+
+                            <!--<button class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}}-->
+                            <!--</button>-->
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+
+        <div  class=" card mb-2">
+            <div class="card-header">{{'SERVICE.PRICE.QUANTITY.TITLE'|translate}}
+                <button ng-if="entity.SET_SERVICE_CONFIG"  class="btn btn-sm btn-primary float-right" ng-click="addQuantityPrice()"><i class="fa fa-plus"></i> {{'CRUD.C'|translate}}</button>
+            </div>
+            <div class="card-body small">
+                <table class="table table-bordered table-sm">
+                    <tr>
+                        <th>{{'SERVICE.PRICE.QUANTITY.DESCRIPTION'|translate}}</th>
+                        <th>{{'SERVICE.PRICE.QUANTITY.TYPE'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.QUANTITY.MIN'|translate}}</th>
+                        <th class="text-right" >{{'SERVICE.PRICE.QUANTITY.PRICE'|translate}}</th>
+
+
+                        <th class="text-right" style="width: 180px ">{{'CRUD.TITLE'|translate}}</th>
+                    </tr>
+                    <tr ng-repeat="quantity in serviceConfig.quantity_price|orderBy:'type'" ng-class="quantity.status ==2?'text-muted':''">
+                        <td ng-if="!quantity.edit">{{quantity.description}}</td>
+                        <td    ng-if="!quantity.edit">{{quantityType[quantity.type]}}</td>
+                        <td class="text-right" ng-if="!quantity.edit">{{quantity.min}}</td>
+                        <td class="text-right" ng-if="!quantity.edit">{{quantity.price}}</td>
+
+
+                        <td ng-if="quantity.edit"><input class="form-control" ng-model="quantity.description"></td>
+                        <td ng-if="quantity.edit"><input class="form-control" ng-model="quantity.min"/></td>
+                        <td ng-if="quantity.edit"><select class="form-control" ng-model="quantity.type" ng-options="key as value for (key , value) in quantityType"></select></td>
+                        <td ng-if="quantity.edit"><input class="form-control"  ng-model="quantity.price"/></td>
+
+
+
+
+                        <td class="text-right"  ng-if="quantity.status !=2">
+                            <!--<button  ng-if="!quantity.edit" class="btn btn-sm btn-default"  ng-click="editQuantityPrice(quantity);"><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>-->
+                            <button  ng-if="entity.SET_SERVICE_CONFIG && !quantity.edit" class="btn btn-sm btn-danger"  ng-click="deleteQuantityPrice(quantity);"><i class="fa fa-trash"></i> {{'CRUD.D'|translate}} </button>
+                            <button  ng-if="entity.SET_SERVICE_CONFIG && quantity.edit" class="btn btn-sm btn-warning" ng-click="saveQuantityPrice(quantity)"><i class="fa fa-save"></i> {{'CRUD.U'|translate}} </button>
+
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+</div>
+</div>
+
+<div class="modal" id="addPrefixType">
+    <div class="modal-dialog" style="min-width: 70%;">
+        <div class="modal-content">
+            <div class="modal-header">
+               <h5>{{zone.id?"PREFIX.EDIT":"PREFIX.ADD"|translate}}</h5>
+            </div>
+            <Div class="modal-body">
+                <div class="form-group form-row small"  >
+                    <div class="col-auto">
+                        <label>{{"PREFIX.PREFIX_TYPE_ID"|translate}}</label>
+                        <select class="form-control  form-control-sm" ng-model="zone.prefix_type_id"
+                                ng-class="serviceConfigPrefixError.errors.prefix_type_id ?'is-invalid':''"
+                                ng-options="item.id as item.name for item in  quantityTypes ">
+                            <option value="">Chọn</option>
+
+                        </select>
+                        <div class="invalid-feedback">
+                            {{serviceConfigPrefixError.errors.prefix_type_id[0]}}
+                        </div>
+                    </div> <div class="col-auto" >
+                        <label>Nhóm loại</label>
+                        <select class="form-control  form-control-sm" ng-model="zone.prefix_group"
+                                ng-class="serviceConfigPrefixError.errors.prefix_group ?'is-invalid':''"
+                               ng-options="item.id as item.group_name for item in quantityGroup">
+                            <option value="">--</option>
+                        </select>
+
+
+
+                        <div class="invalid-feedback">
+                            {{serviceConfigPrefixError.errors.prefix_group[0]}}
+                        </div>
+                    </div>
+                    <div class="col-auto" ng-if="zone.prefix_type_id==-1">
+                        <label>Tên loại</label>
+                        <input class="form-control  form-control-sm" ng-model="zone.prefix_type_name"
+                                ng-class="serviceConfigPrefixError.errors.prefix_type_name ?'is-invalid':''"    >
+
+
+
+                        <div class="invalid-feedback">
+                            {{serviceConfigPrefixError.errors.prefix_type_name[0]}}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <label>{{"PREFIX.PRIORITY"|translate}}</label>
+                        <input type="text" class="form-control  form-control-sm"
+                               ng-class="serviceConfigPrefixError.errors.priority ?'is-invalid':''"
+                               ng-model="zone.priority"/>
+
+                        <div class="invalid-feedback">
+                            {{serviceConfigPrefixError.errors.priority[0]}}
+                        </div>
+                    </div>
+                    <div class="col">
+                        <label>{{"PREFIX.DESCRIPTION"|translate}}</label>
+                        <input type="text"  class="form-control  form-control-sm"
+                               ng-class="serviceConfigPrefixError.errors.description ?'is-invalid':''"
+                               ng-model="zone.description">
+
+                        <div class="invalid-feedback">
+                            {{serviceConfigPrefixError.errors.description[0]}}
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group form-row small"  >
+
+
+                        <label> {{"PREFIX.PREFIX_CALLER"|translate}}</label>
+                        <textarea  rows="4"  class="form-control  form-control-sm"
+                                   ng-model="zone.prefix_caller"
+                                   placeholder="(096|097|098|086)"
+                        ></textarea>
+
+
+
+                </div>         <div class="form-group form-row small"  >
+
+
+                <label> {{"PREFIX.PREFIX_CALLED"|translate}}</label>
+                <textarea rows="4" class="form-control  form-control-sm" ng-model="zone.prefix_called"
+                placeholder="(096|097|098|086)"
+                ></textarea>
+
+            </div>
+
+
+
+                <div class="form-group form-row">
+                    <div class="col-auto">
+                        <label>{{"PREFIX.PREFIX_CALLER_MATCH_SWITCH"|translate}}</label>
+                        <select class="form-control form-control-sm" ng-model="zone.prefix_caller_match_switch"
+                                ng-class="serviceConfigPrefixError.errors.prefix_caller_match_switch ?'is-invalid':''"
+                                ng-options="item.id as item.name for item in  lstMatchSwitch ">
+                        </select>
+                        <div class="invalid-feedback">
+                            {{serviceConfigPrefixError.errors.prefix_caller_match_switch[0]}}
+                        </div>
+
+
+                    </div>
+                    <div class="col-auto">
+                        <label>{{"PREFIX.PREFIX_CALLED_MATCH_SWITCH"|translate}}</label>
+                        <select class="form-control  form-control-sm" ng-model="zone.prefix_called_match_switch"
+                                ng-class="serviceConfigPrefixError.errors.prefix_called_match_switch ?'is-invalid':''"
+                                ng-options="item.id as item.name for item in  lstMatchSwitch ">
+
+                        </select>
+                        <div class="invalid-feedback">
+                            {{serviceConfigPrefixError.errors.prefix_called_match_switch[0]}}
+                        </div>
+
+                    </div>
+
+                    <div class="col">
+                        <label>{{"PREFIX.PREFIX_MATCH_CONSTRAINT"|translate}}</label>
+                        <select class="form-control  form-control-sm" ng-model="zone.prefix_match_constraint"
+                                ng-class="serviceConfigPrefixError.errors.prefix_match_constraint?'is-invalid':''"
+                                ng-options="item.id as item.name for item in  lstMatchSwitchConstraint ">
+                        </select>
+                        <div class="invalid-feedback">
+                            {{serviceConfigPrefixError.errors.prefix_match_constraint[0]}}
+                        </div>
+
+
+                    </div>
+                    <div class="col">
+                        <label>{{"PREFIX.CHARGE_BLOCK_TYPE"|translate}}</label>
+                        <select class="form-control  form-control-sm" ng-model="zone.charge_block_type"
+                                ng-class="serviceConfigPrefixError.errors.charge_block_type?'is-invalid':''"
+                                ng-options="item.id as item.name for item in  lstChargeBlockType ">
+
+                        </select>
+                        <div class="invalid-feedback">
+                            {{serviceConfigPrefixError.errors.charge_block_type[0]}}
+                        </div>
+
+                    </div>
+
+
+
+                </div>
+
+
+            </Div>
+            <div class="modal-footer">
+                <button data-dismiss="modal" class="btn btn-secondary"><i class=" fa fa-times"></i> Cancel </button>
+                <button ng-click="savePrefixType(zone)" class="btn btn-warning"><i class=" fa fa-save"></i>  {{"CRUD.OK"|translate}}</button>
+
+            </div>
+        </div>
+    </div>
+</div>

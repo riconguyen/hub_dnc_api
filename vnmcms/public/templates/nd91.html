@@ -1,0 +1,438 @@
+<div class="container-fluid mt-2">
+    <div class="row">
+        <div class="col">
+            <h4 class="display-4 mt-2 pl-1">NGHỊ ĐỊNH 91</h4>
+        </div>
+    </div>
+</div>
+
+
+        <ul class="nav ml-1">
+            <li class="nav-item " ng-repeat="nav in lstNavNd91" ng-if="nav.permission"
+                ng-class="nav.active?'disabled':''">
+                <a class="nav-link"               ng-class="nav.active?'disabled':''" href="" ng-click="switchNavNd91(nav)">{{nav.title}}</a>
+            </li>
+
+        </ul>
+
+
+
+
+<div class="container-fluid mt-1">
+    <div class="row" ng-if="!nav91|| nav91=='dnc'">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    Cấu hình module DNC, 197, CM, QLTTTT
+
+
+                </div>
+                <div class="card-body row">
+
+                    <div class="col">
+                        <h5>Cấu hình</h5>
+
+
+                        <table class="table table-sm small table-bordered table-striped">
+                            <tr><th>Module key</th><th>Trạng thái</th> <th>Hành động</th></tr>
+                            <tr ng-repeat="item in lstDNCConfig">
+                                <td>{{item.config_name}}</td>
+                                <td >
+
+                                     <span class="badge badge-warning text-uppercase  p-1" ng-if="item.active==0">
+   {{'SERVICE.STATUS.1'|translate}}
+                        </span>
+                                    <span class="badge badge-success text-uppercase  p-1" ng-if="item.active==1">
+   {{'SERVICE.STATUS.0'|translate}}
+                        </span>
+                                    <span class="badge badge-secondary text-uppercase  p-1" ng-if="item.active==2">
+   {{'SERVICE.STATUS.2'|translate}}
+                        </span>
+                                </td>
+                                <!--<td>{{item.apply_rule==1?'Viettel':'Toàn mạng'}}</td>-->
+                                <td><button class="btn btn-sm btn-default" ng-click="editRuleDnc(item)"><i class="fa fa-pencil"></i> Sửa </button></td>
+                            </tr>
+                        </table>
+
+                    </div>
+                    <div class="col"  ng-if="dncConfig">
+                        <div class="card">
+                            <div class="card-header">
+
+                        <p>Cập nhật trạng thái  </p>
+                            </div>
+                            <div class="card-body">
+
+                            <div class="form-group">
+                                <label>Cập nhật cấu hình cho:</label>
+                                <input type="text" class="form-control-lg form-control" ng-value="dncConfig.config_name" disabled/>
+                            </div>
+                        <div class="form-group">
+                            <label>Trạng thái:</label>
+                            <div class="input-group">
+                                <div class="input-group-text"><input type="checkbox"
+                                                                     ng-model="dncConfig.active"
+                                                                     ng-true-value="1" ng-false-value="0"
+                                />
+                                    {{dncConfig.active?"Bật":"Tắt"}} trạng thái của {{dncConfig.config_key}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button class="btn btn-warning" ng-click="onSaveConfigDnc(dncConfig);">Lưu thiết lập</button>
+                            <button class="btn btn-secondary" ng-click="resetFormDnc()">Hủy</button>
+
+
+                    </div>
+                            </div>
+                        </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="row" ng-if="nav91=='quota'">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    Cấu hình module hạn mức được gọi của các hotline brandname
+
+
+                </div>
+                <div class="card-body row">
+
+                    <div class="col">
+
+
+                        <p> Hạn mức </p>
+
+
+                        <table class="table table-sm small  table-bordered table-striped ">
+                            <tr><th>Loại thuê bao bị gọi</th>
+                                <th  class="text-right">Số cuộc gọi trong ngày</th>
+                                <th  class="text-right">Số cuộc gọi trong tháng</th>
+                                <th class="text-right">Hành động</th>
+                            </tr>
+                            <tr ng-repeat="item in lstDncQuota">
+                                <td>{{item.name}}/{{item.subscription_key}}</td>
+                                <td class="text-right">{{item.max_call_per_day}}</td>
+                                <td class="text-right">{{item.max_call_per_month}}</td>
+
+
+                                <td class="text-right"><button class="btn btn-sm btn-default" ng-click="editQuotaItem(item)"><i class="fa fa-pencil"></i> Sửa </button></td>
+                            </tr>
+                        </table>
+
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-if="nav91=='time_range'">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    Cấu hình module khung thời gian được gọi của các hotline brandname
+
+
+                </div>
+                <div class="card-body row">
+
+                    <div class="col">
+
+                        <p>Cấu hình </p>
+
+
+                        <table class="table table-sm small  table-bordered  table-striped">
+                            <tr><th>Tên cấu hình</th><th>Khoảng thời gian cho phép</th><th>Ghi chú</th><th>Hành động</th></tr>
+                            <tr>
+                                <td>{{currentTimeRange.name}}</td>
+                                <td>Từ {{currentTimeRange.range1.from}}-{{currentTimeRange.range1.to}}  và  Từ {{currentTimeRange.range2.from}} - {{currentTimeRange.range2.to}}</td>
+                                <td>{{currentTimeRange.description    }}</td>
+
+
+                                <td><button class="btn btn-sm btn-secondary" ng-click="editTimeItem(currentTimeRange)"><i class="fa fa-pencil"></i> Sửa </button></td>
+                            </tr>
+                        </table>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-show="nav91=='report'">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <div class="nav">
+                        <a href="" class="nav-link text-muted" ng-class="nd91ReportNav=='general'?'text-muted':''" ng-click="switchNd91Report()">  Báo cáo  tổng quan</a>
+                        <span class="nav-divider"></span>
+                        <a href="" class="nav-link" ng-click="switchNd91Report('brandname')"  ng-class="nd91ReportNav=='brandname'?'text-muted':''">Tổng hợp theo brandname</a>
+                        <span class="nav-divider"></span>
+                        <!--<a href="" class="nav-link" ng-click="switchNd91Report('detail')"  ng-class="nd91ReportNav=='detail'?'text-muted':''">Chi tiết</a>-->
+                    </div>
+                    <div class="form-row">
+                        <div class="col" >
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">Hotline</div>
+
+                                </div>
+                                <input type="text" ng-model="reportParam.hotline" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">Từ ngày</div>
+
+                                </div>
+                                <input type="date" ng-model="reportParam.start_date" class="form-control"/>
+
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">Tới ngày</div>
+
+                                </div>
+                                <input type="date" ng-model="reportParam.end_date" class="form-control"/>
+
+                                <div class="input-group-append"><button class="btn btn-primary" ng-click="onSearchReport(reportParam)"><i class="fa fa-search"></i> Lọc </button> </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <div class="card-body " ng-show="nd91ReportNav=='general'">
+                    <h6>TỔNG QUAN TỪ {{nd91Report.report_start}} TỚI  {{nd91Report.report_end}}</h6>
+                    <p class="text-muted small">Dữ liệu báo cáo sẽ tổng hợp trễ 1 giờ so với thời gian thực</p>
+                    <table class="table table-sm table-bordered small   ">
+                        <tr>
+
+                            <th>Tổng</th>
+                            <th>Nghe máy</th>
+                            <th>Chặn ND91 (*)
+                            </th>
+                            <td>(1)Chặn Khung giờ</td>
+                            <td>(2)Chặn DNC</td>
+                            <td>(3)Chặn 197</td>
+                            <td>(4)Chặn Quota</td>
+                            <td>(5)Chặn QLTTTT</td>
+                            <td>(6)Chặn CM</td>
+                            <!--<td>(7)Khách đăng ký DNC</td>-->
+                            <th># Khác</th>
+                        </tr>
+
+                        <tr>
+
+                            <th class="text-right">{{nd91Report.total|number:0}}</th>
+                            <th class="text-right">{{nd91Report.success|number:0}}</th>
+                            <th class="text-right">{{nd91Report.nd91|number:0}}</th>
+                            <td class="text-right">{{nd91Report.time_range|number:0}}</td>
+                            <td class="text-right">{{nd91Report.dnc|number:0}}</td>
+                            <td class="text-right">{{nd91Report.c197|number:0}}</td>
+                            <td class="text-right">{{nd91Report.quota|number:0}}</td>
+                            <td class="text-right">{{nd91Report.qltttb|number:0}}</td>
+                            <td class="text-right">{{nd91Report.cm|number:0}}</td>
+                            <!--<td class="text-right">{{nd91Report.user_reject|number:0}}</td>-->
+                            <td class="text-right">{{nd91Report.other|number:0}}</td>
+                        </tr>
+                    </table>
+                    <P class="small  text-info">(*) Chặn ND91 = Tổng các module chặn từ 1- 6</P>
+
+
+
+
+                </div>
+                <div class="card-body" ng-show="nd91ReportNav=='general'">
+                    <div id="reportChartNd91"></div>
+                </div>
+    
+    
+                <div class="card-body" ng-show="nd91ReportNav=='brandname'">
+        
+                    <table ng-table-dynamic="nd91BrandNameTable with nd91BrandNameTableCol"
+        
+                           class="table table-condensed table-bordered table-striped small"
+                           style="margin-top: 10px;" template-header="nd91BrandNameTable_template">
+            
+                        <tr ng-repeat="row in $data track by $index " ng-if="$data.length > 0 ">
+                
+                            <td ng-repeat="col in nd91BrandNameTableCol" ng-class="col.cssclass">
+                    
+                          
+                                <span ng-if="col.col=='brand_name'">{{row[col.col]}} <span class="text-muted">({{row.CLI}})</span> </span>
+                                <span ng-if="col.col!='brand_name'">{{row[col.col]}}</span>
+                
+                            </td>
+                        </tr>
+            
+                        <tr ng-if="$data.length == 0 || $data == undefined">
+                            <td colspan="100" style="display:table-cell !important;text-align:center">
+                                {{'LBL_NO_DATA_FOUND'|translate}}
+                            </td>
+                        </tr>
+                    </table>
+    
+    
+                </div>
+    
+    
+                <div class="card-footer"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="modal fade" id="editQuotaItem" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Sửa cấu hình hạn mức</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tên loại thuê bao bị gọi</label>
+                    <input readonly ng-model="quotaItem.name" class="form-control"/>
+                </div>
+                <div class="form-group">
+                    <label> Số lượng cuộc gọi được phép thực hiện</label>
+
+                </div>
+                <div class="form-group form-row">
+
+                    <div class="col">
+                        <div class="input-group">
+                            <input class="form-control" ng-model="quotaItem.max_call_per_day"/>
+                            <span class="input-group-text">/ ngày</span>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="input-group">
+                            <input class="form-control" ng-model="quotaItem.max_call_per_month"/>
+                            <span class="input-group-text"> / tháng</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" ng-click="onSaveQuotaItem(quotaItem);">Lưu cấu hình</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editTimeItem" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTimeItemF">Sửa cấu hình khung thời gian</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group form-row">
+                    <div class="col">
+                        <label>Tên cấu hình</label>
+                        <input  ng-model="timeRangeEditItem.name" class="form-control"/>
+                    </div>
+                    <div class="col">
+                        <label>Ghi chú</label>
+                        <input  ng-model="timeRangeEditItem.description" class="form-control"/>
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+                    <label>Khung giờ 1</label>
+
+                </div>
+                <div class="form-group form-row">
+
+                    <div class="col">
+                        <div class="input-group">
+                            <div class="input-group-append">
+                                <span class="input-group-text">Từ</span>
+                            </div>
+                            <input class="form-control" ng-model="timeRangeEditItem.range1.from"/>
+
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="input-group">
+                            <div class="input-group-append">
+                                <span class="input-group-text">Tới</span>
+                            </div>
+                            <input class="form-control" ng-model="timeRangeEditItem.range1.to"/>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="form-group">
+                    <label>Khung giờ 2</label>
+
+                </div>
+                <div class="form-group form-row">
+
+                    <div class="col">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Từ</span>
+                            </div>
+                            <input class="form-control" ng-model="timeRangeEditItem.range2.from"/>
+
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Tới</span>
+                            </div>
+                            <input class="form-control" ng-model="timeRangeEditItem.range2.to"/>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" ng-click="onSavTimeItem(timeRangeEditItem);">Lưu cấu hình</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<script id="nd91BrandNameTable_template" type="text/ng-template">
+    <tr>
+        <th ng-repeat="column in nd91BrandNameTableCol" class="header text-muted">{{column.title | translate }}    </th>
+    </tr>
+</script>
+
+
+

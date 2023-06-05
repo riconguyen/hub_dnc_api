@@ -1,0 +1,94 @@
+<div class="container-fluid">
+    <div class="row mt-3">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">Charge bù homephone</div>
+                <div class="card-body ">
+
+                    <div class="d-print-none">
+                        <p>Đây là tính năng bổ sung cước Homephone sang BCCS do cước nóng trên BCCS nhỏ hơn số tiền cước
+                            phát sinh trên VCONNECT</p>
+                        <p>Để thực hiện tính năng này cần tra cứu cước nóng trên BCCS và nhập số tiền tra được vào ô
+                            dưới theo cấu trúc </p>
+                        <address>ENTERPRISE_NUMBER| SO_TIEN_CUOC_NONG</address>
+                        <p>Có thể thực hiện cho hàng loạt thuê bao với mỗi thuê bao một dòng thông tin và số tiền cước
+                            theo
+                            cấu trúc trên</p>
+                        <hr>
+                    </div>
+
+                    <div ng-show="charging.step==1">
+                        <div class="form-group">
+                            <label>Nhập số đại diện và Cước nóng </label>
+                            <textarea class="form-control" rows="5" id="chargingArea" ng-trim="false"
+                                      placeholder="098XXXXXX|12099111"
+                            ></textarea>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-primary" ng-click="onSearchCharge(charging); "><i
+                                    class="fa fa-arrow-right"></i> Tiếp theo
+                            </button>
+                        </div>
+                    </div>
+                    <div ng-show="charging.step==2">
+                        <h5>Kiểm tra lại số liệu </h5>
+                        <table class="table ">
+                            <tr>
+                                <th>Số đại diện</th>
+                                <th class="text-right">Cước phát sinh trên VConnect</th>
+                                <th class="text-right">Cước nóng trên BCCS</th>
+                                <th class="text-right">Số tiền charge bù</th>
+                            </tr>
+                            <tr ng-repeat="item in charging.reviewData">
+                                <td>{{item.enterprise_number}}</td>
+                                <td class="text-right">{{item.total_amount|number:0}}</td>
+                                <td class="text-right">{{item.bccs_amount|number:0}}</td>
+                                <td class="text-right">{{item.amount_to_charge|number:0}}</td>
+                            </tr>
+
+                        </table>
+                        <div class="form-group">
+                            <button class="btn btn-secondary" ng-click="charging.step=1; "><i
+                                    class="fa fa-arrow-left"></i> Trở lại
+                            </button>
+
+                            <button class="btn btn-warning" ng-if="charging.reviewData.length>0"
+                                    ng-click="onSendCharging(charging); "><i class="fa fa-upload"></i> Gửi charge
+                            </button>
+                        </div>
+                    </div>
+
+                    <div ng-show="charging.step==3">
+                        <h5>Kết quả charge bù </h5>
+                        <p class="d-print-block">{{charging.resultDate}}</p>
+                        <p class="d-print-none">Tùy theo số tiền charge nếu lớn hơn 3.000.000 đ, số tiền charge sẽ được chia nhỏ ra thành các
+                            bản ghi 3.000.000đ để thực hiện charge
+                            <br>Kết quả cước sẽ đồng bộ sau vài phút. Vui lòng không lặp lại quá trình charge cước này
+                            với các số đã gửi charge. </p>
+                        <table class="table small   ">
+                            <tr>
+                                <th>ID</th>
+                                <th>Số đại diện</th>
+                                <th>Mã Event_id</th>
+
+                                <th>Thời gian Insert</th>
+                                <th class="text-right">Số tiền charge</th>
+                            </tr>
+                            <tr ng-repeat="item in charging.result">
+                                <td>{{item.id}}</td>
+                                <td>{{item.enterprise_num}}</td>
+                                <td>{{item.event_id}}</td>
+
+                                <td>{{item.insert_time}}</td>
+                                <td class="text-right">{{item.amount|number:0}}</td>
+                            </tr>
+
+                        </table>
+                        <i class="">--*-- </i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

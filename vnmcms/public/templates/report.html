@@ -1,0 +1,307 @@
+<div class="container-fluid mt-2">
+    <div class="row">
+        <div class="col">
+            <h4 class="display-4 mt-2 pl-1">BÁO CÁO </h4>
+        </div>
+    </div>
+</div>
+
+    <ul class="nav ml-1 mt-0">
+        <li class="nav-item "><a class="nav-link" ng-class="selectedReport=='quantity'?'disabled':''"
+                                 ng-click="viewReport('quantity');"
+                                 href="">{{'REPORT.NAV.QUANTITY'|translate}}</a></li>
+        <li class="nav-item"><a class="nav-link" ng-class="selectedReport=='flow'?'disabled':''"
+                                ng-click="viewReport('flow');" href="">{{'REPORT.NAV.FLOW'|translate}}</a></li>
+        <li class="nav-item"><a class="nav-link" ng-class="selectedReport=='customer'?'disabled':''"
+                                ng-click="viewReport('customer');"
+                                href="">{{'REPORT.NAV.CUSTOMER'|translate}}</a></li>
+        <li class="nav-item"><a class="nav-link" ng-class="selectedReport=='monthly_audit'?'disabled':''"
+                                ng-click="viewReport('monthly_audit');"
+                                href="">{{'REPORT.NAV.MONTHLY_AUDIT'|translate}}</a></li>
+    </ul>
+<div class="container-fluid mt-1 ">
+    <div class="row" ng-show="selectedReport=='quantity'">
+        <div class="col-md-4">
+
+            <table class="table-bordered table-striped table small  table-sm bg-white">
+                <tr>
+                    <td>
+                        <small>TỪ</small>
+                        <br>
+                        <b>{{report.quantity.date.start_date }}</b>
+                    </td>
+                    <td class="" colspan="2">
+                        <small>TỚI</small>
+                        <br>
+                        <b> {{report.quantity.date.end_date}}</b>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Loại</th>
+                    <th class="text-right">Dung lượng</th>
+                    <th class="text-right">Doanh thu <sup class="text-muted"  >đ</sup></th>
+                </tr>
+                <tr ng-repeat="data in report.quantity.fee">
+                    <td>{{'REPORT.QUANTITY.'+data.name|translate}} <sup class="text-muted" ng-if="data.count">{{data.unit}}</sup></td>
+                    <td class="text-right"  >{{data.count|number:0}}
+                    </td>
+                    <td class="text-right"   >{{data.amount|number:0}} </td>
+                </tr>
+                <tr>
+                    <th>{{'REPORT.QUANTITY.TOTAL_FEE'|translate}} </th>
+                    <td colspan="2" class="text-right"  >{{report.quantity.total_fee|number:0}}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="col-md-8 ">
+            <div class="card-body bg-white mt-0 pt-1 pl-2">
+
+            <div class=" mb-3  btn-toolbar  " role="toolbar" aria-label="Toolbar with button groups">
+                <div class="btn-group btn-group-sm btn-group-justified  mr-2 mt-2"   ng-if="report.dateRange !='manual'" >
+                    <button class="btn"   ng-class="report.dateRange=='day'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('day')">{{'LBL.TIME_RANGE.DAY'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='week'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('week')">{{'LBL.TIME_RANGE.WEEK'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='month'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('month')">{{'LBL.TIME_RANGE.MONTH'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='quarter'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('quarter')">{{'LBL.TIME_RANGE.QUARTER'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='year'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('year')">{{'LBL.TIME_RANGE.YEAR'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='y2d'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('y2d')">{{'LBL.TIME_RANGE.Y2D'|translate}}</button>
+                    <button class="btn btn-outline-primary" ng-click="selectDateRange('manual')">{{'LBL.TIME_RANGE.MANUAL'|translate}}</button>
+
+                </div>
+                <div class="input-group input-group-sm mt-2" ng-if="report.dateRange=='manual'" >
+
+                    <input type="date" ng-model="reportParam.start_date" class="form-control " placeholder="Start date" aria-label="Input group example" aria-describedby="btnGroupAddon">
+                    <input type="date" ng-model="reportParam.end_date" class="form-control" placeholder="End date" aria-label="Input group example" aria-describedby="btnGroupAddon">
+                    <div class="input-group-append input-group-btn">
+                        <button class="btn btn-outline-primary btn-sm" ng-click="selectDateManual(); ">{{'CRUD.R'|translate}}</button>
+                        <button class="btn btn-outline-secondary btn-sm" ng-click="report.dateRange = 'month'; "><i class="fa fa-close"></i></button>
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="clearfix"></div>
+
+            
+            <div class="chart-container" id="chart-quantity">
+            </div>
+
+        </div>
+        </div>
+    </div>
+
+
+    <div class="row" ng-show="selectedReport=='flow'">
+        <div class="col-md-4">
+
+            <table class="table-bordered table-striped table small  table-sm bg-white">
+                <tr>
+                    <td>
+                        <small>TỪ</small>
+                        <br>
+                        <b>{{report.flow.date.start_date  }}</b>
+                    </td>
+                    <td class="" colspan="2">
+                        <small>TỚI</small>
+                        <br>
+                        <b> {{report.flow.date.end_date}}</b>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Loại</th>
+                    <th class="text-right">Cuộc gọi</th>
+                    <th class="text-right">Sản lượng <sup class="text-muted">phút</sup></th>
+                </tr>
+                <tr>
+                    <td>Cuộc gọi thành công</td><td class="text-right">{{report.flow.total.success|number:0}}</td>
+                    <td class="text-right">{{report.flow.total.success_time|number:0}} </td>
+                </tr>
+                <tr>
+                    <td>Cuộc gọi không gặp khách</td><td class="text-right">{{report.flow.total.failed|number:0}}</td><td class="text-right text-muted">N/A</td>
+                </tr>
+                <tr>
+                    <th>Tổng</th><th class="text-right">{{(report.flow.total.failed + report.flow.total.success)|number:0}}</th>
+                    <th class="text-right">{{report.flow.total.success_time|number:0}}</th>
+                </tr>
+
+
+            </table>
+        </div>
+        <div class="col-md-8">
+            <div class="card-body bg-white mt-0 pt-1 pl-2">
+            <div class=" mb-3  btn-toolbar " role="toolbar" aria-label="Toolbar with button groups">
+                <div class="btn-group btn-group-sm btn-group-justified  mr-2 mt-2"   ng-if="report.dateRange !='manual'" >
+                    <button class="btn"   ng-class="report.dateRange=='day'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('day')">{{'LBL.TIME_RANGE.DAY'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='week'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('week')">{{'LBL.TIME_RANGE.WEEK'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='month'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('month')">{{'LBL.TIME_RANGE.MONTH'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='quarter'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('quarter')">{{'LBL.TIME_RANGE.QUARTER'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='year'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('year')">{{'LBL.TIME_RANGE.YEAR'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='y2d'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('y2d')">{{'LBL.TIME_RANGE.Y2D'|translate}}</button>
+                    <button class="btn btn-outline-primary" ng-click="selectDateRange('manual')">{{'LBL.TIME_RANGE.MANUAL'|translate}}</button>
+
+                </div>
+                <div class="input-group input-group-sm mt-2" ng-if="report.dateRange=='manual'" >
+
+                    <input type="date" ng-model="reportParam.start_date" class="form-control " placeholder="Start date" aria-label="Input group example" aria-describedby="btnGroupAddon">
+                    <input type="date" ng-model="reportParam.end_date" class="form-control" placeholder="End date" aria-label="Input group example" aria-describedby="btnGroupAddon">
+                    <div class="input-group-append input-group-btn">
+                        <button class="btn btn-outline-primary btn-sm" ng-click="selectDateManual(); ">{{'CRUD.R'|translate}}</button>
+                        <button class="btn btn-outline-secondary btn-sm" ng-click="report.dateRange = 'month'; "><i class="fa fa-close"></i></button>
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="clearfix"></div>
+
+            <div class="chart-container" id="chart_flow">
+            </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" ng-show="selectedReport=='customer'">
+        <div class="col-md-4 ">
+
+            <table class="table-bordered table-striped table small  table-sm bg-white">
+                <tr>
+                    <td>
+                        <small>TỪ</small>
+                        <br>
+                        <b>{{report.customer.date.start_date }}</b>
+                    </td>
+                    <td   >
+                        <small>TỚI</small>
+                        <br>
+                        <b> {{report.customer.date.end_date}}</b>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Loại</th>
+                    <th class="text-right">Số lượng</th>
+
+                </tr>
+                <tr>
+                    <td>Khách hàng <sup>(khách)</sup></td><td class="text-right">{{report.customer.total.customer|number:0}} </td>
+                </tr>
+                <tr>
+                    <td>Hotline <sup>(hotlines</sup></td><td class="text-right">{{report.customer.total.hotline|number:0}}</td>
+                </tr>
+
+
+                <!--<tr>-->
+                    <!--<th>{{'REPORT.QUANTITY.TOTAL_FEE'|translate}}</th>-->
+                    <!--<td class="text-right" colspan="2">{{report.quantity.total_fee|number:0}} <sup class="text-muted"-->
+                                                                                                   <!--ng-if="report.quantity.total_fee>0">đ</sup>-->
+                    <!--</td>-->
+                <!--</tr>-->
+            </table>
+        </div>
+        <div class="col-md-8">
+            <div class="card-body bg-white mt-0 pt-1 pl-2">
+            <div class=" mb-3  btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                <div class="btn-group btn-group-sm btn-group-justified  mr-2 mt-2"   ng-if="report.dateRange !='manual'" >
+                    <button class="btn"   ng-class="report.dateRange=='day'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('day')">{{'LBL.TIME_RANGE.DAY'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='week'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('week')">{{'LBL.TIME_RANGE.WEEK'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='month'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('month')">{{'LBL.TIME_RANGE.MONTH'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='quarter'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('quarter')">{{'LBL.TIME_RANGE.QUARTER'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='year'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('year')">{{'LBL.TIME_RANGE.YEAR'|translate}}</button>
+                    <button class="btn"   ng-class="report.dateRange=='y2d'?'btn-primary active':'btn-outline-primary '" ng-click="selectDateRange('y2d')">{{'LBL.TIME_RANGE.Y2D'|translate}}</button>
+                    <button class="btn btn-outline-primary" ng-click="selectDateRange('manual')">{{'LBL.TIME_RANGE.MANUAL'|translate}}</button>
+
+                </div>
+                <div class="input-group input-group-sm mt-2" ng-if="report.dateRange=='manual'" >
+
+                    <input type="date" ng-model="reportParam.start_date" class="form-control " placeholder="Start date" aria-label="Input group example" aria-describedby="btnGroupAddon">
+                    <input type="date" ng-model="reportParam.end_date" class="form-control" placeholder="End date" aria-label="Input group example" aria-describedby="btnGroupAddon">
+                    <div class="input-group-append input-group-btn">
+                        <button class="btn btn-outline-primary btn-sm" ng-click="selectDateManual(); ">{{'CRUD.R'|translate}}</button>
+                        <button class="btn btn-outline-secondary btn-sm" ng-click="report.dateRange = 'month'; "><i class="fa fa-close"></i></button>
+
+                    </div>
+                </div>
+
+            </div>
+           <div class="clearfix"></div>
+            <div class="chart-container" id="chart_customer">
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" ng-show="!selectedReport">
+        <div class="col-md">
+            <div class="text-muted display-4">
+                Chọn một loại báo cáo để hiển thị
+            </div>
+        </div>
+    </div>
+
+    <div class="row" ng-show="selectedReport=='monthly_audit'"  style="border-top: 1px solid rgba(238,239,240,0.17)">
+        <div class="col-3">
+
+            <div class=" form-group">
+
+                <label> Chọn tháng</label>
+
+
+                <div class="input-group input-sm  date" datetimepicker-options="{{optionsMonth}}" datetimepicker=""
+                     ng-model="reportMonthlyParam.start_date">
+
+                    <input type="text" class="form-control">
+                    <span class="input-group-append input-group-addon">
+                          <span class="input-group-text"><i class="fa fa-clock-o"></i></span>
+                            </span>
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" ng-click="onSearchMonthlyAudit(reportMonthlyParam);"><i class="fa fa-book"></i> Xem </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-9">
+            <nav>
+                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                     <a class="nav-item nav-link" href="" ng-class="monthlyReport.tab=='prefix'?'active':'' " role="tab"  ng-click="viewMonthlyAudit('prefix');">Cước theo kênh</a>
+
+                </div>
+            </nav>
+            <div class="tab-content bg-white" id="nav-tabContent">
+
+                <div class="tab-pane fade "   ng-class="monthlyReport.tab=='prefix'?'show active':'' "  role="tabpanel" aria-labelledby="nav-home-tab">
+
+                    <table class="table table-condensed small">
+                        <tr ng-if="monthlyReport.charge_logs.length == 0 ">
+                            <td colspan="100" style="display:table-cell !important;text-align:center">
+                                {{'LBL_NO_DATA_FOUND'|translate}}
+                            </td>
+                        </tr>
+
+                        <tr ng-if=" monthlyReport.charge_logs.length > 0 " ><th >Hướng</th><th class="text-right">Thời lượng (s)</th><th class="text-right">Số tiền</th></tr>
+                        <tr ng-repeat="row in monthlyReport.charge_logs ">
+                            <td>{{row.Direction}}</td>
+                            <td class="text-right">{{row.Duration|number:0}}</td>
+                            <td class="text-right">{{row.Amount|number:0}}</td>
+                        </tr>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+
+    </div>
+
+
+</div>
+
+<script id="monthlyReportAuditTbl_template" type="text/ng-template">
+    <tr>
+        <th ng-repeat="column in mraCols" class="header text-muted"
+        >
+            {{ column.title | translate }}
+        </th>
+    </tr>
+</script>

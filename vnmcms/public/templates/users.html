@@ -1,0 +1,303 @@
+<div class="container-fluid mt-2">
+    <div class="row">
+        <div class="col-12">
+        <h4 class="display-4 mt-2 pl-1 ">QUẢN LÝ THÔNG TIN TRUY CẬP </h4>
+
+        </div>
+
+
+    </div>
+
+</div>
+<ul class="nav ml-1">
+    <li class="nav-item ">
+        <a class="nav-link" ng-class="!navUser|| navUser=='users'?'disabled':''"
+           href="" ng-click="switchNav('user');">Tài khoản truy cập</a>
+    </li>
+    <li class="nav-item ">
+        <a class="nav-link" ng-if="entity.VIEW_MANAGER_ROLE"
+           ng-class="navUser=='roles'?'disabled':''" href="" ng-click="switchNav('roles');">Phân quyền</a>
+    </li>
+
+</ul>
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mb-2 " >
+
+
+            <div ng-show="!navUser || navUser=='user'">
+
+
+                <form class="form-group">
+                    <div class="input-group">
+                        <input type="text" ng-model="sbcUserParam.q" class="form-control"
+                               placeholder="Tìm theo email hoặc tên">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" ng-click="viewUsers()">
+                                <i class="fa fa-search"></i> Lọc
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+
+                <table ng-table-dynamic="sbcUserTable with userTableCols"
+
+                       class="tickets table table-condensed table-bordered table-striped small"
+                       style="margin-top: 10px;" template-header="userTableParams_template">
+
+
+                    <tr ng-if="$data.length == 0 || $data == undefined">
+                        <td colspan="100" style="display:table-cell !important;text-align:center">
+                            {{'LBL_NO_DATA_FOUND'|translate}}
+                        </td>
+                    </tr>
+                    <!-- // FIX 20180905 -->
+                    <tr ng-repeat="row in $data track by $index" ng-if="$data.length > 0">
+                        <td ng-repeat="col in userTableCols">
+
+                            <span ng-if="col.field !='action' && col.field !='name'"> {{row[col.field]}}</span>
+                            <span ng-if="col.field=='action' ">
+                            <button class="btn btn-default" ng-click="viewUser(row, $index); "><i
+                                    class="fa fa-edit"></i> </button>
+
+                        </span>
+                            <span ng-if="col.field=='name' "> {{row.name}}<br> {{row.email}}</span>
+
+                        </td>
+                    </tr>
+
+
+                </table>
+
+
+            </div>
+
+
+        </div>
+        <div class="col-md-4 " ng-show="!navUser || navUser=='user'">
+            <div class="card " ng-class="user.id?'bg-light':'bg-white'">
+                <div class="card-header">
+
+
+                    <span ng-if="!user.id">{{'LBL.USER.ADD'|translate}}</span>
+                    <span ng-if="user.id">{{'LBL.USER.EDIT'|translate}}</span>
+
+                </div>
+                <div class="card-body">
+
+                    <div class="form-group"><label>{{'LBL.USER.NAME'|translate}}</label>
+                        <input type="text" required="true" ng-model="user.name" class="form-control"
+                               ng-class="userAddError.name?'is-invalid':''"
+                        >
+                        <div class="invalid-feedback">  Tên đang để trống hoặc không hợp lệ hoặc quá dài         </div>
+
+                    </div>
+
+                    <div class="form-group"><label>{{'LBL.USER.EMAIL'|translate}}</label>
+                        <input type="text" required="true" ng-model="user.email" class="form-control"
+                               ng-class="userAddError.email?'is-invalid':''">
+                        <div class="invalid-feedback">  Trường email đang để trông hoặc không hợp lệ        </div>
+
+                    </div>
+                    <div class="form-group"><label>Vai trò</label>
+                        <select ng-model="user.role" class="form-control"
+                                ng-options="value.id as value.name for (key, value) in lstRoles"
+                                ng-class="userAddError.role?'is-invalid':''"
+                        >
+
+                            <option value="">Chọn</option>
+
+
+                        </select>
+
+
+                        <div class="invalid-feedback">    Vai trò trống hoặc không hợp lệ   </div>
+
+                    </div>
+                    <div class="form-group" ng-if="!user.id"><label>{{'LBL.USER.PASSWORD'|translate}}</label>
+                        <p class="text-success">Mât khẩu tối thiểu 8 ký tự trong đó có ký tự đặc biệt, số , chữ thường
+                            và chữ Hoa</p>
+                        <input type="password" ng-model="user.password" class="form-control"    ng-class="userAddError.password?'is-invalid':''">
+                        <div class="invalid-feedback">  Mật khẩu trống hoặc không hợp lệ         </div>
+                    </div>
+
+
+                    <div class="form-group" ng-if="user.id">
+
+
+
+                        <label class="text-primary " ng-click="changepass =!changepass; user.password=''">
+                            <i class="fa fa-key"></i> <u> {{'LBL.USER.RESET_PASSWORD'|translate}}</u></label>
+                        <span ng-show="changepass==true">
+                            <p class="text-success">Mât khẩu tối thiểu 8 ký tự trong đó có ký tự đặc biệt, số , chữ thường và chữ Hoa</p>
+                         <input type="password" ng-model="user.password" class="form-control"
+                                ng-class="userAddError.password?'is-invalid':''">
+
+                            <div class="invalid-feedback">  Mật khẩu trống hoặc không hợp lệ     </div>
+                        </span>
+
+
+
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary " ng-if="!user.id" ng-click="addUser()"><i class="fa fa-user"></i>  {{'CRUD.C'|translate}} </button>
+                        <button class="btn btn-warning" ng-if="user.id" ng-click="saveUser()"><i class="fa fa-save"></i>  {{'CRUD.U'|translate}} </button>
+                        <button ng-if="user.id" class="btn btn-default   float-right" ng-click = "addUserForm()"><i class="fa fa-close"></i>  {{'CRUD.NO'|translate}} </button>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <div ng-show="navUser=='roles'" class="col-8">
+
+            <form class="form-group">
+                <div class="input-group">
+                    <input type="text" ng-model="roleParam.q" class="form-control"
+                           placeholder="Tìm vai trò">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" ng-click="getAllRoles(roleParam)">
+                            <i class="fa fa-search"></i> Lọc
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+
+
+            <table class="table small">
+                <tr>
+                    <th>ID</th>
+                    <th>Vai trò</th>
+                    <th>Chú thích</th>
+                    <th> Khóa </th>
+                    <th>Quyền</th>
+                    <th>Hành động</th>
+                </tr>
+                <tr ng-repeat="role in lstAllRoles" ng-class="role.role_key=='GUEST'?'text-muted':''">
+                    <td>{{role.id}}</td>
+                    <td>{{role.name}}</td>
+                    <td>{{role.description}}</td>
+                    <td>{{role.role_key}}</td>
+
+                    <td><a href="" data-toggle="modal"
+                           ng-click="viewRoleEntity(role);"
+                           ng-if="role.role_key !='GUEST'"> {{role.entity.length?role.entity.length:0}} quyền </a></td>
+                    <td>
+                        <div class="btn-group btn-group-sm" ng-if="role.role_key !='GUEST' && role.role_key !='ADMIN' ">
+                            <button class="btn btn-warning" ng-click="editRole(role)">Sửa</button>
+                            <button class="btn btn-danger" ng-if="entity.REMOVE_ROLE" ng-click="onDeleteRole(role)">Xóa</button>
+
+                        </div>
+                    </td>
+                </tr>
+
+
+            </table>
+        </div>
+        <div class="col-md-4" ng-show="navUser=='roles'">
+            <div class="card">
+
+                <div class="card-header">
+                   {{newRole.id?'Cập nhật vai trò':'Thêm mới vai trò'}}
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Tên vai trò</label>
+                        <input type="text" ng-model="newRole.name" class="form-control" placeholder="Vai trò"
+                               ng-class="newRoleError.name?'is-invalid':''">
+                        <div class="invalid-feedback">  Vai trò đang để trống hoặc quá dài            </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label>Chú thích</label>
+                        <input type="text" ng-model="newRole.description" class="form-control" placeholder="Chú thích"
+                               ng-class="newRoleError.description?'is-invalid':''">
+                        <div class="invalid-feedback">  Chú thích quá dài hoặc chứa ký tự không hợp lệ  </div>
+
+                    </div>
+
+                    <div class="form-group">
+                        <label>Khóa</label>
+                        <input type="text" ng-model="newRole.role_key" class="form-control" placeholder="Khóa duy nhất"
+                               ng-class="newRoleError.role_key?'is-invalid':''">
+                        <div class="invalid-feedback">   Khóa bị trùng hoặc đang để trống      </div>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" ng-click="onAddRole(newRole)">{{newRole.id?'Cập nhật':'Thêm'}}</button>
+                        <button class="btn btn-secondary" ng-click="onClearRole(newRole)">Hủy</button>
+
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+
+    </div>
+</div>
+
+
+
+<script id="userTableParams_template" type="text/ng-template">
+    <tr>
+        <th ng-repeat="column in userTableCols" class="header text-muted"
+            ng-click="sbcUserTable.sorting(column.sortable, sbcUserTable.isSortBy(column.sortable, 'asc') ? 'desc' : 'asc')"
+            ng-class="{'sort-asc': sbcUserTable.isSortBy(column.sortable, 'asc'), 'sort-desc': sbcUserTable.isSortBy(column.sortable, 'desc'), 'sortable': column.sortable}"
+        >
+            {{ column.title | translate }}
+        </th>
+    </tr>
+</script>
+
+
+
+
+
+<div class="modal fade" id="viewEntityToRole" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Xem các quyền của vai trò</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times"></i> </button>
+            </div>
+            <div class="modal-body">
+                <div class="col">
+
+                    <h5 class="text-info">{{currentRole.name}}</h5>
+                    <blockquote>{{currentRole.description}}</blockquote>
+                </div>
+                <div class="col">
+                    <h6>Danh sách quyền</h6>
+                    <table class="table small">
+                        <tr><td>Nhóm</td><td>Tên</td><td>Hành động</td></tr>
+                        <tr ng-repeat="entity in currentRole.entity">
+                            <td>{{entity.entity_group}}</td>
+                            <td>{{entity.entity_name}}</td>
+                            <td><a href=""   ng-if="currentRole.role_key !='GUEST' && currentRole.role_key !='ADMIN' " ng-click="onRemoveEntityRole(entity);" class="text-warning"><i class="fa fa-trash"></i> </a> </td>
+
+                        </tr>
+                        <tr><td colspan="2"><select ng-model="newEntityRole.entity" ng-options="item as item.entity_name for item in lstEntities" class="form-control form-control-sm">
+                        </select> </td>
+                            <td><button class="btn btn-sm btn-warning" ng-click="onAddNewEntityToRole(newEntityRole)"><i class="fa fa-plus"></i>Thêm </button> </td>
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+

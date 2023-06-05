@@ -1,0 +1,94 @@
+<div class="container-fluid">
+    <div class="row pt-2  justify-content-md-center">
+        <div class="col-md-6 col-sm-8 mt-3">
+            <h4 class="text-uppercase"> Cấu hình hệ thống </h4>
+            <form>
+                <div class="form-group">
+                    <label>Tên máy chủ
+                    <span ng-if="server.edit" class="text-warning">
+                        Đang chỉnh sửa thông tin. <a href="" ng-click="newServer(); ">Tạo mới</a>
+                    </span>
+                    </label>
+                    <input class="form-control" ng-model="server.server_name"/>
+                </div>
+                <div class="form-group">
+                    <label>Webservice IP : PORT</label>
+                    <div class="input-group">
+
+
+                    <input class="form-control" ng-model="server.ip" placeholder="ex: 10.0.0.1"/>
+                        <div class="input-group-append"><span class="input-group-text">PORT:</span> <input class="form-control" ng-model="server.port"/> </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                            <label>Webservice URL</label>
+                            <input class="form-control" ng-model="server.api_url"/>
+                        </div>
+  <div class="form-group">
+                            <label>Server type</label>
+                            <select class="form-control" ng-model="server.server_type" ng-options="item.id as item.name  for item in  lstServerType">
+                            </select>
+                        </div>
+
+
+                <div class="form-group">
+                            <button class="btn btn-success" ng-click="onSubmitServer(server);"><i class="fa fa-send"></i> OK </button>
+                        </div>
+
+            </form>
+        </div>
+        <div class="col-md-3 col-sm-4 mt-3">
+            <h4>DANH SÁCH MÁY CHỦ</h4>
+            <div class="list-group">
+                <li  class="list-group-item" ng-repeat="server in listServer">
+
+                    <div class="btn-group-sm pull-right">
+                    <button ng-if="server.active !=1 && server.server_type==1" ng-click="onActiveServer(server)" class="btn btn-sm btn-success ">Active</button>
+                    <button   ng-click="onCheckResource(server)" class="btn btn-sm btn-outline-info ">Check CPU</button>
+                    </div>
+
+                    <a href="" ng-click="editServer(server);">{{server.server_name}}   </a>
+                    <br>
+                    <small ng-class="server.active==1?'text-success':'text-muted'"><i class="fa " ng-class="server.active==1?'fa-check':'fa-ban'"></i> {{server.active==1?'Active':'In-active'}}</small>
+                    <span class="small">{{server.ip}}:{{server.port}}
+                    <br>
+                        {{server.api_url}}
+                    </span> </li>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+<!--Modal call tracking -->
+<div class="modal fade" id="serveResource" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+               THÔNG TIN TÀI NGUUYÊN MÁY CHỦ
+
+
+                <button type="button" class="close" data-dismiss="modal" ng-click="serverCPU=null" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+            </div>
+            <div class="modal-body call-tracking">
+
+                <div class="card-body small">
+                    <div id="cpuData"></div>
+
+
+                </div>
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div>
+    </div>
+</div>

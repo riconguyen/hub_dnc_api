@@ -1,0 +1,297 @@
+<div class="container-fluid mt-1" ng-if="entity.ADD_CUSTOMER">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <h4  class="display-4  pl-1  text-uppercase text-muted mt-2">{{'CUSTOMER.ADD.TITLE'|translate}}</h4>
+
+
+                <div class="">
+                    <button class="btn btn-default" ng-click="closeFormAdd()"><i class="fa fa-close"></i></button>
+                </div>
+            </div>
+
+            <div class="card mt-1">
+                <div class="card-header">
+                    <span>Biểu mẫu cập nhật thông tin khách hàng, và các tham số cấu hình ban đầu của khách lên hệ thống</span>
+                </div>
+                <div class="card-body">
+                    <form ng-submit="onAddCustomer()">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group"><label> {{'CUSTOMER.CUS_NAME'|translate}}</label>
+                                    <input type="text" class="form-control"
+                                           ng-class="newCustomerError.cus_name          ?'is-invalid':''"
+                                           ng-model="newCustomer.cus_name"/>
+                                    <div class="invalid-feedback">
+                                        {{newCustomerError.cus_name[0]}}
+                                    </div>
+                                </div>
+
+                            <div class="form-group"><label> {{'CUSTOMER.ENTERPRISE_NUMBER'|translate}}</label>
+                                <input type="text"
+                                       class="form-control"
+                                       ng-class="newCustomerError.enterprise_number ?'is-invalid':''"
+                                       ng-model="newCustomer.enterprise_number"/>
+                                <div class="invalid-feedback">
+                                    {{newCustomerError.enterprise_number[0]}}
+                                </div>
+                            </div>
+
+                            <div class="form-group"><label> {{'CUSTOMER.COMPANYNAME'|translate}}</label>
+                                <input type="text"
+                                       class="form-control"
+                                       ng-class="newCustomerError.companyname       ?'is-invalid':''"
+                                       ng-model="newCustomer.companyname"/>
+                                <div class="invalid-feedback">
+                                    {{newCustomerError.companyname[0]}}
+                                </div>
+                            </div>
+                            <div class="form-group"><label> {{'CUSTOMER.ADDR'|translate}}</label>
+                                <input type="text"
+                                       class="form-control"
+                                       ng-class="newCustomerError.addr              ?'is-invalid':''"
+                                       ng-model="newCustomer.addr"/>
+                                <div class="invalid-feedback">
+                                    {{newCustomerError.addr[0]}}
+                                </div>
+                            </div>
+                            <div class="form-group"><label> {{'CUSTOMER.PHONE1'|translate}}</label>
+                                <input type="text"
+                                       class="form-control"
+                                       ng-class="newCustomerError.phone1            ?'is-invalid':''"
+                                       ng-model="newCustomer.phone1"/>
+                                <div class="invalid-feedback">
+                                    {{newCustomerError.phone1[0]}}
+                                </div>
+                            </div>
+                            <div class="form-group"><label> {{'CUSTOMER.EMAIL'|translate}}</label>
+                                <input type="text"
+                                       class="form-control"
+                                       ng-class="newCustomerError.email             ?'is-invalid':''"
+                                       ng-model="newCustomer.email"/>
+                                <div class="invalid-feedback">
+                                    {{newCustomerError.email[0]}}
+                                </div>
+                            </div>
+                                <div class="form-group"><label> {{'CUSTOMER.PRODUCT_CODE'|translate}}</label>
+
+                                    <select
+                                            class="form-control"
+                                            ng-class="newCustomerError.product_code      ?'is-invalid':''"
+                                            ng-model="newCustomer.product_code">
+                                        <option value="">Chọn</option>
+                                        <option ng-repeat="service in lstServices"   ng-if="service.status==0" value="{{service.product_code}}">{{service.service_name}}</option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        {{newCustomerError.product_code[0]}}
+                                    </div>
+                                </div>
+                                <div class="form-group"><label> {{'CUSTOMER.ADD.STATUS'|translate}}</label>
+                                    <select
+                                            class="form-control"
+                                            ng-class="newCustomerError.status            ?'is-invalid':''"
+                                            ng-model="newCustomer.status">
+                                        <option value="">Chọn</option>
+                                        <option value="0">{{'LBL.STATUS.0'|translate}}</option>
+                                        <option value="1">{{'LBL.STATUS.1'|translate}}</option>
+
+
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        {{newCustomerError.status[0]}}
+                                    </div>
+                                </div>
+
+                        </div>
+                            <div class="col-6">
+
+
+
+
+                        <div class="form-group ">
+                            <label> {{'CUSTOMER.SIP.IP_AUTH'|translate}} (*)</label>
+                            <div class="form-row">
+                                <div class=" col">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend"><span class="input-group-text">Primary</span></div>
+                                        <input type="text"
+                                               class="form-control"
+                                               ng-class="newCustomerError.ip_auth           ?'is-invalid':''"
+                                               ng-model="newCustomer.ip_auth"/>
+                                        <div class="invalid-feedback">
+                                            {{newCustomerError.ip_auth[0]}}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend"><span class="input-group-text">Backup</span></div>
+                                        <input type="text"
+                                               class="form-control"
+                                               ng-class="newCustomerError.ip_auth_backup ?'is-invalid':''"
+                                               ng-model="newCustomer.ip_auth_backup"/>
+                                        <div class="invalid-feedback">
+                                            {{newCustomerError.ip_auth_backup[0]}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label> {{'CUSTOMER.SIP.IP_PROXY'|translate}}</label>
+                            <div class="form-row">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Primary</span></div>
+                                        <input type="text"
+                                               class="form-control"
+                                               ng-class="newCustomerError.ip_proxy          ?'is-invalid':''"
+                                               ng-model="newCustomer.ip_proxy"/>
+                                        <div class="invalid-feedback">
+                                            {{newCustomerError.ip_proxy[0]}}
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                                <div class="col">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Backup</span></div>
+                                        <input type="text"
+                                               class="form-control"
+                                               ng-class="newCustomerError.ip_proxy_backup         ?'is-invalid':''"
+                                               ng-model="newCustomer.ip_proxy_backup"/>
+                                        <div class="invalid-feedback">
+                                            {{newCustomerError.ip_proxy_backup[0]}}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="form-group"><label> {{'CUSTOMER.SIP.DESTINATION'|translate}}</label>
+                            <input type="text"
+                                   class="form-control"
+                                   ng-class="newCustomerError.destination       ?'is-invalid':''"
+                                   ng-model="newCustomer.destination"/>
+                            <div class="invalid-feedback">
+                                {{newCustomerError.destination[0]}}
+                            </div>
+                        </div>
+                        <div class="form-group"><label> {{'CUSTOMER.SIP.HOTLINE_NUMBERS'|translate}}</label>
+                            <input type="text"
+                                   class="form-control"
+                                   ng-class="newCustomerError.hotline_numbers   ?'is-invalid':''"
+                                   ng-model="newCustomer.hotline_numbers"/>
+                            <div class="invalid-feedback">
+                                {{newCustomerError.hotline_numbers[0]}}
+                            </div>
+                        </div>
+
+                        <div class="form-group"><label> {{'CUSTOMER.SIP.USE_TOS'|translate}}</label>
+                            <input type="text"
+                                   class="form-control"
+                                   ng-class="newCustomerError.use_tos   ?'is-invalid':''"
+                                   ng-model="newCustomer.use_tos"/>
+                            <div class="invalid-feedback">
+                                {{newCustomerError.use_tos[0]}}
+                            </div>
+                        </div>
+
+                        <div class="form-group"><label> {{'CUSTOMER.SIP.TOS_PRODUCT_CODE'|translate}}</label>
+                            <input type="text"
+                                   class="form-control"
+                                   ng-class="newCustomerError.tos_product_code   ?'is-invalid':''"
+                                   ng-model="newCustomer.tos_product_code"/>
+                            <div class="invalid-feedback">
+                                {{newCustomerError.tos_product_code[0]}}
+                            </div>
+                        </div>
+
+
+                        <div class="form-group"><label> {{'CUSTOMER.SIP.SPLIT_CONTRACT'|translate}}</label>
+                            <input type="text"
+                                   class="form-control"
+                                   ng-class="newCustomerError.split_contract   ?'is-invalid':''"
+                                   ng-model="newCustomer.split_contract"/>
+                            <div class="invalid-feedback">
+                                {{newCustomerError.split_contract[0]}}
+                            </div>
+                        </div>
+                        <div class="form-group"><label> {{'CUSTOMER.SIP.FEE_LIMIT'|translate}}</label>
+                            <input type="text"
+                                   class="form-control"
+                                   ng-class="newCustomerError.fee_limit   ?'is-invalid':''"
+                                   ng-model="newCustomer.fee_limit"/>
+                            <div class="invalid-feedback">
+                                {{newCustomerError.fee_limit[0]}}
+                            </div>
+                        </div>
+
+                        <div class="form-group"><label>Connection profile</label><select ng-model="newCustomer.profile_id_backup"
+                                                                                         class="form-control" ng-options="item.id as item.title for item in lstSipProfile">
+
+                        </select>
+                        </div>
+
+
+
+                        <div class="form-group">
+                            <button class="btn btn-primary"><i class="fa fa-plus"></i> Cập nhật </button>
+                            <button class="btn btn-secondary" ng-click="closeFormAdd()"><i class="fa fa-close"></i> Hủy</button>
+                        </div>
+                            </div>
+                            </div>
+                    </form>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
