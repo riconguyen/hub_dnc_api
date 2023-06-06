@@ -144,18 +144,20 @@
 
       $serviceID = $request->input('id');
       if (!$serviceID) {
-        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id','ocs_charge'),
+        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id','ocs_charge','is_prepaid'),
           ['service_name' => 'required|unicode_valid|max:50', 'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2',
             'product_code' => 'required|alpha_dash|unique:service_config,product_code|max:50',
-            'ocs_charge'=>'required|in:0,1'
+            'ocs_charge'=>'required|in:0,1',
+            'is_prepaid'=>'required|in:0,1',
 
           ]);
       } else {
-        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id','ocs_charge'),
+        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id','ocs_charge','is_prepaid'),
           ['service_name' => 'required|max:50',
             'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2',
-            'product_code' => 'required|alpha_dash|max:50',
-            'ocs_charge'=>'required|in:0,1'
+          'product_code' => 'required|alpha_dash|max:50',
+          'ocs_charge'=>'required|in:0,1',
+          'is_prepaid'=>'required|in:0,1',
           ]);
       }
 
@@ -177,12 +179,14 @@
         $service= new ServiceConfig();
         $service->created_at=date("Y-m-d H:i:s");
         $service->ocs_charge=request('ocs_charge');
+
       }
+      $service->is_prepaid=request('is_prepaid');
       $service->service_name=request('service_name');
       $service->type=request('type');
       $service->product_code=request('product_code');
       $service->status=request('status');
-      $service->status=request('status');
+
 
       $service->save();
 

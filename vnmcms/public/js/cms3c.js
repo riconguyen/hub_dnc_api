@@ -1016,6 +1016,7 @@ var ServiceConfig = function (data) {
 	this.type = 0;
 	this.status =0;
 	this.product_code = "";
+	this.is_prepaid=0;
 }
 
 
@@ -1034,6 +1035,12 @@ cms3c.controller('servicesControllerAdd', function ($scope, ApiServices, $locati
 		{id:0, title:$filter('translate')('Không ')},
 		{id:1, title:$filter('translate')('Tính cước qua OCS')}
 	]
+
+	$scope.lstPaymentOptions=[
+		{id:0, title:$filter('translate')('Trả sau ')},
+		{id:1, title:$filter('translate')('Trả trước')}
+	]
+
 
 	$scope.lstStatus=[
 		{id:0, title:$filter('translate')('Hoạt đông ')},
@@ -1070,6 +1077,9 @@ cms3c.controller('servicesControllerAdd', function ($scope, ApiServices, $locati
 	}
 	if ('status' in sharedInfo) {
 		$scope.addService.status = sharedInfo.status;
+	}
+	if ('is_prepaid' in sharedInfo) {
+		$scope.addService.is_prepaid = sharedInfo.is_prepaid;
 	}
 
 

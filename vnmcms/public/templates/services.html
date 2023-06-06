@@ -60,7 +60,10 @@
                                     class="fa fa-edit"></i> Sửa </button>
                         </div>
                         </span>
-                        <span  ng-click="viewServiceConfig(row, $index); " ng-if="col.field=='service_name' "> {{row.service_name}}</span>
+                        <span  ng-click="viewServiceConfig(row, $index); " ng-if="col.field=='service_name' "> {{row.service_name}}
+                       <br><span class="badge" ng-class="row.is_prepaid==1?'badge-info':'badge-secondary'"> {{row.is_prepaid==1?'Trả trước':'Trả sau'}}</span>
+                        
+                        </span>
                         <span  ng-if="col.field=='type' "> {{'SERVICE.TYPE.'+row.type|translate}}</span>
                         <span  ng-if="col.field=='status' ">
                         <span class="badge badge-success text-uppercase  p-1" ng-if="row.status==0">
@@ -81,33 +84,6 @@
 
 
             </table>
-
-
-            <!--<table   class="mt-1 table table-condensed table-bordered table-striped table-sm small table-responsive-sm bg-white">-->
-                <!--<tr>-->
-                    <!--<th class="header bg-white">{{"SERVICE.SERVICE_NAME"|translate}}</th>-->
-                    <!--<th class="header bg-white">{{"SERVICE.PRODUCT_CODE"|translate}}</th>-->
-                    <!--<th class="header bg-white">{{"SERVICE.TYPE.TITLE"|translate}}</th>-->
-                    <!--<th class="header bg-white">{{"LBL.STATUS.TITLE"|translate}}</th>-->
-                    <!--<th class="header bg-white" ng-show="!currentService">{{"LBL.CREATED_AT"|translate}}</th>-->
-                    <!--<th class="header bg-white" ng-show="!currentService">{{"LBL.UPDATED_AT"|translate}}</th>-->
-                <!--</tr>-->
-                <!--<tr ng-repeat="service in lstServices">-->
-                    <!--<th class="text-primary" ng-click="viewServiceConfig(service)"><a href=""> {{service.service_name}}</a>-->
-
-                    <!--</th>-->
-                    <!--<td class="text-primary" ng-click="viewServiceConfig(service)"> {{service.product_code}}</td>-->
-                    <!--<td>-->
-                        <!--<span >{{'SERVICE.TYPE.'+service.type|translate}}</span>-->
-                    <!--</td>-->
-                    <!--<td class="app-status-color-{{service.status}}">-->
-
-                        <!--{{'LBL.STATUS.'+service.status|translate}}-->
-                    <!--</td>-->
-                    <!--<td ng-show="!currentService">{{service.created_at}}</td>-->
-                    <!--<td ng-show="!currentService">{{service.updated_at}}</td>-->
-                <!--</tr>-->
-            <!--</table>-->
 
 
         </div>
@@ -153,6 +129,16 @@
 
                         {{'SERVICE.TYPE.'+currentService.type|translate}}
                     </li>
+                    
+                       <li class="list-group-item text-right">
+                        <span class="text-muted float-left">
+                        Thanh toán
+                        </span>
+
+                        {{currentService.is_prepaid==1?'Trả trước':'Trả sau   '}}
+                    </li>
+                    
+                    
                     <li class="list-group-item text-right">
                         <span class="text-muted float-left">
                         {{'LBL.CREATED_AT'|translate}}
