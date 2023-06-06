@@ -8,15 +8,20 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
 	$scope.SERVER_PROFILE= SERVER_PROFILE;
 
     var path= $location.path();
+    $scope.getLstOperatorTelco= function () {
+        ApiServices.getOperatorTelco().then(result=>{
+            $scope.lstOperatorTelco= result.data?result.data.data:[];
+            $scope.lstOperatorTelco.unshift({'id':"",'description':"Chọn"})
+        }, reason => {
 
+        })
+
+    }
+    $scope.lstOperatorTelco=[];
     if(path=="/accounts")
     {
         initServices();
-
-
     }
-
-
     function initServices() {
 
         var res= ApiServices.getServiceZoneQuantityType();
@@ -37,8 +42,12 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
           $.jGrowl("Không tải được dịch vụ",{themes:"error"})
         })
 
-    }
 
+
+
+        $scope.getLstOperatorTelco({});
+
+    }
 
     $scope.newCustomer={};
     $scope.searchCustomer='';
@@ -108,6 +117,7 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
 
     $scope.editCustomerForm=function (data) {
         $scope.editCustomer=angular.copy(data);
+        $scope.editCustomer.operator_telco_id= angular.copy(data.operator_telco_id?data.operator_telco_id:"");
         $("#editCustomerForm").modal('show');
 
     }
@@ -729,6 +739,8 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
     }
     $scope. viewCustomer = function (data) {
     	$scope.newHotlines_show=false;
+        console.log("current data ", data)
+
         $scope.currentCustomer = angular.copy(data); // reset before loaded
         // $scope.viewLogCustomer(data.id);
         if ($scope.currentCustomer.product_code  ) {
@@ -859,6 +871,7 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
 
 		$scope.newHotlines_show= true
 		$scope.newHotlines=new newHotlines($scope.currentCustomer)
+
 
 		console.log($scope.newHotlines);
 
@@ -1256,7 +1269,7 @@ cms3c.controller('customerControllerAdd', function ($scope, ApiServices, ApiV1, 
 
 	]
 
-	$scope.lstOperatorTelco=[];
+
 
     $scope.newCustomer= new Customer();
 
@@ -1275,21 +1288,21 @@ cms3c.controller('customerControllerAdd', function ($scope, ApiServices, ApiV1, 
     }
 
 
-
+    $scope.lstOperatorTelco=[];
     $scope.getLstOperatorTelco= function () {
        ApiServices.getOperatorTelco().then(result=>{
        	$scope.lstOperatorTelco= result.data?result.data.data:[];
-
+           $scope.lstOperatorTelco.unshift({'id':"",'description':"Chọn"})
 	   }, reason => {
 
 	   })
 
     }
 
-
+    $scope.getLstOperatorTelco({});
 
     $scope.getListService({});
-    $scope.getLstOperatorTelco({});
+
 
     // V1.2 Model ===============================================================
     $scope.closeFormAdd= function () {
@@ -1338,6 +1351,8 @@ function Customer() {
     this.enterprise_number="";
     this.cus_name=""
     this.baodo=0;
+    this.operator_telco_id="";
+    this.telco_destination="";
 
 
 }
@@ -1346,5 +1361,6 @@ function Customer() {
 function  newHotlines(data) {
 	this.enterprise_number=data.enterprise_number;
 	this.hotline_numbers= "";
+    this.operator_telco_id=data.operator_telco_id?data.operator_telco_id:"";
 
 }

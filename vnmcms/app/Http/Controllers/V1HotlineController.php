@@ -42,84 +42,92 @@
 
     public function addCustomerHotlines(Request $request) // DOC 4.2
     {
-      //      return ['a'=>$request->api_source];
+        //      return ['a'=>$request->api_source];
 
-      $BACKUPSTATE = $request->single_mode == 1 ? false : config("server.backup_site");
-      $API_STATE = $request->api_source ? "API|" : "WEB|";
-      $startTime = round(microtime(true) * 1000);
-      $user = $request->user;
+        $BACKUPSTATE = $request->single_mode == 1 ? false : config("server.backup_site");
+        $API_STATE = $request->api_source ? "API|" : "WEB|";
+        $startTime = round(microtime(true) * 1000);
+        $user = $request->user;
 
-      if (!$this->checkEntity($user->id, "ADD_HOTLINE")) {
-        Log::info($user->email . '  TRY TO GET V1HotlineController.addCustomerHotlines WITHOUT PERMISSION');
-        return response()->json(['status' => false, 'message' => "Permission denied"], 403);
-      }
+        if (!$this->checkEntity($user->id, "ADD_HOTLINE")) {
+            Log::info($user->email . '  TRY TO GET V1HotlineController.addCustomerHotlines WITHOUT PERMISSION');
+            return response()->json(['status' => false, 'message' => "Permission denied"], 403);
+        }
 
-      $validData = $request->only('enterprise_number', 'hotline_numbers', 'profile_id_backup');
-      $validator = Validator::make($validData, ['enterprise_number' => 'required|alpha_dash|max:250|exists:customers,enterprise_number', 'profile_id_backup' => 'nullable|in:2,3,4', 'hotline_numbers' => 'required|number_dash|max:1500']);
-      if ($validator->fails()) {
-        $logDuration = round(microtime(true) * 1000) - $startTime;
-        Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL Invalid data");
+        $validData = $request->only('enterprise_number', 'hotline_numbers', 'profile_id_backup', 'operator_telco_id');
+        $validator = Validator::make($validData,
+            ['enterprise_number' => 'required|alpha_dash|max:250|exists:customers,enterprise_number',
+                'profile_id_backup' => 'nullable|in:2,3,4',
+                'hotline_numbers' => 'required|number_dash|max:1500',
+                'operator_telco_id' => 'nullable|max:40|exists:operator_telco,id'
+            ]);
+        if ($validator->fails()) {
+            $logDuration = round(microtime(true) * 1000) - $startTime;
+            Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL Invalid data");
 
-        return $this->ApiReturn($validator->errors(), false, 'The given data was invalid', 422);
-      }
+            return $this->ApiReturn($validator->errors(), false, 'The given data was invalid', 422);
+        }
 
-      if (strpos($request->hotline_numbers, ',') !== false) {
-        $hotlineNumbers = explode(',', $request->hotline_numbers);
-      } else {
-        $hotlineNumbers = [$request->hotline_numbers];
-      }
-
-      // Validate if is Hotline Number
-
-      $lstErrors = [];
-
-      foreach ($hotlineNumbers as $number) {
-        $re = '/^[0-1][0-9]{7,11}$/m';
-
-        if (preg_match($re, $number, $matches, PREG_OFFSET_CAPTURE, 0)) {
+        if (strpos($request->hotline_numbers, ',') !== false) {
+            $hotlineNumbers = explode(',', $request->hotline_numbers);
         } else {
-          array_push($lstErrors, $number);
-        }
-      }
-      if (count($lstErrors) > 0) {
-        $logDuration = round(microtime(true) * 1000) - $startTime;
-        Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL Hotline invalid format|" . implode(",", $lstErrors));
-
-        return $this->ApiReturn(["hotline_numbers" => ["Hotline numbers is invalid"]], false, 'The given data was invalid: ' . implode(",", $lstErrors), 422);
-      }
-
-      $lstInUseHotline = Hotlines::whereIn('hotline_number', $hotlineNumbers)->whereIn('status', [0, 1])->get();
-      if (count($lstInUseHotline) > 0) {
-        $linesInUsed = [];
-        foreach ($lstInUseHotline as $line) {
-          array_push($linesInUsed, $line->hotline_number);
+            $hotlineNumbers = [$request->hotline_numbers];
         }
 
-        $logDuration = round(microtime(true) * 1000) - $startTime;
-        Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL Hotlines in used|" . implode(",", $linesInUsed));
 
-        return $this->ApiReturn(["hotline_numbers" => ["Hotline numbers is uses " . implode(",", $linesInUsed)]], false, 'The given data was invalid', 422);
-      }
+        // Validate if is Hotline Number
 
-      $enterprise = $request->enterprise_number;
+        $lstErrors = [];
 
-      $customer = Customers::where("enterprise_number", $enterprise)->whereIn('blocked', [0, 1])->first();
-      $vendorData = DB::table('sbc.vendors')->where('i_vendor', $request->vendor_id ? $request->vendor_id : 1)->first();
-      $service= ServiceConfig::where('id',$customer->service_id)->first();
-      $isBackup = false;
-      if (!$customer) {
-        $logDuration = round(microtime(true) * 1000) - $startTime;
-        Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL|Not found active enterprise number");
+        foreach ($hotlineNumbers as $number) {
+            $re = '/^[0-1][0-9]{7,11}$/m';
 
-        return $this->ApiReturn([], false, "Not found active enterprise number " . $enterprise, 404);
-      }
+            if (preg_match($re, $number, $matches, PREG_OFFSET_CAPTURE, 0)) {
+            } else {
+                array_push($lstErrors, $number);
+            }
+        }
+        if (count($lstErrors) > 0) {
+            $logDuration = round(microtime(true) * 1000) - $startTime;
+            Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL Hotline invalid format|" . implode(",", $lstErrors));
 
-      if ($customer->server_profile != config("server.server_profile")) {
-        $isBackup = true;
-      }
+            return $this->ApiReturn(["hotline_numbers" => ["Hotline numbers is invalid"]], false, 'The given data was invalid: ' . implode(",", $lstErrors), 422);
+        }
+
+        $lstInUseHotline = Hotlines::whereIn('hotline_number', $hotlineNumbers)->whereIn('status', [0, 1])->get();
+        if (count($lstInUseHotline) > 0) {
+            $linesInUsed = [];
+            foreach ($lstInUseHotline as $line) {
+                array_push($linesInUsed, $line->hotline_number);
+            }
+
+            $logDuration = round(microtime(true) * 1000) - $startTime;
+            Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL Hotlines in used|" . implode(",", $linesInUsed));
+
+            return $this->ApiReturn(["hotline_numbers" => ["Hotline numbers is uses " . implode(",", $linesInUsed)]], false, 'The given data was invalid', 422);
+        }
+
+        $enterprise = $request->enterprise_number;
+
+        $customer = Customers::where("enterprise_number", $enterprise)->whereIn('blocked', [0, 1])->first();
+        $vendorData = DB::table('sbc.vendors')->where('i_vendor', $request->vendor_id ? $request->vendor_id : 1)->first();
+        $service = ServiceConfig::where('id', $customer->service_id)->first();
 
 
-      $use_brand_name = false;
+        if (!$customer) {
+            $logDuration = round(microtime(true) * 1000) - $startTime;
+            Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL|Not found active enterprise number");
+
+            return $this->ApiReturn([], false, "Not found active enterprise number " . $enterprise, 404);
+        }
+        $operator_telco_id = request('operator_telco_id', $customer->operator_telco_id);
+        if (!$operator_telco_id)
+        {
+            return $this->ApiReturn(["operator_telco_id"=>["Operator telco Id is invalid"]], false, "The given data was invalid", 422);
+        }
+
+
+        $use_brand_name = false;
       if ($customer) {
         $use_brand_name = ServiceConfig::where("id", $customer->service_id)->where("product_code", "like", '%VB%')->exists();
       }
@@ -138,21 +146,17 @@
             'enterprise_number' => $request->enterprise_number,
             'hotline_number' => $line,
             'status' => $customer->blocked,
+            'operator_telco_id' => $operator_telco_id,
             'use_brand_name' => $use_brand_name,
             'ocs_charge'=>$service?$service->ocs_charge:0
 
           );
 
-          if ($isBackup) {
-            $data['status'] = 1;
-            $data['pause_state'] = 11;
-          }
           $hotlineId = Hotlines::insertGetId($data);
 
           $CDR_TEXT = $enterprise . "|" . config("sbc.CDR.CHANGE") . "|" . date("YmdHis") . "|" . $line;
-          if (!$isBackup) {
+
             $this->CDRActivity($customer->server_profile, $CDR_TEXT, $enterprise, $API_STATE . "ADD_HOTLINE");
-          }
 
           $this->SetActivity($data, 'hot_line_config', $hotlineId, 0, config("sbc.action.add_hotline"), "Tạo mới hotlines " . $line, $request->enterprise_number, $line);
           $sip->hotline_id = $hotlineId;
@@ -168,7 +172,7 @@
           $sip->destination = $customer->destination;
           $sip->telco_destination = $customer->telco_destination;
           $sip->profile_id_backup = $request->profile_id_backup ? $request->profile_id_backup : config('sbc.profile_id_backup');
-          $sip->isRunOnBackup = $isBackup;
+          $sip->isRunOnBackup = false;
           $sip->status = $data['status'];
 
           $sipOk = $this->addSipRouting($sip, false);

@@ -15,6 +15,7 @@ var ServicePrefix=function()
     this.prefix_called_match_switch=0;
     this.prefix_match_constraint=0;
     this.charge_block_type= 0;
+    this.operator_telco_id="";
 
 }
 
@@ -39,7 +40,18 @@ cms3c.controller('servicesController', function ($scope, ApiServices,$filter,  $
 
     }
 
+    $scope.lstOperatorTelco=[];
+    $scope.getLstOperatorTelco= function () {
+        ApiServices.getOperatorTelco().then(result=>{
+            $scope.lstOperatorTelco= result.data?result.data.data:[];
+            $scope.lstOperatorTelco.unshift({'id':"",'description':"Chọn"})
+        }, reason => {
 
+        })
+
+    }
+
+    $scope.getLstOperatorTelco({});
     function initServices() {
 
         var res= ApiServices.getServiceZoneQuantityType();

@@ -587,11 +587,30 @@
         return response()->json(['status' => false, 'message' => "Permission denied"], 403);
       }
 
-      $data = $request->only("id", "service_config_id", "prefix_type_id", "description", "prefix_caller", "prefix_called", "prefix_caller_match_switch", "prefix_called_match_switch", "prefix_match_constraint", "charge_block_type", "priority");
+      $data = $request->only("id", "service_config_id", "prefix_type_id",
+          "description", "prefix_caller", "prefix_called",
+          "prefix_caller_match_switch",
+          "prefix_called_match_switch",
+          "prefix_match_constraint",
+          "charge_block_type",
+          "priority",
+          "operator_telco_id"
+      );
 
       $errors = Validator::make($data, [
 
-        "id" => "nullable|exists:service_prefix_type,id", "service_config_id" => "required|exists:service_config,id", "prefix_type_id" => "required", "description" => "required|max:100", "prefix_caller" => "nullable|max:2000", "prefix_called" => "nullable|max:2000", "prefix_caller_match_switch" => "required|in:0,1", "prefix_called_match_switch" => "required|in:0,1", "prefix_match_constraint" => "required|in:0,1,2", "charge_block_type" => "required|in:0,1,2", "priority" => "required"
+        "id" => "nullable|exists:service_prefix_type,id",
+          "service_config_id" => "required|exists:service_config,id",
+          "operator_telco_id" => "required|exists:operator_telco,id",
+          "prefix_type_id" => "required",
+          "description" => "required|max:100",
+          "prefix_caller" => "nullable|max:2000",
+          "prefix_called" => "nullable|max:2000",
+          "prefix_caller_match_switch" => "required|in:0,1",
+          "prefix_called_match_switch" => "required|in:0,1",
+          "prefix_match_constraint" => "required|in:0,1,2",
+          "charge_block_type" => "required|in:0,1,2",
+          "priority" => "required"
 
       ]);
       if ($errors->fails()) {

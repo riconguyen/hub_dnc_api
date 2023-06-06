@@ -205,6 +205,7 @@ class V1CustomerController extends Controller
       'ip_proxy_backup' => 'nullable|ipv4|max:50',
       'destination' => 'required|ipV4Port|max:50',
       'telco_destination' => 'nullable|ipV4Port|max:50',
+      'operator_telco_id' => 'required|max:10|exists:operator_telco,id',
       'hotline_numbers' => 'required|number_dash|max:1500',
       'split_contract' => 'nullable|max:25|exists:customers,enterprise_number',
       'fee_limit' => 'nullable|integer|max:9999999999',
@@ -233,12 +234,8 @@ class V1CustomerController extends Controller
       return $this->ApiReturn(['product_code' => ['Product code Not available or is temporary disabled']], false, 'The given data was invalid', 422);
     }
     $use_brand_name=false;
-    if($resServiceId)
-    {
-
-      $use_brand_name= ServiceConfig::where("id",$resServiceId->id)->where("product_code","like",'%VB%')->exists();
-
-
+    if ($resServiceId) {
+        $use_brand_name = ServiceConfig::where("id", $resServiceId->id)->where("product_code", "like", '%VB%')->exists();
     }
 
 
@@ -287,6 +284,7 @@ class V1CustomerController extends Controller
     $ip_proxy = $request->ip_proxy;
     $destination = $request->destination;
     $telco_destination = request("telco_destination", null);
+      $operator_telco_id = request("operator_telco_id", null);
     $ip_auth_backup = $request->ip_auth_backup ? $request->ip_auth_backup : null;
     $ip_proxy_backup = $request->ip_proxy_backup ? $request->ip_proxy_backup : null;
 
@@ -298,6 +296,7 @@ class V1CustomerController extends Controller
     $newCustomer['pause_state'] = "10";
     $newCustomer['server_profile']=config("server.server_profile");
     $newCustomer['telco_destination']=$telco_destination;
+    $newCustomer['operator_telco_id']=$operator_telco_id;
 
 
     $vendorData = DB::table('sbc.vendors')->where('i_vendor', $request->vendor_id ? $request->vendor_id : 1)->first();
@@ -366,6 +365,7 @@ class V1CustomerController extends Controller
             'hotline_number' => $line, 'status' => $request->status,
             'use_brand_name'=>$use_brand_name,
             'ocs_charge'=>$resServiceId->ocs_charge,
+            'operator_telco_id'=>$operator_telco_id
 
           );
 
@@ -472,7 +472,7 @@ class V1CustomerController extends Controller
           }
 
         $validData = $request->only('cus_name', 'enterprise_number', 'companyname', 'addr', 'phone1', 'email', 'ip_auth','ip_proxy','destination', 'telco_destination',  'ip_auth_backup',
-          'ip_proxy_backup');
+          'ip_proxy_backup','operator_telco_id');
         $validator = Validator::make($validData, [
             'cus_name' => 'nullable|max:250',
             'enterprise_number' => 'required|alpha_dash|max:25|min:5|exists:customers,enterprise_number',
@@ -486,6 +486,7 @@ class V1CustomerController extends Controller
           'ip_proxy_backup' => 'nullable|ipv4|max:100',
             'destination' => 'nullable|ipV4Port|max:100',
             'telco_destination' => 'nullable|ipV4Port|max:50',
+            'operator_telco_id' => 'required|max:50|exists:operator_telco,id',
         ]);
         if ($validator->fails()) {
           $logDuration= round(microtime(true) * 1000)-$startTime;
@@ -513,6 +514,7 @@ class V1CustomerController extends Controller
         $customer->ip_proxy= request('ip_proxy', null);
         $customer->destination= request('destination', null);
         $customer->telco_destination= request('telco_destination', null);
+        $customer->operator_telco_id= request('operator_telco_id');
         $customer->ip_auth_backup= request('ip_auth_backup', null);
         $customer->ip_proxy_backup= request('ip_proxy_backup', null);
 
@@ -2289,7 +2291,7 @@ class V1CustomerController extends Controller
             $sql=" SELECT a.companyname, a.blocked as status, a.updated_at, a.created_at, a.pause_state, a.server_profile,
                      a.enterprise_number,  b.total_amount total, c.service_name, 
                           a.ip_auth, a.ip_proxy,a.ip_auth_backup, a.ip_proxy_backup, a.destination, a.account_id, 
-                         a.addr, a.email, a.cus_name, a.id, a.telco_destination, 
+                         a.addr, a.email, a.cus_name, a.id, a.telco_destination,  a.operator_telco_id,
                      e.charge_result, e.charge_time as event_occur_time, a.phone1, c.product_code, a.cfu
                     FROM customers a
                     LEFT JOIN 

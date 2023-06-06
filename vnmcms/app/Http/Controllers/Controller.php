@@ -338,7 +338,7 @@ class Controller extends BaseController
   else
   {
     $quantity = DB::select($sql, [$service_id]);
-    Log::info($quantity);
+
     if (count($quantity) > 0) {
       $returnQty= [];
       foreach ($quantity as $qty)

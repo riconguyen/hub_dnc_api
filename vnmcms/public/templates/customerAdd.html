@@ -237,16 +237,18 @@
                         </div>
                         
                         
-                        <div class="form-group"><label> Telco</label>
+                        <div class="form-group"><label> Nhà mạng </label>
                             
-                            <select ng-model="newCustomer.operator_telco_id" ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
+                            <select class="form-control"
+                                    ng-class="newCustomerError.operator_telco_id   ?'is-invalid':''"
+                                    ng-model="newCustomer.operator_telco_id" ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
+
+
                             </select>
-                            <input type="text"
-                                   class="form-control"
-                                   ng-class="newCustomerError.hotline_numbers   ?'is-invalid':''"
-                                   ng-model="newCustomer.hotline_numbers"/>
+
+
                             <div class="invalid-feedback">
-                                {{newCustomerError.hotline_numbers[0]}}
+                                {{newCustomerError.operator_telco_id[0]}}
                             </div>
                         </div>
                         

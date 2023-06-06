@@ -530,23 +530,25 @@
 
                         <div class="form-group">
                         <label>Thêm mới hotline</label>
-                        <div class="input-group">
+
 
                             <input type="text" class="form-control" ng-model="newHotlines.hotline_numbers" placeholder="Có thể thêm nhiều hotline, cách nhau bởi dấu phảy"
                                    ng-class="newHotlines.error.hotline_numbers?'is-invalid':''"
                                     class="form-control">
-
-
-
-
-
-
-                            <div class="input-group-append">
-                            <button class="btn btn-warning" ng-click="onSaveHotline(newHotlines)"><i class="fa fa-save"></i> Thêm  </button>
-                            </div>
-
                             <div class="invalid-feedback"> {{newHotlines.error.hotline_numbers[0]}}</div>
+
                         </div>
+                        <div class="form-group"><label> Nhà mạng </label>
+                            <div class="input-group">
+                            <select class="form-control"
+                                    ng-class="newHotlines.error.operator_telco_id  ?'is-invalid':''"
+                                    ng-model="newHotlines.operator_telco_id" ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
+                            </select>
+                                <div class="input-group-append">
+                                    <button class="btn btn-warning" ng-click="onSaveHotline(newHotlines)"><i class="fa fa-save"></i> Thêm  </button>
+                                </div>
+                                <div class="invalid-feedback"> {{newHotlines.error.operator_telco_id[0]}}</div>
+                            </div>
 
                         </div>
 
@@ -1160,12 +1162,7 @@
                     </div>
                 </div>
            <div class="form-group">
-                            <label>{{'CUSTOMER.SIP.DESTINATION'|translate}}</label>
-<!--                            <input type="text" class="form-control" ng-model="editCustomer.destination"-->
-<!--                                   ng-class="currentCustomer.error.destination   ?'is-invalid':''"-->
-<!--                            />-->
-<!--               <div class="invalid-feedback">{{currentCustomer.error.destination}}  </div>-->
-
+            <label>{{'CUSTOMER.SIP.DESTINATION'|translate}}</label>
                <div class="form-row">
                    <div class="col">
                        <div class="input-group">
@@ -1197,9 +1194,17 @@
                    </div>
 
                </div>
+           </div>
+            <div class="form-group"><label> Nhà mạng </label>
 
+                <select class="form-control"
+                        ng-class="editCustomer.error.operator_telco_id  ?'is-invalid':''"
+                        ng-model="editCustomer.operator_telco_id"
+                        ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
+                </select>
+                <div class="invalid-feedback"> {{ editCustomer.error.operator_telco_id[0] }}</div>
 
-                        </div>
+            </div>
 
             </div>
             <div class="modal-footer">
