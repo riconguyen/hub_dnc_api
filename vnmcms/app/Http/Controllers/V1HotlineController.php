@@ -9,11 +9,10 @@
   use App\HotlineStatusLog;
   use App\HotlineStatusLogBackup;
   use App\SBCAcl;
-  use App\SBCAclBackup;
+  use App\SBCCallGroup;
   use App\SBCRouting;
   use App\SBCRoutingBackup;
   use App\ServiceConfig;
-  use App\ServiceConfigBackup;
   use Illuminate\Http\Request;
   use Illuminate\Support\Facades\DB;
   use Illuminate\Support\Facades\Log;
@@ -379,17 +378,6 @@
       }
 
       $isBackup = false;
-      if ($BACKUP_STATE) {
-        $customerBackup = CustomersBackup::where('enterprise_number', $enterprise)->whereIn('blocked', [0, 1])->first();
-        if (!$customerBackup) {
-          Log::info("Not found customer on backup : " . $enterprise);
-          return $this->ApiReturn([], false, "Enterprise not active or not found", 404);
-        }
-
-        if ($customer->server_profile != config("server.server_profile")) {
-          $isBackup = true;
-        }
-      }
 
 
 
@@ -397,20 +385,11 @@
       $reason = request('reason', "--");
 
       DB::beginTransaction();
-      if ($BACKUP_STATE) {
-        DB::connection("db2")->beginTransaction();
-      }
+
 
       try {
         $line = Hotlines::where('hotline_number', $hotLine)->where('cus_id', $customer->id)->whereIn('status', [0, 1])->first();
-          if ($BACKUP_STATE) {
-            $lineBackup = HotlinesBackup::where('hotline_number', $hotLine)->where('cus_id', $customerBackup->id)->whereIn('status', [0, 1])->first();
-            if (!$lineBackup) {
-              $logDuration = round(microtime(true) * 1000) - $startTime;
-              Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|CHANGE_HOTLINE_STATUS|" . $logDuration . "|CHANGE_HOTLINE_STATUS_FAIL Hotline not exists on backup");
-              return $this->ApiReturn(['hotline_number' => 'Hotline number on backup not match with present enterprise number or deleted'], false, 'The given data was invalid', 422);
-            }
-          }
+
 
 
         if ((!$line || $customer->blocked == 1) && !$isBackup ) {
@@ -423,103 +402,6 @@
         $CDR_ACTION = $newStatus == 1 ? config("sbc.CDR.PAUSE") : config("sbc.CDR.ACTIVE");
         $CDR_TEXT = $enterprise . "|" . $CDR_ACTION . "|" . date("YmdHis") . "|" . $hotLine;
         $this->CDRActivity($customer->server_profile, $CDR_TEXT, $enterprise, $API_STATE . "CHANGE_STATUS");
-
-        if (!$isBackup) {
-          // Update hotline
-
-//          $saveStatusHotline = true;
-//          if ($newStatus == 0) {
-//
-//
-//            if ($reason == config('hotline.khyc')) {
-//
-//              HotlineStatusLog::where('hotline_id', $line->id)->where('reason', config('hotline.khyc'))->delete();
-//
-//              if($BACKUP_STATE)
-//              {
-//                HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason', config('hotline.khyc'))->delete();
-//              }
-//
-//              $resLog = HotlineStatusLog::where('hotline_id', $line->id)->where('reason', '!=', config('hotline.khyc'))->first();
-//              if ($resLog) {
-//                $saveStatusHotline = false;
-//              }
-//              // Mở bình thường
-//            } else {
-//
-//              HotlineStatusLog::where('hotline_id', $line->id)->where('reason', '!=', config('hotline.khyc'))->delete();
-//              if($BACKUP_STATE)
-//              {
-//                HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason', '!=', config('hotline.khyc'))->delete();
-//
-//              }
-//
-//              $resLog = HotlineStatusLog::where('hotline_id', $line->id)->where('reason', config('hotline.khyc'))->first();
-//
-//              if ($resLog) {
-//                $saveStatusHotline = false;
-//              }
-//            }
-//
-//
-//          } else { //
-//
-//            Log::info("CHECK reason".$reason);
-//            Log::info("CHECK hotline.khyc".config('hotline.khyc'));
-//
-//
-//
-//            if ($reason == config('hotline.khyc')) // Khóa theo KHYC
-//            {
-//              $res = HotlineStatusLog::where('hotline_id', $line->id)->where('reason', config('hotline.khyc'))->first();
-//                if ($BACKUP_STATE) {
-//                  $resBackup = HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason', config('hotline.khyc'))->first();
-//                  if ($resBackup) {
-//                    $resBackup->updated_at = date("Y-m-d H:i:s");
-//                    $resBackup->save();
-//                  } else {
-//                    HotlineStatusLogBackup::insert(['hotline_id' => $lineBackup->id, 'cus_id' => $customerBackup->id, 'hotline_number' => $lineBackup->hotline_number, 'enterprise_number' => $enterprise, 'reason' => $reason, 'user_id' => $user->id]);
-//                  }
-//                }
-//
-//              if ($res) {
-//                $res->updated_at = date("Y-m-d H:i:s");
-//                $res->save();
-//              } else {
-//                HotlineStatusLog::insert(['hotline_id' => $line->id, 'cus_id' => $customer->id,
-//                  'hotline_number' => $line->hotline_number,
-//                  'enterprise_number' => $enterprise,
-//                  'reason' => $reason,
-//                  'user_id' => $user->id]);
-//              }
-//            } else {
-//              $res = HotlineStatusLog::where('hotline_id', $line->id)->where('reason', '!=', config('hotline.khyc'))->first();
-//              if ($BACKUP_STATE) {
-//                $resBackup = HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason','!=',  config('hotline.khyc'))->first();
-//                if ($resBackup) {
-//                  $resBackup->updated_at = date("Y-m-d H:i:s");
-//                  $resBackup->save();
-//                } else {
-//                  HotlineStatusLogBackup::insert(['hotline_id' => $lineBackup->id,
-//                    'cus_id' => $customerBackup->id,
-//                    'hotline_number' => $lineBackup->hotline_number, 'enterprise_number' => $enterprise,
-//                    'reason' => $reason, 'user_id' => $user->id]);
-//                }
-//              }
-//
-//              if ($res) {
-//                $res->updated_at = date("Y-m-d H:i:s");
-//                $res->reason = $reason;
-//                $res->save();
-//              } else {
-//                HotlineStatusLog::insert(['hotline_id' => $line->id, 'cus_id' => $customer->id, 'hotline_number' => $line->hotline_number,
-//                  'enterprise_number' => $enterprise, 'user_id' => $user->id, 'reason' => $reason,]);
-//              }
-//            }
-//          }
-//          Log::info("SAVE STATUS CHECK BEFORE UPDATE LINE");
-//          Log::info($saveStatusHotline);
-
 
 
 
@@ -623,122 +505,24 @@
             Log::info([$newStatus, $customer->id, $hotLine, $hotLine]);
 
 
+
             $line->save();
+
+            $CallerGroup = SBCCallGroup::where('cus_id', $customer->id)->where('caller',$line->hotline_number)->update(['status'=>$newStatus]);
 
             /** @var LOG $logDuration */
             $logDuration = round(microtime(true) * 1000) - $startTime;
             Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|CHANGE_HOTLINE_STATUS|" . $logDuration . "|CHANGE_HOTLINE_STATUS_SUCCESS");
           }
 
-        } else { // LUU VAO BACKUP
 
-          // Update hotline
-
-          $saveStatusHotline = true;
-          if ($newStatus == 0) {
-            if ($reason == config('hotline.khyc')) {
-              HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason',config('hotline.khyc'))->delete();
-              HotlineStatusLog::where('hotline_id', $line->id)->where('reason',config('hotline.khyc'))->delete();
-
-
-              $resLog = HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason','!=',config('hotline.khyc'))->first();
-              if ($resLog) {
-                $saveStatusHotline = false;
-              }
-              // Mở bình thường
-            } else {
-              HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason','!=',config('hotline.khyc'))->delete();
-
-              HotlineStatusLog::where('hotline_id', $line->id)->where('reason','!=',config('hotline.khyc'))->delete();
-
-              $resLog = HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason',config('hotline.khyc'))->first();
-              if ($resLog) {
-                $saveStatusHotline = false;
-              }
-            }
-          } else { //
-            if ($reason == config('hotline.khyc')) // Khóa theo KHYC
-            {
-              $res = HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason', config('hotline.khyc'))->first();
-              if ($res) {
-                $res->updated_at = date("Y-m-d H:i:s");
-                $res->save();
-              } else {
-                HotlineStatusLogBackup::insert(['hotline_id' => $lineBackup->id, 'cus_id' => $customerBackup->id, 'hotline_number' => $lineBackup->hotline_number, 'enterprise_number' => $enterprise, 'reason' => $reason, 'user_id' => $user->id]);
-              }
-              // Main profile
-              $resMain = HotlineStatusLog::where('hotline_id', $line->id)->where('reason', config('hotline.khyc'))->first();
-              if ($resMain) {
-                $resMain->updated_at = date("Y-m-d H:i:s");
-                $resMain->save();
-              } else {
-                HotlineStatusLog::insert(['hotline_id' => $line->id, 'cus_id' => $customer->id,
-                  'hotline_number' => $line->hotline_number,
-                  'enterprise_number' => $enterprise,
-                  'reason' => $reason,
-                  'user_id' => $user->id]);
-              }
-
-
-            } else {
-              $res = HotlineStatusLogBackup::where('hotline_id', $lineBackup->id)->where('reason', '!=', config('hotline.khyc'))->first();
-              if ($res) {
-                $res->updated_at = date("Y-m-d H:i:s");
-                $res->reason = $reason;
-                $res->save();
-              } else {
-                HotlineStatusLogBackup::insert(['hotline_id' => $lineBackup->id, 'cus_id' => $customerBackup->id, 'hotline_number' => $lineBackup->hotline_number, 'reason' => $reason, 'enterprise_number' => $enterprise, 'user_id' => $user->id]);
-              }
-
-              // Main profile
-              $resMain = HotlineStatusLog::where('hotline_id', $line->id)->where('reason','!=', config('hotline.khyc'))->first();
-              if ($resMain) {
-                $resMain->updated_at = date("Y-m-d H:i:s");
-                $resMain->reason = $reason;
-                $resMain->save();
-              } else {
-                HotlineStatusLog::insert(['hotline_id' => $line->id, 'cus_id' => $customer->id,
-                  'hotline_number' => $line->hotline_number,
-                  'enterprise_number' => $enterprise,
-                  'reason' => $reason,
-                  'user_id' => $user->id]);
-              }
-
-            }
-          }
-
-          if ($saveStatusHotline) {
-            $textLogHotline = $newStatus == 1 ? "Chặn 2 chiều hotline " : "Mở 2 chiều hotline ";
-
-            //      $this->SetActivity($validData, "hot_line_config",$line->id, 0, "UPDATE",$enterprise."| Thay đổi trạng thái hotline |$hotLine| từ $line->status sang $newStatus");
-            $this->SetActivity($request->all(), 'hot_line_config', $lineBackup->id, 0, config("sbc.action.pause_state_hotline"), "[BACKUPSITE]" . $textLogHotline . $hotLine, $enterprise, $hotLine);
-
-            $lineBackup->status = $newStatus;
-            $lineBackup->updated_at = date("Y-m-d H:i:s");
-            if ($newStatus == 0) {
-              $lineBackup->pause_state = "10";
-            }
-
-            DB::connection('db2')->update("update sbc.routing set status=?  where i_customer=? and (ifNUll(callee,'')= ? or ifNull(caller,'')=?) ", [$newStatus, $customerBackup->id, $hotLine, $hotLine]);
-
-            $lineBackup->save();
-            $logDuration = round(microtime(true) * 1000) - $startTime;
-            Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|CHANGE_HOTLINE_STATUS|" . $logDuration . "|CHANGE_HOTLINE_STATUS_SUCCESS");
-          } else {
-            // Xu ly da bi chan theo yc khach hang
-          }
-        }
 
         DB::commit();
-        if ($BACKUP_STATE) {
-          DB::connection("db2")->commit();
-        }
+
       } catch (\Exception $exception) {
         Log::info($exception->getTraceAsString());
         DB::rollback();
-        if ($BACKUP_STATE) {
-          DB::connection("db2")->rollback();
-        }
+
 
         return $this->ApiReturn(null, false, "Internal server error", 500);
       }
@@ -791,9 +575,7 @@
       }
 
       DB::beginTransaction();
-      if ($BACKUP_STATE) {
-        DB::connection("db2")->beginTransaction();
-      }
+
 
       try {
         $this->SetActivity($request->all(), 'hot_line_config', $hotLine->id, 0, config("sbc.action.cancel_hotline"), "Hủy hotline " . $line, $enterprise, $line);
@@ -801,12 +583,7 @@
         Hotlines::where('hotline_number', $request->hotline_number)->whereIn('status', [0, 1])->update(['status' => 2, 'sip_config' => null, 'updated_at' => date("Y-m-d H:i:s")]);
 
         SBCRouting::where('caller', $request->hotline_number)->orWhere('callee', $request->hotline_number)->delete();
-
-        if ($BACKUP_STATE) {
-          HotlinesBackup::where('hotline_number', $request->hotline_number)->whereIn('status', [0, 1])->update(['status' => 2, 'sip_config' => null, 'updated_at' => date("Y-m-d H:i:s")]);
-
-          SBCRoutingBackup::where('caller', $request->hotline_number)->orWhere('callee', $request->hotline_number)->delete();
-        }
+        SBCCallGroup::where('cus_id',$customer->id)->where('caller',$line)->delete();
 
         $CDR = $request->enterprise_number . "|2|" . date("YmdHis") . "|" . $request->hotline_number;
         $this->CDRActivity($customer->server_profile, $CDR, $request->enterprise_number, $API_STATE . "REMOVE_HOTLINE");
@@ -816,16 +593,12 @@
 
         DB::commit();
 
-        if ($BACKUP_STATE) {
-          DB::connection("db2")->commit();
-        }
+
       } catch (\Exception $exception) {
         Log::info(json_encode($exception));
         DB::rollback();
 
-        if ($BACKUP_STATE) {
-          DB::connection("db2")->rollback();
-        }
+
         return $this->ApiReturn([], false, "Error remove Hotline ", 500);
       }
 
@@ -1299,21 +1072,28 @@
           $line->status = $resultStatus;
           $line->pause_state = $resultState;
 
-          $line->save();;
+          $line->save();
+
+
+          //Cập nnhật caller group
+          //
+          //
+
+          $CallerGroup = SBCCallGroup::where('caller', $hotlineNo)->where('cus_id', $customer->id)->first();
+
+          if ($CallerGroup) {
+            $CallerGroup->status = $outDirectionValue;
+            $CallerGroup->save();
+          }
 
           $logAction = $sbcDirection == 1 ? config("sbc.action.pause_call_out") : config("sbc.action.pause_call_in");
-          if ($RUNONBACKUP) {
-            SBCRoutingBackup::where('i_customer', $customer->id)->where('direction', $outDirection)->where('caller', $hotlineNo)->update(["status" => $outDirectionValue]);
-            SBCRoutingBackup::where('i_customer', $customer->id)->where('direction', $inDirection)->where('callee', $hotlineNo)->update(["status" => $inDirectionValue]);
-            Log::info("SAVE SBC ON BACKUP");
-            $this->SetActivity($request->all(), 'hot_line_config', $customer->id, 0, $logAction, "[backup]" . ($newStatus == 1 ? "Chặn" : "Mở") . " Chặn 1 chiều hotline " . $customer->companyname, $enterprise_number, $hotlineNo);
-          } else {
+
             SBCRouting::where('i_customer', $customer->id)->where('direction', $outDirection)->where('caller', $hotlineNo)->update(["status" => $outDirectionValue]);
             SBCRouting::where('i_customer', $customer->id)->where('direction', $inDirection)->where('callee', $hotlineNo)->update(["status" => $inDirectionValue]);
             Log::info("SAVE SBC oN PRIMARY");
 
             $this->SetActivity($request->all(), 'hot_line_config', $customer->id, 0, $logAction, ($newStatus == 1 ? "Chặn" : "Mở") . " 1 chiều hotline " . $customer->companyname, $enterprise_number, $hotlineNo);
-          }
+
 
           $CDRAction = $sbcDirection == 1 ? config("sbc.action_cdr.pause_call_out_cdr") : config("sbc.action_cdr.pause_call_in_cdr");
           //        $CDR= $request->enterprise_number."|$CDRAction|".date("YmdHis");

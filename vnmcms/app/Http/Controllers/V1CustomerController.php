@@ -11,25 +11,19 @@ use App\HotlineStatusLog;
 use App\HotlineStatusLogBackup;
 use App\QuantitySubcriber;
 use App\QuantitySubcriberBackup;
+use App\SBCCallGroup;
 use App\SBCRouting;
-use App\SBCRoutingBackup;
 use App\ServiceConfig;
 use App\ServiceConfigBackup;
-use App\ServiceSubcriber;
 use App\TosServices;
 use App\TosServicesBackup;
 use App\User;
-use App\UserBackup;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Mockery\Exception;
-
-use PhpParser\Node\Arg;
 use Validator;
-
 
 class V1CustomerController extends Controller
 {
@@ -2033,27 +2027,6 @@ class V1CustomerController extends Controller
 
 
 
-        if(config("server.backup_site") )
-        {
-          $customerBackup =CustomersBackup::where('enterprise_number', $request->enterprise_number)->whereIn("blocked",[0,1])->first();
-
-          if(!$customerBackup)
-          {
-            $logDuration= round(microtime(true) * 1000)-$startTime;
-            Log::info(APP_API."|".date("Y-m-d H:i:s",time())."|".$user->email."|".$request->ip()."|".
-              $request->url()."|".json_encode($request->all())."|CHANGE_CUSTOMER_PRODUCTCODE|".$logDuration."|CHANGE_CUSTOMER_PRODUCT_CODE_FAIL Invalid enterprise number");
-            /** @var LOG  $logDuration */
-
-            return $this->ApiReturn(['enterprise_number' => 'Enterprise number not found on backup site'], false, 'The given data was invalid', 422);
-          }
-
-
-          $cusIdBackup= $customerBackup->id;
-          $hotlinesBackup = HotlinesBackup::where('cus_id', $cusIdBackup)->select('hotline_number', 'id')->get();
-        }
-
-
-
       $canceledEnterprise_no= $request->enterprise_number."_HUY_".date("Y_m_d_H_i");
       $zeroEnterprise = $this->removeZero($request->enterprise_number);
 
@@ -2063,10 +2036,6 @@ class V1CustomerController extends Controller
       $hotlines = Hotlines::where('cus_id', $cusId)->select('hotline_number', 'id')->get();
 
       DB::beginTransaction();
-      if($BACKUP_STATE)
-      {
-        DB::connection("db2")->beginTransaction();
-      }
 
       try {
 
@@ -2110,6 +2079,7 @@ class V1CustomerController extends Controller
         DB::table('quantity_subcriber')->where('service_subcriber_id', $cusId)
         ->delete();
 
+        SBCCallGroup::where('cus_id', $cusId)->delete();
         Log::info("Change to CANCEL NUMBER ON CYCLE STATUS  Enterprise from : " . $zeroEnterprise ." To ". $canceledEnterprise_no_Nozero);
 
         //** END  */
@@ -2117,93 +2087,21 @@ class V1CustomerController extends Controller
         if (count($hotlines) > 0) {
           foreach ($hotlines as $line) {
             DB::table('sbc.routing')->where('i_customer', $cusId)->delete();
-
-        //    DB::table('hot_line_config')->where('hotline_number', $line->hotline_number)->update(['status' => 2, 'sip_config' => null, 'updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no]);
+            //    DB::table('hot_line_config')->where('hotline_number', $line->hotline_number)->update(['status' => 2, 'sip_config' => null, 'updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no]);
             DB::table('hot_line_config')->where('id', $line->id)->update(['status' => 2, 'sip_config' => null, 'updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no]);
 
-            $CDR= $request->enterprise_number."|2|".date("YmdHis")."|".$line->hotline_number;
-            $this->CDRActivity($customer->server_profile,$CDR, $request->enterprise_number,$API_STATE."REMOVE_HOTLINE");
-            $this->SetActivity($validData, 'hot_line_config', $line->id, 0, config("sbc.action.cancel_hotline"),'Hủy số hotline: '.$line->hotline_number, $request->enterprise_number, $line->hotline_number );
-
-
-
+            $CDR = $request->enterprise_number . "|2|" . date("YmdHis") . "|" . $line->hotline_number;
+            $this->CDRActivity($customer->server_profile, $CDR, $request->enterprise_number, $API_STATE . "REMOVE_HOTLINE");
+            $this->SetActivity($validData, 'hot_line_config', $line->id, 0, config("sbc.action.cancel_hotline"), 'Hủy số hotline: ' . $line->hotline_number, $request->enterprise_number, $line->hotline_number);
           }
         }
 
-
-
-
-        //Backup
-
-        if(config("server.backup_site"))
-        {
-
-
-//          $serviceCodeBackup= ServiceConfig::where("id",$customerBackup->service_id)->first();
-//          $CDR= $request->enterprise_number."|2|".date("YmdHis")."|".$serviceCodeBackup->product_code;
-////          $this->CDRActivity($customerBackup->server_profile,$CDR, $request->enterprise_number,$API_STATE."REMOVE_CUSTOMER");
-//
-          DB::connection("db2")->table('charge_fee_limit')->where('enterprise_number', $request->enterprise_number)->update(['enterprise_number' => $canceledEnterprise_no]);
-
-          DB::connection("db2")->table("users")->where("id", $customerBackup->account_id)->where("role", 3)->delete();
-
-          Log::info("Delete Billing user: " . $customer->account_id);
-          //        $this->SetActivity($validData, 'users', $customer->account_id, 0, 'api/removeCustomer','Xóa bỏ tài khoản billing:'.$customer->account_id);
-          /** 3 Delete From hotline_config (billing user) */
-
-          // Check avaliable hotline
-          DB::connection("db2")->table('customers')->where('id', $cusIdBackup)->update(['blocked' => 2, 'updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no]);
-
-          $reason= $request->reason?$request->reason:"REMOVE_CUSTOMER_NO_REASON";
-          $this->addCustomerChangeStateLog($request->enterprise_number, $cusIdBackup,$reason, 2, $user->id);
-
-          DB::connection("db2")->table('service_subcriber')->where('enterprise_number', $request->enterprise_number)->update(['status' => 2, 'updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no]);
-
-//          Log::info("Change to CANCEL NUMBER  Enterprise from : " . $request->enterprise_number ." To ". $canceledEnterprise_no);
-
-          //** UPDATE CYCLE OF EXPIRED  */
-          DB::connection("db2")->table('call_fee_cycle_status')->where('enterprise_number', $zeroEnterprise)
-            ->update(['updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no_Nozero]);
-
-          DB::connection("db2")->table('sms_fee_cycle_status')->where('enterprise_number', $zeroEnterprise)
-            ->update(['updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no_Nozero]);
-
-          DB::connection("db2")->table('subcharge_fee_cycle_status')->where('enterprise_number', $zeroEnterprise)
-            ->update(['updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no_Nozero]);
-
-          DB::connection("db2")->table('services_apps_linked')->where('cus_id', $cusIdBackup)
-            ->update(['updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no_Nozero,'active'=>0]);
-
-          DB::connection("db2")->table('quantity_subcriber_cycle_status')->where('enterprise_number', $zeroEnterprise)
-            ->update(['enterprise_number' => $canceledEnterprise_no_Nozero]);
-          Log::info("Change to CANCEL NUMBER ON CYCLE STATUS  Enterprise from : " . $zeroEnterprise ." To ". $canceledEnterprise_no_Nozero);
-
-          DB::connection("db2")->table('quantity_subcriber')->where('service_subcriber_id', $cusIdBackup)
-            ->delete();
-
-          //** END  */
-
-          if (count($hotlinesBackup) > 0) {
-            foreach ($hotlinesBackup as $line) {
-              DB::connection("db2_sbc")->table('routing')->where('i_customer', $cusIdBackup)->delete();
-
-              //    DB::table('hot_line_config')->where('hotline_number', $line->hotline_number)->update(['status' => 2, 'sip_config' => null, 'updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no]);
-              DB::connection("db2")->table('hot_line_config')->where('id', $line->id)->update(['status' => 2, 'sip_config' => null, 'updated_at' => date("Y-m-d H:i:s"), 'enterprise_number' => $canceledEnterprise_no]);
-            }
-          }
-
-        }
-
-        //Backup
 
 
 
 
         DB::commit();
-        if($BACKUP_STATE)
-        {
-          DB::connection("db2")->commit();
-        }
+
       } catch (\Exception $exception) {
         Log::info($exception);
 
@@ -2211,10 +2109,7 @@ class V1CustomerController extends Controller
         Log::info(APP_API."|".date("Y-m-d H:i:s",time())."|".$user->email."|".$request->ip()."|".$request->url()."|".json_encode($validData)."|DELETE_CUSTOMER|".$logDuration."|DELETE_FAIL ERROR UPDATE DATABASE, ROLLBACK DATA");
 
         DB::rollback();
-        if($BACKUP_STATE)
-        {
-          DB::connection("db2")->rollback();
-        }
+
         return $this->ApiReturn(['error' => 'Error cancel customers'], false, 'Error cancel customer -' . $request->enterprise_number, 500);
       }
 
@@ -3191,34 +3086,7 @@ class V1CustomerController extends Controller
 
         $this->CDRActivity($customer->server_profile,$CDR, $request->enterprise_number,"PAUSE_STATE_CUSTOMER");
 
-        if($RUNONBACKUP)
-        {
-          Log::info("Lưu Hotline backup");
-//          HotlinesBackup::where("cus_id", $customer->id)
-//            ->whereIn('status',[0,1])
-//            ->update(['status'=>$resultStatus, 'pause_state'=>$resultState]);
 
-
-          $listHotline= HotlinesBackup::where("cus_id", $customer->id) ->whereIn('status',[0,1])->get();
-
-          if(count($listHotline)>0) {
-            foreach ($listHotline as $line) {
-              HotlinesBackup::where('id', $line->id)->update(['status' => $resultStatus, 'pause_state' => $resultState]);
-              $this->SetActivity($request->all(), 'hot_line_config', $customer->id, 0, $logAction, "[backup]" . ($newStatus == 1 ? "Chặn" : "Mở") . " 1 chiều hotline khách hàng" . $customer->companyname, $enterprise_number, $line->hotline_number);
-            }
-          }
-
-          Log::info("Lưu giá trị SBC");
-          SBCRoutingBackup::where('i_customer', $customer->id)->where('direction', $outDirection)->update(["status" => $outDirectionValue]);
-          SBCRoutingBackup::where('i_customer', $customer->id)->where('direction', $inDirection)->update(["status" => $inDirectionValue]);
-
-
-          $this->SetActivity($request->all(),'customers', $customer->id, 0,$logAction, "[backup]". ($newStatus==1?"Chặn":"Mở")." Chặn 1 chiều khách hàng  ".$customer->companyname, $enterprise_number, null);
-          Log::info("Direction: new status". $sbcDirection);
-
-        }
-        else
-        {
           Log::info("Lưu Hotline");
           $listHotline= Hotlines::where("cus_id", $customer->id) ->whereIn('status',[0,1])->get();
 
@@ -3235,6 +3103,9 @@ class V1CustomerController extends Controller
 
             }
 
+            $CallerGroup = SBCCallGroup::where('cus_id', $customer->id)->update(['status'=>$outDirectionValue]);
+
+
             Log::info("Lưu giá trị SBC");
             SBCRouting::where('i_customer', $customer->id)->where('direction', $outDirection)->update(["status" => $outDirectionValue]);
             SBCRouting::where('i_customer', $customer->id)->where('direction', $inDirection)->update(["status" => $inDirectionValue]);
@@ -3246,7 +3117,7 @@ class V1CustomerController extends Controller
           $this->SetActivity($request->all(),'customers', $customer->id, 0,$logAction, ($newStatus==1?"Chặn":"Mở")." 1 chiều khách hàng ".$customer->companyname, $enterprise_number, null);
           Log::info("Direction: new status". $sbcDirection);
 
-        }
+
 
       }
 

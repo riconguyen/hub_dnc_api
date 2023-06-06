@@ -303,6 +303,11 @@ class AccountController extends Controller
 
     $cusID = Customers::where('enterprise_number', $enterpriseNumber)->whereIn('blocked', [0, 1])->first();
 
+    if(!$cusID)
+    {
+      return ['data' => [], 'count' => 0];
+    }
+
     $pagenum = request('page', 1);
     $count = request('count', 50);
     $query = request('query', null);
