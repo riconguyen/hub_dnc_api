@@ -455,6 +455,7 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
         $scope.sip={};
         $scope.sip.hotline=data.hotline_number;
         $scope.sip.cus_id=data.cus_id;
+
         $scope.sip.caller_group_master=data.caller_group_master;
 
 
@@ -464,15 +465,8 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
 
             $scope.lstVendor= rs.data.vendor;
 
-            if(rs.data.current_vendor && rs.data.current_vendor.vendor_id>0 )
-            {
-                $scope.sip.vendor_id=rs.data.current_vendor.vendor_id;
-            }
-            else
-            {
-                $scope.sip.vendor_id= null;
-            }
-
+            $scope.sip.vendor_id=rs.data.current_vendor && rs.data.current_vendor.vendor_id?rs.data.current_vendor.vendor_id:null;
+            $scope.sip.operator_telco_id=rs.data.current_vendor && rs.data.current_vendor.operator_telco_id?rs.data.current_vendor.operator_telco_id:"";
             $scope.sip.ip_auth=rs.data.acl.ip_auth;
 
             $scope.sip.ip_proxy=rs.data.acl.ip_proxy;

@@ -212,7 +212,7 @@ where a.direction= ? ";
       $resSelectedVendor=DB::table('hot_line_config')
         ->where('hotline_number',$id)
         ->whereIn('status',[0,1])
-        ->select('vendor_id')
+        ->select('vendor_id','operator_telco_id')
         ->first();
 
 
@@ -265,11 +265,13 @@ where a.direction= ? ";
                 'description' => 'max:255',
                 'destination' => 'required|max:100',
                 'callee_regex' => 'nullable|max:5000',
+                'operator_telco_id' => 'required|max:40|exists:operator_telco,id',
                 'hotline' => 'required|max:200',
 
 
             ]);
             $sip->hotline = $request->input('hotline');
+
         }
         else
         {
@@ -283,12 +285,14 @@ where a.direction= ? ";
                 'destination' => 'required|max:100',
                 'hotline_number' => 'required|max:200',
                 'caller_group_master' => 'nullable|max:200',
+                'operator_telco_id' => 'required|max:40|exists:operator_telco,id',
                 'callee_regex' => 'nullable|max:5000',
 
 
             ]);
             $sip->hotline = $request->input('hotline_number');
         }
+
 
       $vendorData = SBCVendor::where('i_vendor', $request->vendor_id?$request->vendor_id:1)->first();
       $customer=Customers::where("enterprise_number",$request->enterprise_number)->whereIn("blocked",[0,1])->first();
@@ -386,6 +390,7 @@ where a.direction= ? ";
           $sip->groupHotLine= $request->caller_group;
           $sip->vendor= $vendorData;
           $sip->isRunningOnbackup= $isRunningOnbackup;
+            $sip->operator_telco_id = $request->input('operator_telco_id');
           $sipOk= $this->setupSipRouting($sip, false);
 
 
@@ -409,7 +414,7 @@ where a.direction= ? ";
               $sip->block_regex_callee = $request->block_regex_callee;
               $sip->groupHotLine= $request->caller_group;
               $sip->vendor= $vendorData;
-
+                $sip->operator_telco_id = $request->input('operator_telco_id');
               $sip->isRunningOnbackup= $isRunningOnbackup;
               $sipOk = $this->setupSipRouting($sip, false);
 
@@ -582,7 +587,9 @@ where a.direction= ? ";
 
 
       Hotlines::where('id', $hotlineInfo->id)
-        ->update(['sip_config' => date("Y-m-d H:i:s"), 'vendor_id'=>$sip->vendor->i_vendor]);
+        ->update(['sip_config' => date("Y-m-d H:i:s"),
+            'operator_telco_id'=>$sip->operator_telco_id,
+            'vendor_id'=>$sip->vendor->i_vendor]);
 
       return response()->json(['status' => true], 200);
 

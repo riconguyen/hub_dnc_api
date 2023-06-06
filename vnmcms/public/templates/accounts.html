@@ -980,15 +980,7 @@
                     </div>
 
 
-
-<!--                    <input type="text"-->
-<!--                                                                                                     class="form-control"-->
-<!--                                                                                                     ng-model="sip.destination">-->
-<!--                    -->
-
-
-
-                </div>
+                 </div>
                 <div class="form-group"><label>{{"SIP.ACL.BLOCK_REGEX_CALLEE"|translate}}</label><input type="text"
                                                                                                      class="form-control"
                                                                                                      ng-model="sip.block_regex_callee">
@@ -1005,6 +997,17 @@
                     <small  class="form-text text-muted">
                         Biểu thức chính quy dạng ^[0-9]{8,16}.*
                     </small>
+                </div>
+
+                <div class="form-group"><label> Nhà mạng </label>
+
+                    <select class="form-control"
+                            ng-class="sip.error.operator_telco_id  ?'is-invalid':''"
+                            ng-model="sip.operator_telco_id"
+                            ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
+                    </select>
+                    <div class="invalid-feedback"> {{ sip.error.operator_telco_id[0] }}</div>
+
                 </div>
 
                 <div class="form-group"><label>Nhóm cuộc gọi</label>
