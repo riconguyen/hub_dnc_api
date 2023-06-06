@@ -202,9 +202,8 @@ where a.direction= ? ";
       $resCallee = DB::table('sbc.routing')->where('callee', $id)->first();
       $resGroup=DB::table('sbc.caller_group')
         ->where('caller',$id)
-
-        //    ->where('enterprise',$resCaller->enterprise_number)
-        ->select('status','enterprise as caller_master_group')
+          ->where('status',0)
+        ->select('status','enterprise as caller_master_group','callee_regex')
         ->first();
       $resVendor=DB::table('sbc.vendors')
         ->select('i_vendor', 'name')
@@ -265,6 +264,7 @@ where a.direction= ? ";
                 'ip_proxy_backup' => 'sometimes|max:100',
                 'description' => 'max:255',
                 'destination' => 'required|max:100',
+                'callee_regex' => 'nullable|max:5000',
                 'hotline' => 'required|max:200',
 
 
@@ -283,7 +283,7 @@ where a.direction= ? ";
                 'destination' => 'required|max:100',
                 'hotline_number' => 'required|max:200',
                 'caller_group_master' => 'nullable|max:200',
-
+                'callee_regex' => 'nullable|max:5000',
 
 
             ]);
@@ -295,11 +295,7 @@ where a.direction= ? ";
 
 
       $isRunningOnbackup= $customer->server_profile== config("server.server_profile")?false:true;
-      if ($BACKUPSTATE) {
-        $vendorDataBackup = SBCVendorBackup::where('i_vendor', $request->vendor_id?$request->vendor_id:1)->first();
-        $customerBackup=CustomersBackup::where("enterprise_number",$request->enterprise_number)->whereIn("blocked",[0,1])->first();
 
-      }
       $caller_group_master= request("caller_group_master",null);
 
       if ($request->caller_group) {
@@ -323,6 +319,7 @@ where a.direction= ? ";
 
 
 
+
       if (strpos($sip->hotline, ',') !== false) {
         $hotlines=explode(",", $sip->hotline);
       }
@@ -330,59 +327,35 @@ where a.direction= ? ";
       {
         $hotlines=[];
       }
-
+        $callee_regex= request("callee_regex", $vendorData->hotline_prefix);
     DB::beginTransaction();
-      if($BACKUPSTATE)
-      {
-        DB::connection("db2")->beginTransaction();
-      }
+
 
       try{
         if ($request->caller_group) {
 
+            Log::info("Request Caller group V2");
           $callerGroup = $request->caller_group;
           if ($callerGroup == 1) {
 
-//            die(json_encode(SBCCallGroup::get()));
 
-            $resCallGrup= SBCCallGroup::where('caller', $sip->hotline)->first();
 
-            if ($resCallGrup) {
-              Log::info("update group ".$sip->hotline);
-              $resCallGrup->update(['status' => 1]);
-            } else {
+              $resGroupMaster= SBCCallGroup::where('caller', $sip->hotline)->first();
+
+            if (!$resGroupMaster) {
+                $resGroupMaster= new SBCCallGroup();
+
+            }
               Log::info("create group 1 ".$sip->hotline);
-              $resGroupMaster= new SBCCallGroup();
               $resGroupMaster->enterprise= $request->caller_group_master;
               $resGroupMaster->caller= $sip->hotline;
-              $resGroupMaster->status= 1;
-              $resGroupMaster->callee_regex= $vendorData->hotline_prefix;
+              $resGroupMaster->status= 0;
+              $resGroupMaster->callee_regex= $callee_regex;
               $resGroupMaster->algorithm= 1;
               $resGroupMaster->cus_id= $customer->id;
               $resGroupMaster->save();
 
-            }
 
-            if($BACKUPSTATE)
-            {
-              $resCallGrupBackup= SBCCallGroupBackup::where('caller', $sip->hotline)->first();
-
-              if ($resCallGrupBackup) {
-                Log::info("update backup group ".$sip->hotline);
-                $resCallGrupBackup->update(['status' => 1]);
-              } else {
-                Log::info("create group backup ".$sip->hotline);
-                $resGroupSlave= new SBCCallGroupBackup();
-                $resGroupSlave->enterprise= $request->caller_group_master;
-                $resGroupSlave->caller= $sip->hotline;
-                $resGroupSlave->status= 1;
-                $resGroupSlave->callee_regex= $vendorData->hotline_prefix;
-                $resGroupSlave->algorithm= 1;
-                $resGroupSlave->cus_id= $customerBackup->id;
-                $resGroupSlave->save();
-              }
-
-            }
 
           } else {
 
@@ -392,23 +365,8 @@ where a.direction= ? ";
               $resCallGrup->delete();
             }
 
-            if($BACKUPSTATE)
-            {
-              Log::info("Delete group backup".$sip->hotline);
-              $resCallGrupBackup= SBCCallGroupBackup::where('cus_id',$customerBackup->id)
-                ->where('caller', $sip->hotline)->first();
-              if ($resCallGrupBackup) {
-                $resCallGrupBackup->delete();
-              }
-            }
-
-            // Clear Routing
           }
         }
-
-
-
-
 
         if(!$hotlines)
         {
@@ -421,6 +379,7 @@ where a.direction= ? ";
 
           $sip->description = $request->input('description');
           $sip->destination = $request->input('destination');
+          $sip->telco_destination = request('telco_destination',null);
           $sip->allow_regex_callee = $request->allow_regex_callee;
           $sip->block_regex_callee = $request->block_regex_callee;
           $sip->profile_id_backup = $request->profile_id_backup?$request->profile_id_backup:2 ;
@@ -428,11 +387,7 @@ where a.direction= ? ";
           $sip->vendor= $vendorData;
           $sip->isRunningOnbackup= $isRunningOnbackup;
           $sipOk= $this->setupSipRouting($sip, false);
-          if($BACKUPSTATE)
-          {
-            $sip->vendor= $vendorDataBackup;
-            $sipOk= $this->setupSipRouting($sip, true);
-          }
+
 
         }
         else {
@@ -449,6 +404,7 @@ where a.direction= ? ";
 
               $sip->description = $request->input('description');
               $sip->destination = $request->input('destination');
+                $sip->telco_destination = request('telco_destination',null);
               $sip->allow_regex_callee = $request->allow_regex_callee;
               $sip->block_regex_callee = $request->block_regex_callee;
               $sip->groupHotLine= $request->caller_group;
@@ -456,12 +412,6 @@ where a.direction= ? ";
 
               $sip->isRunningOnbackup= $isRunningOnbackup;
               $sipOk = $this->setupSipRouting($sip, false);
-
-              if($BACKUPSTATE)
-              {
-                $sip->vendor= $vendorDataBackup;
-                $sipOk= $this->setupSipRouting($sip, true);
-              }
 
 
             } else {
@@ -471,19 +421,13 @@ where a.direction= ? ";
         }
 
         DB::commit();
-        if($BACKUPSTATE)
-        {
-          DB::connection("db2")->commit();
-        }
+
       }
       catch (\Exception $exception)
       {
 
         DB::rollback();
-        if($BACKUPSTATE)
-        {
-          DB::connection("db2")->rollback();
-        }
+
 
         Log::info($exception->getTraceAsString());
         return response()->json(['response'=>'error', 'message'=>"Error update sip",'e'=>$exception->getTraceAsString()],500);
@@ -524,8 +468,7 @@ where a.direction= ? ";
 
       // TODO CURRENTLY STATE ON +**********************************************************TODO******************************************************************************************************************
 
-    if(!$BACKUPSTATE)
-    {
+
       $hotlineInfo = Hotlines::where('hotline_number', $sip->hotline)
         ->where('enterprise_number', $sip->enterprise_number)
         ->whereIn('status',[0,1])
@@ -596,7 +539,7 @@ where a.direction= ? ";
         "callee" => null,
         "i_acl" => $aclid,
         "i_acl_backup" => $aclidBackup,
-        "destination" =>  config('sip.RoutingDestination'),  /// Primary Server  ....120// change to 10.50.245.96:5060// secondary server 121
+        "destination" =>isset($sip->telco_destination)&& $sip->telco_destination?$sip->telco_destination: config('sip.RoutingDestination'),  /// Primary Server  ....120// change to 10.50.245.96:5060// secondary server 121
         "priority" => 10,
         "i_customer" => $hotlineInfo->cus_id,
         "i_vendor" => 2,
@@ -633,9 +576,7 @@ where a.direction= ? ";
           ->where('callee', $sip->hotline)
           ->update($arrRoutingSecondary);
 
-
       }
-
 
        $this->SetActivity($sip, "hot_line_config", $hotlineInfo->id, 0, config("sbc.action.update_sip_config"),"Cập nhật cấu hinh sip cho hotline  " .$sip->hotline, $sip->enterprise_number, $sip->hotline);
 
@@ -645,402 +586,8 @@ where a.direction= ? ";
 
       return response()->json(['status' => true], 200);
 
-    }
-
-
-
-    if($BACKUPSTATE) {
-       // TODO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++BACKUP STATE ON +**********************************************************TODO******************************************************************************************************************
-      $hotlineOnbackUp = HotlinesBackup::where('hotline_number', $sip->hotline)
-        ->where('enterprise_number', $sip->enterprise_number)
-        ->whereIn('status',[0,1])
-        ->select('id', 'cus_id')
-        ->first();
-
-
-
-      if (!$hotlineOnbackUp) {
-        return response()->json(['response' => 'error', 'message' => 'Hotline [' . $sip->hotline . '] and enterprise id at backup [' . $sip->enterprise_number . '] do not match'], 422);
-      }
-      // Kiểm tra có SIP chưa
-      $acl = SBCRoutingBackup::whereRaw('caller=? and i_customer=?', [$sip->hotline,$hotlineOnbackUp->cus_id])
-        ->select('i_acl as ACL','i_acl_backup')
-        ->first();
-
-
-
-      if ($acl) {
-        $aclid = $acl->ACL;
-        array_filter($arrAcl);
-
-
-        // Cập nhật ACL chính
-        SBCAclBackup::where('i_acl', $aclid)->update($arrAcl);
-
-
-        // Kiểm tra tạo ACL Backup
-
-        $aclidBackup = $acl->i_acl_backup;
-
-        if($aclid==$aclidBackup &&  $sip->ip_auth_backup)
-        {
-          // Tạo mới ACL Backup
-          Log::info("Tạo mới acl Backup");
-          $aclidBackup = DB::table('sbc.acl')->insertGetId($arrAclBackup);
-        }
-
-        // Nếu có Iaclbackup và khác cái chính và có auth thì
-
-
-        if ( $aclid != $aclidBackup &&  $sip->ip_auth_backup) {
-          Log::info("Cập nhật  mới acl Backup".$aclidBackup);
-          SBCAclBackup::where('i_acl', $aclidBackup)->update($arrAclBackup);
-
-
-        }
-        else if(!$sip->ip_auth_backup&&  $aclid != $aclidBackup )
-        {
-
-          // Xóa ACL đi
-          SBCAclBackup::where('i_acl', $aclidBackup)->delete();
-          $aclidBackup= $aclid;
-        }
-
-        SBCRoutingBackup::whereRaw('caller=? and i_customer=?', [$sip->hotline,$hotlineOnbackUp->cus_id])
-          ->update(['i_acl_backup'=> $aclidBackup]);
-
-
-         $editMode = true;
-      } else {
-        $editMode = false;
-        $aclid = SBCAclBackup::insertGetId($arrAcl);
-        $aclidBackup=  SBCAclBackup::insertGetId($arrAclBackup);
-
-      }
-
-      $arrRoutingPrimary = ["direction" => 1,
-        "caller" => $sip->hotline,
-        "callee" => null,
-        "i_acl" => $aclid,
-        "i_acl_backup" => $aclidBackup,
-        "destination" =>  config('sip.RoutingDestination'),  /// Primary Server  ....120// change to 10.50.245.96:5060// secondary server 121
-        "priority" => 10,
-        "i_customer" => $hotlineOnbackUp->cus_id,
-        "i_vendor" => 2,
-        "network"=>1,
-        "description" => $sip->description,
-        "i_sip_profile" => 1];
-
-      $arrRoutingSecondary = ["direction" => 2,
-        "caller" => null,
-        "callee" => $sip->hotline,
-        "i_acl" => 1,
-        "i_acl_backup" => 2,
-        "destination" => $sip->destination,
-        "priority" => 10,
-        "i_customer" =>$hotlineOnbackUp->cus_id,
-        "i_vendor" => 0,
-        "network"=>2,
-        "description" => $sip->description,
-        "i_sip_profile" => $sip->profile_id_backup];
-      // Setup Routing
-      if ($editMode == false) {
-        //Inssert //
-        $iCallerRouting=  $routingPrimary =SBCRoutingBackup::insertGetId($arrRoutingPrimary);
-        $routingSecondary = SBCRoutingBackup::insertGetId($arrRoutingSecondary);
-
-      } else {
-
-        SBCRoutingBackup::where('direction', 1)
-          ->where('i_customer', $hotlineOnbackUp->cus_id)
-          ->where('caller', $sip->hotline)
-          ->update($arrRoutingPrimary);
-        SBCRoutingBackup::where('direction', 2)
-          ->where('i_customer', $hotlineOnbackUp->cus_id)
-          ->where('callee', $sip->hotline)
-          ->update($arrRoutingSecondary);
-
-      }
-
-
-      //    $this->SetActivity(['sip_config' => date("Y-m-d H:i:s"),'id'=>$resAvai->id, 'hotline_number' => $sip->hotline], "hot_line_config", $resAvai->id, 0, "UPDATE_SIP","Cập nhật sip cho hotline: " .$sip->hotline." của khách hàng: ".$sip->enterprise_number);
-      $this->SetActivity($sip, "hot_line_config", $hotlineOnbackUp->id, 0, config("sbc.action.update_sip_config"),"[BACKUPSITE] Cập nhật cấu hinh sip cho hotline  " .$sip->hotline, $sip->enterprise_number, $sip->hotline);
-
-
-
-      // SETUP CALLEE DESTINATION
-      HotlinesBackup::where('id', $hotlineOnbackUp->id)
-        ->update(['sip_config' => date("Y-m-d H:i:s"), 'vendor_id'=>$sip->vendor->i_vendor]);
-      return response()->json(['status' => true], 200);
-
-      // BACKUP STATE ON +**********************************************************TODO******************************************************************************************************************
-    }
-
-
 
   }
-
-
-
-
-// TODO COMMENT FOR UPGRADE ALC _BACKUP IP
-
-  //    public function setupSipRouting($sip)
-//    {
-//
-//
-//        $arrAcl = ['ip_auth' => $sip->ip_auth,
-//            'ip_proxy' => $sip->ip_proxy,
-//            'description' => $sip->description,
-//            'block_regex_caller'=>'',
-//            'block_regex_callee'=>empty($sip->block_regex_callee)?'^(00|\\\\+84|1900|1800).*': $sip->block_regex_callee ,
-//            'allow_regex_caller'=>'',
-//
-//            // 'allow_regex_callee'=>empty($sip->allow_regex_callee)?'^[0-9]{8,16}.*': $sip->allow_regex_callee
-//            'allow_regex_callee'=>empty($sip->allow_regex_callee)?'^0[0-9]{8,11}$': $sip->allow_regex_callee
-//
-//
-//            ];
-//
-//
-//
-//       // $sip->enterprise_number = $request->input('enterprise_number');
-//        // Kiểm tra dữ liệu hotline
-//        $resAvai = DB::table('hot_line_config')
-//            ->where('hotline_number', $sip->hotline)
-//            ->where('enterprise_number', $sip->enterprise_number)
-//            ->select('id', 'cus_id')
-//            ->first();
-//
-//
-//        if (!($resAvai) ) {
-//
-//            // inseret
-//            return response()->json(['response' => 'error', 'message' => 'Hotline [' . $sip->hotline . '] and enterprise id [' . $sip->enterprise_number . '] do not match'], 422);
-//        }
-//        // Kiểm tra có SIP chưa
-//        $acl = DB::table('sbc.routing')
-//            ->whereRaw('caller=? and i_customer=?', [$sip->hotline,$resAvai->cus_id])
-//            ->select('i_acl as ACL')
-//            ->first();
-//        if ($acl) {
-//            $aclid = $acl->ACL;
-//            DB::table('sbc.acl')
-//                ->where('i_acl', $aclid)
-//                ->update($arrAcl);
-//            $activityController->AddActivity($arrAcl, "sbc.acl", $aclid, $resAvai->cus_id, "Update");
-//            $editMode = true;
-//        } else {
-//            $editMode = false;
-//            $aclid = DB::table('sbc.acl')
-//                ->insertGetId($arrAcl);
-//            $activityController->AddActivity($arrAcl, "sbc.acl", $aclid, $resAvai->cus_id, "Create");
-//            // Insert new
-//        }
-//
-//        $arrRoutingPrimary = ["direction" => 1,
-//            "caller" => $sip->hotline,
-//            "callee" => null,
-//            "i_acl" => $aclid,
-//            "i_acl_backup" => $aclid,
-//            "destination" =>  config('sip.RoutingDestination'),  /// Primary Server  ....120// change to 10.50.245.96:5060// secondary server 121
-//            "priority" => 10,
-//            "i_customer" => $resAvai->cus_id,
-//            "i_vendor" => 2,
-//            "network"=>1,
-//            "description" => $sip->description,
-//            "i_sip_profile" => 1];
-//
-//        $arrRoutingSecondary = ["direction" => 2,
-//            "caller" => null,
-//            "callee" => $sip->hotline,
-//            "i_acl" => 1,
-//            "i_acl_backup" => 2,
-//            "destination" => $sip->destination,
-//            "priority" => 10,
-//            "i_customer" =>$resAvai->cus_id,
-//            "i_vendor" => 0,
-//            "network"=>2,
-//            "description" => $sip->description,
-//            "i_sip_profile" => $sip->profile_id_backup];
-//        // Setup Routing
-//        if ($editMode == false) {
-//            //Inssert //
-//            $routingPrimary = DB::table('sbc.routing')
-//                ->insertGetId($arrRoutingPrimary);
-//            $routingSecondary = DB::table('sbc.routing')
-//                ->insertGetId($arrRoutingSecondary);
-//            $activityController->AddActivity($arrRoutingPrimary, "routing", $routingPrimary, 0, "Create");
-//            $activityController->AddActivity($arrRoutingSecondary, "routing", $routingSecondary, 0, "Create");
-//        } else {
-//
-//            DB::table('sbc.routing')
-//                ->where('direction', 1)
-//                ->where('i_customer', $resAvai->cus_id)
-//                ->where('caller', $sip->hotline)
-//                ->update($arrRoutingPrimary);
-//            DB::table('sbc.routing')
-//                ->where('direction', 2)
-//                ->where('i_customer', $resAvai->cus_id)
-//                ->where('callee', $sip->hotline)
-//                ->update($arrRoutingSecondary);
-//
-//            $resUpdateID = DB::table('sbc.routing')
-//                ->where('caller', $sip->hotline)
-//                ->orWhere('callee', $sip->hotline)
-//                ->get();
-//            // Insert routing
-//            $activityController->AddActivity($arrRoutingPrimary, "sbc.routing", 0, $resAvai->cus_id, "Update");
-//            $activityController->AddActivity($arrRoutingSecondary, "sbc.routing",0, $resAvai->cus_id, "Update");
-//        }
-//        DB::table('hot_line_config')
-//            ->where('id', $resAvai->id)
-//            ->update(['sip_config' => date("Y-m-d H:i:s")]);
-//        $activityController->AddActivity(['sip_config' => date("Y-m-d H:i:s"),'id'=>$resAvai->id, 'hotline_number' => $sip->hotline], "hotline_number", $resAvai->id, 0, "Update Sip");
-//        return response()->json(['status' => true], 200);
-//    }
-//
-
-  // TODO END COMMENT FOR UPGRADE ALC _BACKUP IP
-
-
-//    public function postCallLog($id, Request $request)
-//    {
-//        $user= $request->user;
-//        if($user->role != ROLE_ADMIN  && $user->role != ROLE_BILLING && $user->role != ROLE_USER && $user->role != ROLE_TRACKING)
-//        {
-//            return ['error'=>'Permission denied'];
-//        }
-//
-//
-//        $request->validate([
-//            'direction'=>'nullable|in:"in","out"',
-//            'q'=>'nullable|max:50',
-//            'start_date'=>'nullable|date',
-//            'end_date'=>'nullable|date|after:start_date'
-//        ]);
-//        $limitRow = $request->count?$request->count:1000;
-//
-//        if(!$request->download)
-//        {
-//           $limitRow < 1000?$limitRow:1000;
-//        }
-//        else
-//        {
-//            $limitRow < config('sb.limitLog')?$limitRow:config('sb.limitLog');
-//        }
-//
-//
-//
-//        $caller = $id;
-////        Check hot line belong to customer
-//        $rsCus = DB::table('hot_line_config')
-//            ->where('hotline_number', $id);
-//        if ($user->role == ROLE_BILLING) {
-//            $customerID = DB::table('customers')->where("account_id", $user->id)->first();
-//            if ($customerID) {
-//                $rsCus->where("cus_id", ($customerID->id));
-//            } else {
-//                return "Permission deniced";
-//            }
-//        }
-//        $customer = $rsCus->first();
-//
-//        $q = $request->q;
-//        $start_date = $request->start_date;
-//        $direction = $request->direction;
-//
-//        $end_date = $request->end_date;
-//        if (!$start_date) {
-//            $start_date = (date("Y-m-d 00:00:00"));
-//
-//            //$start_date=($start_date->getDate());
-//        }
-//        if (!$end_date) {
-//            $end_date = date("Y-m-d H:i:s");
-//        }
-//
-//        if($direction=="in")
-//        {
-//            $additionDirSuccess=" AND a.CLD= ".$caller ."  ";
-//            $additionDirFailed=" AND a.CLD= ".$caller ."  ";
-//        }
-//        else if ($direction=="out")
-//        {
-//            $additionDirSuccess=" AND a.CLI= ".$caller ."  ";
-//            $additionDirFailed=" AND a.CLI= ".$caller ."  ";
-//        }
-//        else
-//
-//        {
-//            $additionDirSuccess=" ";
-//            $additionDirFailed=" ";
-//        }
-//
-//
-//        if ($caller && $customer) {
-//            $sql= "
-//            SELECT
-//             a.CLI,
-//            a.CLD,
-//            a.setup_time,
-//            a.connect_time,
-//             a.call_id,
-//             a.disconnect_time,
-//             a.disconnect_cause,
-//             a.from_network_ip,
-//             a.des_network_ip,
-//             a.quality_mos,
-//             a.quality_largest_jb,
-//             a.quality_jitter_burst_rate,
-//             a.duration,
-//             a.charge_status,
-//            'success' AS state
-//            FROM sbc.cdr_vendors a FORCE INDEX (setup_time, CLI, CLD)
-//            WHERE a.setup_time >=? AND a.setup_time <= ? AND (a.CLI= ? OR a.CLD= ?)
-//              AND (a.CLD like ? or a.CLI like ?)
-//            ". $additionDirSuccess."
-//
-//             UNION ALL
-//            SELECT
-//
-//             a.CLI,
-//             a.CLD,
-//            a.setup_time, NULL AS connect_time,
-//             a.call_id,
-//             a.disconnect_time,
-//             a.disconnect_cause,
-//             a.from_network_ip,
-//             a.des_network_ip, NULL AS quality_mos, NULL AS quality_largest_jb, NULL AS quality_jitter_burst_rate, NULL AS duration, NULL AS charge_status,
-//            'failed' AS state
-//            FROM sbc.cdr_vendors_failed a FORCE INDEX (setup_time, CLI, CLD)
-//            WHERE a.setup_time >=? AND a.setup_time <= ? AND (a.CLI= ? OR a.CLD= ?)
-//            AND (a.CLD like ? or a.CLI like ?)
-//            ". $additionDirFailed."
-//
-//            LIMIT 0,?
-//
-//
-//            ";
-//
-//            $param=[$start_date, $end_date, $caller, $caller,
-//                "%".$q,"%".$q,
-//                $start_date, $end_date, $caller, $caller,
-//                "%".$q,"%".$q, $limitRow
-//                ];
-//
-//            $result= DB::select($sql, $param);
-//
-//
-//        } else {
-//            $result=[];
-//            $callLog =[];
-//            $callLogFaild = [];
-//        }
-//       // $callResult = array_merge($callLog->toArray(), $callLogFaild->toArray());
-//        return response()->json(['call_history' => $result,  'client' => $customer, 'start_date' => $start_date, 'end_date' => $end_date]);
-//    }
-
 
 
 

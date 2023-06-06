@@ -573,8 +573,8 @@
 
 
                             <tr ng-repeat="line in $data"  ng-class="line.status ==2?'text-muted':''">
-                                <th>{{line.group_call_status == 1?"GROUP":"-"}}
-                                    <span ng-show="line.group_call_status" class="text-muted small">
+                                <th>{{line.group_call_status === 0?"GROUP":"-"}}
+                                    <span ng-show="line.group_call_status===0" class="text-muted small">
                                         <br>{{line.caller_group_master}}
                                     </span>
                                 </th>
@@ -959,9 +959,33 @@
                                                                                                 ng-model="sip.hotline"
                                                                                                 class="form-control">
                 </div>
-                <div class="form-group"><label>{{"SIP.ROUTING.DESTINATION"|translate}}</label><input type="text"
-                                                                                                     class="form-control"
-                                                                                                     ng-model="sip.destination">
+                <div class="form-group">
+                    <label>{{"SIP.ROUTING.DESTINATION"|translate}}</label>
+
+                    <div class="form-row">
+                        <div class="col">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text" style="width: 84px;">PBX</span> </div>
+                                <input type="text"  class="form-control" ng-model="sip.destination">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text" style="width: 84px;">Telco</span> </div>
+                                <input type="text"  class="form-control" ng-model="sip.telco_destination">
+                            </div>
+                        </div>
+                    </div>
+
+
+
+<!--                    <input type="text"-->
+<!--                                                                                                     class="form-control"-->
+<!--                                                                                                     ng-model="sip.destination">-->
+<!--                    -->
+
+
+
                 </div>
                 <div class="form-group"><label>{{"SIP.ACL.BLOCK_REGEX_CALLEE"|translate}}</label><input type="text"
                                                                                                      class="form-control"
@@ -980,19 +1004,6 @@
                         Biểu thức chính quy dạng ^[0-9]{8,16}.*
                     </small>
                 </div>
-                <!--<div class="form-group"><label>Prefix</label>-->
-
-
-                    <!--<select ng-model="sip.vendor_id"-->
-                            <!--class="form-control"-->
-                            <!--ng-options="value.i_vendor as value.name for (key, value) in lstVendor">-->
-                        <!--<option value="">&#45;&#45; Chọn&#45;&#45;</option>-->
-                    <!--</select>-->
-
-
-                <!--</div>-->
-
-
 
                 <div class="form-group"><label>Nhóm cuộc gọi</label>
 
@@ -1005,15 +1016,11 @@
                 <div class="form-group" ng-show="sip.caller_group==1"><label>Chọn số chủ </label>
                     <input type="text" ng-model="sip.caller_group_master"
                            class="form-control">
+                </div>
 
-
-                    <!--<select ng-model="sip.caller_group_master"-->
-                            <!--class="form-control"-->
-                            <!--ng-options="value.hotline_number  as value.hotline_number for (key, value) in currentCustomer.cog.hotlines|filter:{group_call_status:'!1'}">-->
-                        <!--<option value="">&#45;&#45; Chọn&#45;&#45;</option>-->
-                    <!--</select>-->
-
-
+                <div class="form-group" ng-show="sip.caller_group==1"><label>Random callee_regex Regex </label>
+                    <input type="text" ng-model="sip.callee_regex"
+                           class="form-control">
                 </div>
 
 
@@ -1155,10 +1162,44 @@
                 </div>
            <div class="form-group">
                             <label>{{'CUSTOMER.SIP.DESTINATION'|translate}}</label>
-                            <input type="text" class="form-control" ng-model="editCustomer.destination"
-                                   ng-class="currentCustomer.error.destination   ?'is-invalid':''"
-                            />
-               <div class="invalid-feedback">{{currentCustomer.error.destination}}  </div>
+<!--                            <input type="text" class="form-control" ng-model="editCustomer.destination"-->
+<!--                                   ng-class="currentCustomer.error.destination   ?'is-invalid':''"-->
+<!--                            />-->
+<!--               <div class="invalid-feedback">{{currentCustomer.error.destination}}  </div>-->
+
+               <div class="form-row">
+                   <div class="col">
+                       <div class="input-group">
+                           <div class="input-group-prepend">
+                               <span class="input-group-text" style="width: 84px;">PBX</span></div>
+                           <input type="text"
+                                  class="form-control"
+                                  ng-class="currentCustomer.error.destination          ?'is-invalid':''"
+                                  ng-model="editCustomer.destination"/>
+                           <div class="invalid-feedback">
+                               {{currentCustomer.error.destination[0]}}
+                           </div>
+                       </div>
+
+
+                   </div>
+                   <div class="col">
+                       <div class="input-group">
+                           <div class="input-group-prepend">
+                               <span class="input-group-text" style="width: 84px;">Telco</span></div>
+                           <input type="text"
+                                  class="form-control"
+                                  ng-class="currentCustomer.error.telco_destination         ?'is-invalid':''"
+                                  ng-model="editCustomer.telco_destination"/>
+                           <div class="invalid-feedback">
+                               {{currentCustomer.error.telco_destination[0]}}
+                           </div>
+                       </div>
+                   </div>
+
+               </div>
+
+
                         </div>
 
             </div>

@@ -476,15 +476,21 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
             $scope.sip.description=rs.data.acl.description;
             $scope.sip.block_regex_callee=rs.data.acl.block_regex_callee;
             $scope.sip.allow_regex_callee=rs.data.acl.allow_regex_callee;
-			$scope.sip.caller_group=rs.data.group?rs.data.group.status:false;
-			if(rs.data.routing.length > 1)
-			{
+			$scope.sip.caller_group=rs.data.group?1:0;
+            var  callerGroup = rs.data.group ? rs.data.group : {};
+
+            console.log("CALLER GROUP",callerGroup)
+            $scope.sip.callee_regex= callerGroup.callee_regex;
+            // $scope.sip.caller_group_master= callerGroup.caller_group_master;
+
+            console.log("SIP", $scope.sip)
+			var sipCallin=rs.data.routing.length==2?rs.data.routing[1]:{}
+            var sipCallOut=rs.data.routing.length>0?rs.data.routing[0]:{}
 
 
-				$scope.sip.destination=rs.data.routing[1].destination;
-				$scope.sip.profile_id_backup=parseInt(rs.data.routing[1].i_sip_profile);
-			}
-
+            $scope.sip.destination=sipCallin.destination;
+            $scope.sip.telco_destination=sipCallOut.destination;
+            $scope.sip.profile_id_backup=parseInt(sipCallin.i_sip_profile);
 			$("#sipConfigForm").modal('show');
 
 

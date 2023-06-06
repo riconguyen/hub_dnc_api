@@ -173,14 +173,58 @@
                             </div>
                         </div>
 
-                        <div class="form-group"><label> {{'CUSTOMER.SIP.DESTINATION'|translate}}</label>
-                            <input type="text"
-                                   class="form-control"
-                                   ng-class="newCustomerError.destination       ?'is-invalid':''"
-                                   ng-model="newCustomer.destination"/>
-                            <div class="invalid-feedback">
-                                {{newCustomerError.destination[0]}}
+                        <div class="form-group">
+
+
+                            <label> {{'CUSTOMER.SIP.DESTINATION'|translate}}</label>
+<!--                            <input type="text"-->
+<!--                                   class="form-control"-->
+<!--                                   ng-class="newCustomerError.destination       ?'is-invalid':''"-->
+<!--                                   ng-model="newCustomer.destination"/>-->
+<!--                            <div class="invalid-feedback">-->
+<!--                                {{newCustomerError.destination[0]}}-->
+<!--                            </div>-->
+
+
+
+
+
+
+                                <!-- UPDATE PBX DESTINATION VS TELCO DESTINATION 2023-06-06 -->
+
+                            <div class="form-row">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend" >
+                                            <span class="input-group-text" style="    width: 84px;">PBX</span></div>
+                                        <input type="text"  placeholder="Định dạng IP v4:PORT vd: 198.168.1.1:9090"
+                                               class="form-control"
+                                               ng-class="newCustomerError.destination         ?'is-invalid':''"
+                                               ng-model="newCustomer.destination"/>
+                                        <div class="invalid-feedback">
+                                            {{ newCustomerError.destination[0] }}
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                                <div class="col">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend" >
+                                            <span class="input-group-text" style="    width: 84px;">Telco</span></div>
+                                        <input type="text" placeholder="Định dạng IP v4:PORT vd: 198.168.1.1:9090"
+                                               class="form-control"
+                                               ng-class="newCustomerError.telco_destination         ?'is-invalid':''"
+                                               ng-model="newCustomer.telco_destination"/>
+                                        <div class="invalid-feedback">
+                                            {{ newCustomerError.telco_destination[0] }}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+
+                                <!-- UPDATE PBX DESTINATION VS TELCO DESTINATION 2023-06-06 -->
+
                         </div>
                         <div class="form-group"><label> {{'CUSTOMER.SIP.HOTLINE_NUMBERS'|translate}}</label>
                             <input type="text"
@@ -191,27 +235,6 @@
                                 {{newCustomerError.hotline_numbers[0]}}
                             </div>
                         </div>
-
-                        <div class="form-group"><label> {{'CUSTOMER.SIP.USE_TOS'|translate}}</label>
-                            <input type="text"
-                                   class="form-control"
-                                   ng-class="newCustomerError.use_tos   ?'is-invalid':''"
-                                   ng-model="newCustomer.use_tos"/>
-                            <div class="invalid-feedback">
-                                {{newCustomerError.use_tos[0]}}
-                            </div>
-                        </div>
-
-                        <div class="form-group"><label> {{'CUSTOMER.SIP.TOS_PRODUCT_CODE'|translate}}</label>
-                            <input type="text"
-                                   class="form-control"
-                                   ng-class="newCustomerError.tos_product_code   ?'is-invalid':''"
-                                   ng-model="newCustomer.tos_product_code"/>
-                            <div class="invalid-feedback">
-                                {{newCustomerError.tos_product_code[0]}}
-                            </div>
-                        </div>
-
 
                         <div class="form-group"><label> {{'CUSTOMER.SIP.SPLIT_CONTRACT'|translate}}</label>
                             <input type="text"

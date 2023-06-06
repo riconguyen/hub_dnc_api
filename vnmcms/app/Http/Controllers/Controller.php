@@ -193,115 +193,8 @@ class Controller extends BaseController
       'allow_regex_callee' => config('sip.allow_regex_callee')
     ];
 
-    if($backupState)
-    {
-      ////////// LƯU BACKUP ================================================================== ############################################################################################################
-
-      $aclBackup = SBCRoutingBackup::  whereRaw('caller=? and i_customer=?', [$sip->hotline, $sip->cus_id])
-        ->select('i_acl as ACL','i_acl_backup')
-        ->first();
-
-      /** @var  ACL    $arrRoutingPrimary */
 
 
-      if ($aclBackup) {
-        $aclid = $aclBackup->ACL;
-
-        array_filter($arrAcl);
-        SBCAclBackup::where('i_acl', $aclid)
-          ->update($arrAcl);
-
-        $aclidBackup= $aclBackup->i_acl_backup;
-        if($sip->ip_auth_backup && $aclidBackup == $aclid) {
-          $aclidBackup =SBCAclBackup::insertGetId($arrAclBackup);
-          SBCRoutingBackup::whereRaw('caller=? and i_customer=?', [$sip->hotline, $sip->cus_id])
-            ->update(['i_acl_backup'=>$aclidBackup]);
-
-        }
-        else if ($sip->ip_auth_backup &&   $aclidBackup != $aclid)
-        {
-          SBCAclBackup::where('i_acl', $aclidBackup)
-            ->update($arrAclBackup);
-        }
-
-        //          $this->SetActivity($arrAcl, "sbc.acl", $aclid, $resAvai->cus_id, "Update","Cập nhật cấu hình SIP acl: $sip->hotline");
-        $editMode = true;
-      } else {
-        $editMode = false;
-        $aclid = SBCAclBackup::insertGetId($arrAcl);
-        if($sip->ip_auth_backup)
-        {
-          $aclidBackup=  SBCAclBackup::insertGetId($arrAclBackup);
-        }
-        else
-          $aclidBackup= $aclid;
-
-      }
-
-
-      if($editMode == false)
-      {
-        $hotlineRoutingCallerBackup= new SBCRoutingBackup();
-        $hotlineRoutingCalleeBackup = new SBCRoutingBackup();
-        $hotlineRoutingCallerBackup->status =  $sip->isRunOnBackup?$sip->status:1;
-        $hotlineRoutingCalleeBackup->status = $sip->isRunOnBackup ? $sip->status:0;
-
-
-      }
-      else
-      {
-        $hotlineRoutingCallerBackup= SBCRoutingBackup::where("direction",1)->where('i_customer',$sip->cus_id)->where('caller', $sip->hotline)->first();
-        $hotlineRoutingCalleeBackup = SBCRoutingBackup::where("direction",2)->where('i_customer',$sip->cus_id)->where('callee', $sip->hotline)->first();
-        $hotlineRoutingCallerBackup->status= $sip->isRunOnBackup?0:1;
-        $hotlineRoutingCalleeBackup->status = 0;
-      }
-
-
-
-
-      $hotlineRoutingCallerBackup->direction=1;
-      $hotlineRoutingCallerBackup->caller=$sip->hotline;
-      $hotlineRoutingCallerBackup->i_acl= $aclid;
-      $hotlineRoutingCallerBackup->i_acl_backup= $aclidBackup;
-      $hotlineRoutingCallerBackup->destination= config('sip.RoutingDestination');
-      $hotlineRoutingCallerBackup->priority= 10;
-      $hotlineRoutingCallerBackup->i_vendor= 2;
-      $hotlineRoutingCallerBackup->i_customer= $sip->cus_id;
-      $hotlineRoutingCallerBackup->description= $sip->description;
-      $hotlineRoutingCallerBackup->network= 1;
-      $hotlineRoutingCallerBackup->i_sip_profile= 1;
-
-
-
-      $hotlineRoutingCallerBackup->save();
-
-
-      $hotlineRoutingCalleeBackup->direction = 2;
-      $hotlineRoutingCalleeBackup->callee = $sip->hotline;
-      $hotlineRoutingCalleeBackup->i_acl = 1;
-      $hotlineRoutingCalleeBackup->i_acl_backup = 2;
-      $hotlineRoutingCalleeBackup->destination = $sip->destination;
-      $hotlineRoutingCalleeBackup->priority = 10;
-      $hotlineRoutingCalleeBackup->i_vendor = 0;
-      $hotlineRoutingCalleeBackup->i_customer = $sip->cus_id;
-      $hotlineRoutingCalleeBackup->description = $sip->description;
-      $hotlineRoutingCalleeBackup->network = 2;
-      $hotlineRoutingCalleeBackup->i_sip_profile = $sip->profile_id_backup?$sip->profile_id_backup: config('sbc.profile_id_backup');
-
-
-
-      $hotlineRoutingCalleeBackup->save();
-
-       HotlinesBackup::where('id', $sip->hotline_id)
-        ->update(['sip_config' => date("Y-m-d H:i:s"), 'vendor_id'=>$sip->vendor->i_vendor]);
-
-
-
-
-
-    }
-    else
-    {
 
       ////////// LƯU BÌNH THƯỜNG ==================================================================LƯU BÌNH THƯỜNG ==================================================================LƯU BÌNH THƯỜNG ==================================================================
 
@@ -315,40 +208,35 @@ class Controller extends BaseController
 
 
       if ($acl) {
-        Log::info("Đã có ACL");
-        $aclid = $acl->ACL;
-        array_filter($arrAcl);
+          Log::info("Đã có ACL");
+          $aclid = $acl->ACL;
+          array_filter($arrAcl);
 
-        SBCAcl::where('i_acl', $aclid)
-          ->update($arrAcl);
+          SBCAcl::where('i_acl', $aclid)
+              ->update($arrAcl);
 
-        $aclidBackup= $acl->i_acl_backup;
-        if($sip->ip_auth_backup && $aclidBackup == $aclid) {
-          $aclidBackup =SBCAcl::insertGetId($arrAclBackup);
-          SBCRouting::whereRaw('caller=? and i_customer=?', [$sip->hotline, $sip->cus_id])
-            ->update('i_acl_backup', $aclidBackup);
+          $aclidBackup = $acl->i_acl_backup;
+          if ($sip->ip_auth_backup && $aclidBackup == $aclid) {
+              $aclidBackup = SBCAcl::insertGetId($arrAclBackup);
+              SBCRouting::whereRaw('caller=? and i_customer=?', [$sip->hotline, $sip->cus_id])
+                  ->update('i_acl_backup', $aclidBackup);
 
-        }
-        else if ($sip->ip_auth_backup &&   $aclidBackup != $aclid)
-        {
-          SBCAcl::where('i_acl', $aclidBackup)
-            ->update($arrAclBackup);
-        }
+          } else if ($sip->ip_auth_backup && $aclidBackup != $aclid) {
+              SBCAcl::where('i_acl', $aclidBackup)
+                  ->update($arrAclBackup);
+          }
 
-        //          $this->SetActivity($arrAcl, "sbc.acl", $aclid, $resAvai->cus_id, "Update","Cập nhật cấu hình SIP acl: $sip->hotline");
-        $editMode = true;
+          $editMode = true;
       } else {
 
-        $editMode = false;
-        $aclid = SBCAcl::insertGetId($arrAcl);
+          $editMode = false;
+          $aclid = SBCAcl::insertGetId($arrAcl);
 
-        if($sip->ip_auth_backup)
-        {
+          if ($sip->ip_auth_backup) {
 
-          $aclidBackup=  SBCAcl::insertGetId($arrAclBackup);
-        }
-        else
-          $aclidBackup= $aclid;
+              $aclidBackup = SBCAcl::insertGetId($arrAclBackup);
+          } else
+              $aclidBackup = $aclid;
 
       }
 
@@ -360,9 +248,7 @@ class Controller extends BaseController
         $hotlineRoutingCallee->status = $sip->isRunOnBackup ? 0 : $sip->status;
       } else {
         $hotlineRoutingCaller = SBCRouting::where("direction", 1)->where('i_customer', $sip->cus_id)->where('caller', $sip->hotline)->first();
-
         $hotlineRoutingCallee = SBCRouting::where("direction", 2)->where('i_customer', $sip->cus_id)->where('callee', $sip->hotline)->first();
-
         $hotlineRoutingCaller->status = $sip->isRunOnBackup ? 1 : $sip->status;
         $hotlineRoutingCallee->status = 0;
       }
@@ -370,17 +256,14 @@ class Controller extends BaseController
       $hotlineRoutingCaller->caller=$sip->hotline;
       $hotlineRoutingCaller->i_acl= $aclid;
       $hotlineRoutingCaller->i_acl_backup= $aclidBackup;
-      $hotlineRoutingCaller->destination= config('sip.RoutingDestination');
+      $hotlineRoutingCaller->destination= isset($sip->telco_destination)&&$sip->telco_destination?$sip->telco_destination:config('sip.RoutingDestination');
       $hotlineRoutingCaller->priority= 10;
       $hotlineRoutingCaller->i_vendor= 2;
       $hotlineRoutingCaller->i_customer= $sip->cus_id;
       $hotlineRoutingCaller->description= $sip->description;
       $hotlineRoutingCaller->network= 1;
       $hotlineRoutingCaller->i_sip_profile= 1;
-
-
       $hotlineRoutingCaller->save();
-
 
       $hotlineRoutingCallee->direction = 2;
       $hotlineRoutingCallee->callee = $sip->hotline;
@@ -401,14 +284,6 @@ class Controller extends BaseController
       Hotlines::where('id', $sip->hotline_id)
         ->update(['sip_config' => date("Y-m-d H:i:s"), 'vendor_id'=>$sip->vendor->i_vendor]);
 
-
-
-
-
-
-    }
-
-    //            $this->SetActivity($dataBeforeAction, "hot_line_config", $resAvai->id, 0, "Update Sip","Cập nhật cấu hình SIP hotline: ".$sip->hotline);
     return response()->json(['status' => true], 200);
 
   }

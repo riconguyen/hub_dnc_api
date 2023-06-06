@@ -36,107 +36,58 @@ class V1CustomerController extends Controller
     //
 
 
-
     private function synCustomerToServiceSub($data, $BACKUP_STATE)
     {
 
-		if($data['split_contract'])
-    {
+        if ($data['split_contract']) {
 
-      $begin_charge_date = date_create(date('Y-m-01 H:i:s'));
-      date_modify($begin_charge_date, "+1 month");
-      Log::info("SPLIT CONTRACT FROM: ". $data['split_contract']);
-    }
-    else
-    {
-      $begin_charge_date = date_create(date('Y-m-d H:i:s'));
-      date_modify($begin_charge_date, "+".config("sbc.delay_sub_charge_in_minutes")." minutes");
-    }
+            $begin_charge_date = date_create(date('Y-m-01 H:i:s'));
+            date_modify($begin_charge_date, "+1 month");
+            Log::info("SPLIT CONTRACT FROM: " . $data['split_contract']);
+        } else {
+            $begin_charge_date = date_create(date('Y-m-d H:i:s'));
+            date_modify($begin_charge_date, "+" . config("sbc.delay_sub_charge_in_minutes") . " minutes");
+        }
 
         $num_of_agent = 0;
 
-    if($BACKUP_STATE)
-    {
 
-      $resExist = DB::connection("db2")->table('service_subcriber as a')
-        ->join('customers as b', 'a.id', '=', 'b.id')
-        ->where('a.id', $data['cus_id'])
-        ->select('a.enterprise_number as enterprise_number')
-        ->first();
-      $postData = [
-        "service_config_id" => $data["service_id"],
-        "enterprise_number" => $data["enterprise_number"],
-        "status" => $data["blocked"],
-        "id" => $data["cus_id"],
-        "num_agent" => $num_of_agent,
-        "updated_at" => date('Y-m-d H:i:s'),
-        "begin_charge_date" => $begin_charge_date
-      ];
-      if ($resExist) {
-        // Check extist data
-        unset($postData["num_agent"]);
-        unset($postData["begin_charge_date"]);
+        $resExist = DB::table('service_subcriber as a')
+            ->join('customers as b', 'a.id', '=', 'b.id')
+            ->where('a.id', $data['cus_id'])
+            ->select('a.enterprise_number as enterprise_number')
+            ->first();
+        $postData = [
+            "service_config_id" => $data["service_id"],
+            "enterprise_number" => $data["enterprise_number"],
+            "status" => $data["blocked"],
+            "id" => $data["cus_id"],
+            "num_agent" => $num_of_agent,
+            "updated_at" => date('Y-m-d H:i:s'),
+            "begin_charge_date" => $begin_charge_date
+        ];
+        if ($resExist) {
+            // Check extist data
+            unset($postData["num_agent"]);
+            unset($postData["begin_charge_date"]);
 
 
-        DB::connection("db2")->table('service_subcriber')
-          ->where('id', $data["cus_id"])
-          ->update($postData);
+            DB::table('service_subcriber')
+                ->where('id', $data["cus_id"])
+                ->update($postData);
 
-        // UPDATE OTHER TABLE HERE
-        DB::connection("db2")->table('hot_line_config')
-          ->where('id', $data["cus_id"])
-          ->update(['enterprise_number' => $data['enterprise_number'], 'updated_at' => $postData['updated_at']]);
-
-
-
-      } else {
-        $subid = DB::connection("db2")->table('service_subcriber')
-          ->insert($postData);
-        //$this->Activity($postData, "service_subcriber", $data["cus_id"], 0, "Created");
-      }
-      return true;
-    }
-    else
-
-    {
-      $resExist = DB::table('service_subcriber as a')
-        ->join('customers as b', 'a.id', '=', 'b.id')
-        ->where('a.id', $data['cus_id'])
-        ->select('a.enterprise_number as enterprise_number')
-        ->first();
-      $postData = [
-        "service_config_id" => $data["service_id"],
-        "enterprise_number" => $data["enterprise_number"],
-        "status" => $data["blocked"],
-        "id" => $data["cus_id"],
-        "num_agent" => $num_of_agent,
-        "updated_at" => date('Y-m-d H:i:s'),
-        "begin_charge_date" => $begin_charge_date
-      ];
-      if ($resExist) {
-        // Check extist data
-        unset($postData["num_agent"]);
-        unset($postData["begin_charge_date"]);
+            // UPDATE OTHER TABLE HERE
+            DB::table('hot_line_config')
+                ->where('id', $data["cus_id"])
+                ->update(['enterprise_number' => $data['enterprise_number'], 'updated_at' => $postData['updated_at']]);
 
 
-        DB::table('service_subcriber')
-          ->where('id', $data["cus_id"])
-          ->update($postData);
-
-        // UPDATE OTHER TABLE HERE
-        DB::table('hot_line_config')
-          ->where('id', $data["cus_id"])
-          ->update(['enterprise_number' => $data['enterprise_number'], 'updated_at' => $postData['updated_at']]);
-
-
-
-      } else {
-        $subid = DB::table('service_subcriber')
-          ->insert($postData);
-        //$this->Activity($postData, "service_subcriber", $data["cus_id"], 0, "Created");
-      }
-      return true;
-    }
+        } else {
+            $subid = DB::table('service_subcriber')
+                ->insert($postData);
+            //$this->Activity($postData, "service_subcriber", $data["cus_id"], 0, "Created");
+        }
+        return true;
 
 
     }
@@ -150,10 +101,6 @@ class V1CustomerController extends Controller
         Log::info($user->email . '  TRY TO GET V1CustomerController.getCustomers WITHOUT PERMISSION');
         return response()->json(['status' => false, 'message' => "Permission prohibit"], 400);
       }
-
-
-
-
       $page = 0;
         $take = 200;
         // Valid data
@@ -263,6 +210,7 @@ class V1CustomerController extends Controller
       'ip_auth_backup' => 'nullable|ipv4|max:50',
       'ip_proxy_backup' => 'nullable|ipv4|max:50',
       'destination' => 'required|ipV4Port|max:50',
+      'telco_destination' => 'nullable|ipV4Port|max:50',
       'hotline_numbers' => 'required|number_dash|max:1500',
       'split_contract' => 'nullable|max:25|exists:customers,enterprise_number',
       'fee_limit' => 'nullable|integer|max:9999999999',
@@ -298,61 +246,7 @@ class V1CustomerController extends Controller
 
 
     }
-    // Kiểm tra tồn tại dịch vụ backup
 
-    if ($BACKUPSTATE) {
-      $resServiceIdBackup = DB::connection("db2")->table('service_config')->where('product_code', $request->product_code)->where('status', 0)->select('id','ocs_charge')->first();
-
-      // Trả lỗi không có dịch vụ backup phù hợp
-      if (!$resServiceIdBackup) {
-        return $this->ApiReturn(['product_code' => ['Product code Not available backup or is temporary disabled']], false, 'The given data was invalid', 422);
-      }
-    }
-
-
-
-    // TODO VALIDATE TOS
-    if ($tosProductCode) {
-      if (strpos($tosProductCode, ',') !== false) {
-        $listUseTosCode = explode(',', $tosProductCode);
-        $listUseTos = explode(',', $tosUse);
-
-        if (count($listUseTosCode) != count($listUseTos)) {
-          $logDuration = round(microtime(true) * 1000) - $startTime;
-          Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($listUseTosCode) . "|ADD_CUSTOMER|" . $logDuration . "|INVALID TOS_PRODUCT_CODE IN USED");
-
-          return $this->ApiReturn(['tos_product_code' => ["tos_product_code invalid or inactive"], 'use_tos' => ['use_tos not equal product code']], false, 'The given data was invalid', 422);
-        }
-
-        $inValidCode = DB::table('service_config')->whereIn('product_code', $listUseTosCode)->where('status', 0)->count();
-
-        if ($inValidCode != count($listUseTosCode)) {
-          $logDuration = round(microtime(true) * 1000) - $startTime;
-          Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($listUseTosCode) . "|ADD_CUSTOMER|" . $logDuration . "|INVALID TOS_PRODUCT_CODE IN USED");
-
-          return $this->ApiReturn(['tos_product_code' => ["tos_product_code invalid or inactive"]], false, 'The given data was invalid', 422);
-        }
-      } else {
-        if (!isset($tosUse)) {
-          $logDuration = round(microtime(true) * 1000) - $startTime;
-          Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "| ADD_CUSTOMER|" . $logDuration . "|INVALID TOS_PRODUCT_CODE IN USED");
-
-          return $this->ApiReturn(['tos_product_code' => ["tos_product_code invalid or inactive"], 'use_tos' => ['use_tos not equal product code']], false, 'The given data was invalid', 422);
-        }
-
-        $inValidCode = DB::table('service_config')->where('product_code', $tosProductCode)->where('status', 0)->first();
-
-        if (!$inValidCode) {
-          $logDuration = round(microtime(true) * 1000) - $startTime;
-          Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($tosProductCode) . "|ADD_CUSTOMER|" . $logDuration . "|INVALID TOS_PRODUCT_CODE IN USED");
-
-          return $this->ApiReturn(['tos_product_code' => ["tos_product_code invalid or inactive"]], false, 'The given data was invalid', 422);
-        }
-      }
-    }
-    // TODO TOS CHECK
-
-    // Kiểm tra hotline
 
 
     if ($request->hotline_numbers) {
@@ -374,21 +268,6 @@ class V1CustomerController extends Controller
           return $this->ApiReturn(['hotline_numbers' => ["Hotlines number in uses"]], false, 'The given data was invalid', 422);
         }
 
-
-        if($BACKUPSTATE)
-        {
-          $inValidHotlineBackup =HotlinesBackup:: whereIn('hotline_number', $listHotline)
-            ->whereIn('status', [0, 1])
-            ->count();
-
-          if ($inValidHotlineBackup > 0) {
-            $logDuration= round(microtime(true) * 1000)-$startTime;
-            Log::info(APP_API."|".date("Y-m-d H:i:s",time())."|".$user->email."|".$request->ip()."|".
-              $request->url()."|".json_encode($request->all())."|ADD_CUSTOMER_HOTLINE|".$logDuration."|ADD_CUSTOMER_HOTLINE_FAIL ON BACKUP Hotlines in used");
-            return $this->ApiReturn(['hotline_numbers' => ["Hotlines  ON BACKUP  number in uses"]], false, 'The given data was invalid', 422);
-          }
-        }
-
       // Processing DB For Hotline
     }
     $email_login_portal = $request->enterprise_number;
@@ -399,15 +278,7 @@ class V1CustomerController extends Controller
       Log::info(APP_API . "|" . date("Y-m-d H:i:s", $startTime) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($email_login_portal) . "|ADD_CUSTOMER|" . $logDuration . "|EMAIL BILLING EXISTS");
       return $this->ApiReturn(['email' => ["User login billing already exists"]], false, 'The given data was invalid', 422);
     }
-    if($BACKUPSTATE) {
-      if (UserBackup::where("email", $email_login_portal)->exists()) {
-        // Kiem tra xem co chua
 
-        $logDuration = round(microtime(true) * 1000) - $startTime;
-        Log::info(APP_API . "|" . date("Y-m-d H:i:s", $startTime) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($email_login_portal) . "|ADD_CUSTOMER|" . $logDuration . "|EMAIL BILLING EXISTS ON BACKUP");
-        return $this->ApiReturn(['email' => ["User login billing already exists on BACKUP"]], false, 'The given data was invalid', 422);
-      }
-    }
 
 
 
@@ -421,6 +292,7 @@ class V1CustomerController extends Controller
     $ip_auth = $request->ip_auth;
     $ip_proxy = $request->ip_proxy;
     $destination = $request->destination;
+    $telco_destination = request("telco_destination", null);
     $ip_auth_backup = $request->ip_auth_backup ? $request->ip_auth_backup : null;
     $ip_proxy_backup = $request->ip_proxy_backup ? $request->ip_proxy_backup : null;
 
@@ -431,29 +303,8 @@ class V1CustomerController extends Controller
     $newCustomer['blocked'] = $request->status;
     $newCustomer['pause_state'] = "10";
     $newCustomer['server_profile']=config("server.server_profile");
+    $newCustomer['telco_destination']=$telco_destination;
 
-
-
-
-
-    if($BACKUPSTATE)
-    {
-
-      $newCustomerBackup = $request->only('cus_name', 'enterprise_number', 'companyname', 'addr', 'phone1', 'email', 'ip_auth', 'ip_proxy', 'destination', 'ip_auth_backup', 'ip_proxy_backup', 'blocked');
-      $newCustomerBackup['service_id']= $resServiceIdBackup->id;
-      $newCustomerBackup['blocked']=config("sbc.customer_status.pause"); // LUÔN KHÓA
-      $newCustomerBackup['pause_state']=11; // Mở chiều gọi vào
-      $newCustomerBackup['server_profile']=config("server.server_profile");
-
-      if (UserBackup::where("email", $email_login_portal)->exists()) {
-        // Kiem tra xem co chua
-
-        $logDuration = round(microtime(true) * 1000) - $startTime;
-        Log::info(APP_API . "|" . date("Y-m-d H:i:s", $startTime) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($email_login_portal) . "|ADD_CUSTOMER|" . $logDuration . "|EMAIL BILLING EXISTS ON BACKUP");
-        return $this->ApiReturn(['email' => ["User login billing ON BACKUP already exists"]], false, 'The given data was invalid', 422);
-      }
-      $vendorDataBackup = DB::connection("db2_sbc")->table('sbc.vendors')->where('i_vendor', $request->vendor_id ? $request->vendor_id : 1)->first();
-    }
 
     $vendorData = DB::table('sbc.vendors')->where('i_vendor', $request->vendor_id ? $request->vendor_id : 1)->first();
 
@@ -463,10 +314,6 @@ class V1CustomerController extends Controller
     // Check Services
 
     DB::beginTransaction();
-    if($BACKUPSTATE)
-    {
-      DB::connection("db2")->beginTransaction();
-    }
 
 
     try {
@@ -481,23 +328,11 @@ class V1CustomerController extends Controller
         $newCustomer['account_id']=$user->id;
         $newCustomer['cus_id'] = Customers::insertGetId($newCustomer);
 
-
-      if($BACKUPSTATE)
-      {
-        $userBackup = UserBackup::create($billingAccount);
-        $newCustomerBackup['account_id']=$userBackup->id;
-        $newCustomerBackup['cus_id'] = CustomersBackup::insertGetId($newCustomerBackup);
-        $this->SetActivity($request->all(), 'customers', $newCustomerBackup['cus_id'], 0, config("sbc.action.create_customer"), "[BACKUPSITE] Tạo mới khách hàng " . $request->companyname, $enterprise, null);
-        $newCustomerBackup['split_contract'] = $request->split_contract;
-      }
       // Backup
       $this->SetActivity($request->all(), 'customers', $newCustomer['cus_id'], 0, config("sbc.action.create_customer"), "Tạo mới khách hàng " . $request->companyname, $enterprise, null);
 
       $CDR_ADD_PRODUCTCODE=$enterprise."|3|".date("YmdHis")."|".$request->product_code;
       $this->CDRActivity(config("server.server_profile"), $CDR_ADD_PRODUCTCODE,$enterprise,$API_STATE."ADD_CUSTOMER");
-
-
-
       $newCustomer['split_contract'] = $request->split_contract;
       $isBackup= false;
 
@@ -519,34 +354,12 @@ class V1CustomerController extends Controller
           $newQuantity->begin_use_date= $begin_charge_date;
           $newQuantity->quantity_config_id= $quantitySubcriberCheck[0]->id;
           $newQuantity->save();
-
           Log::info("AUTO ADD QUANTITY SUBSCRIBER PACKAGE");
           Log::info(json_encode($newQuantity));
 
         }
 
 
-        if($BACKUPSTATE)
-        {
-
-          $quantitySubcriberCheckBackup=
-            DB::connection("db2")->select("select q.id from service_config s join quantity_config q on s.id= q.service_config_id where s.product_code =? and q.status=0",[$request->product_code]);
-          if(count($quantitySubcriberCheckBackup)==1)
-          {
-
-            $newQuantityBackup=new QuantitySubcriberBackup();
-            $newQuantityBackup->service_subcriber_id= $newCustomerBackup['cus_id'];
-            $newQuantityBackup->status= 1;
-            $newQuantityBackup->resub= 0;
-            $newQuantityBackup->begin_use_date= $begin_charge_date;
-            $newQuantityBackup->quantity_config_id= $quantitySubcriberCheckBackup[0]->id;
-            $newQuantityBackup->save();
-            Log::info("AUTO ADD QUANTITY SUBSCRIBER PACKAGE ON BACKUP");
-            Log::info(json_encode($newQuantityBackup));
-
-          }
-
-        }
 
       /**
        * THÊM HOTLINE
@@ -573,22 +386,6 @@ class V1CustomerController extends Controller
           $this->CDRActivity(config("server.server_profile"),$CDR_TEXT,$enterprise,$API_STATE."ADD_HOTLINE");
 
           $this->SetActivity($data,'hot_line_config', $hotlineId, 0,config("sbc.action.add_hotline"), "Tạo mới hotline ".$line, $request->enterprise_number, $line);
-          if($BACKUPSTATE)
-          {
-            $dataBackup = array('cus_id' => $newCustomerBackup['cus_id'],
-              'enterprise_number' => $request->enterprise_number,
-              'hotline_number' => $line, 'status' => config("sbc.customer_status.pause"),
-              'pause_state'=>11,
-              'use_brand_name'=>$use_brand_name,
-              'ocs_charge'=>$resServiceIdBackup->ocs_charge,
-
-            );
-
-            $hotlineIdBackup=   HotlinesBackup::insertGetId($dataBackup);
-            $this->SetActivity($data,'hot_line_config', $hotlineIdBackup, 0,config("sbc.action.add_hotline"), "[BACKUPSITE] Tạo mới hotline ".$line, $request->enterprise_number, $line);
-
-          }
-
 
           $sip->hotline = $line;
           $sip->cus_id=$newCustomer['cus_id'];
@@ -600,6 +397,7 @@ class V1CustomerController extends Controller
           $sip->profile_id_backup = $request->profile_id_backup ? $request->profile_id_backup : config('sbc.profile_id_backup');
 
           $sip->destination = $destination;
+          $sip->telco_destination = $telco_destination;
           $sip->ip_proxy = $ip_proxy;
           $sip->ip_auth = $ip_auth;
           $sip->ip_proxy_backup = $ip_proxy_backup;
@@ -609,15 +407,7 @@ class V1CustomerController extends Controller
           $sip->status = $request->status;
 
           $sipOk = $this->addSipRouting($sip,false);
-          if($BACKUPSTATE)
-          {
-            $sip->cus_id=$newCustomerBackup['cus_id'];
-            $sip->hotline_id=$hotlineIdBackup;
-            $sip->vendor = $vendorDataBackup;
-            $sip->isRunOnBackup = false;
 
-            $sipOk = $this->addSipRouting($sip, true);
-          }
         }
       }
 
@@ -625,11 +415,6 @@ class V1CustomerController extends Controller
 
       $this->synCustomerToServiceSub($newCustomer,  false);
 
-      if($BACKUPSTATE)
-      {
-
-        $this->synCustomerToServiceSub($newCustomerBackup,  true);
-      }
       /** Thêm mới bản ghi Fee limit */
       if ($request->fee_limit) {
         $dataFeelimit = ["enterprise_number" => $request->enterprise_number, "limit_amount" => $request->fee_limit];
@@ -637,13 +422,7 @@ class V1CustomerController extends Controller
         Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($dataFeelimit) . "|ADD_FEE_LIMIT|SUCCESS");
         $feeLogId= DB::table("charge_fee_limit")->insertGetId($dataFeelimit);
         $this->SetActivity($dataFeelimit,'charge_fee_limit', $feeLogId, 0,config("sbc.action.set_fee_limit"), "Thiết lập hạn mức ".$dataFeelimit['limit_amount'], $request->enterprise_number, null);
-        if($BACKUPSTATE)
-        {
-          $feeLogIdBackup= DB::connection("db2")->table("charge_fee_limit")->insertGetId($dataFeelimit);
-          $this->SetActivity($dataFeelimit,'charge_fee_limit', $feeLogIdBackup, 0,config("sbc.action.set_fee_limit"), "[BACKUPSITE]Thiết lập hạn mức ".$dataFeelimit['limit_amount'], $request->enterprise_number, null);
 
-
-        }
 
       }
 
@@ -670,53 +449,21 @@ class V1CustomerController extends Controller
           }
         }
 
-
-
-        if($BACKUPSTATE)
-        {
-          if (isset($listUseTosCode) && count($listUseTosCode) > 0) {
-            foreach ($listUseTosCode as $key => $value) {
-              $postData = ['cus_id' =>  $newCustomerBackup['cus_id'], 'service_key' => $value, 'enterprise_number' => $enterprise, 'active' => $listUseTos[$key]];
-
-              if (TosServicesBackup::where('enterprise_number', $enterprise)->where('service_key', $value)->exists()) {
-                 TosServicesBackup::where('enterprise_number', $enterprise)->where('service_key', $value)->update($postData);
-              } else {
-               TosServicesBackup::create($postData);
-              }
-            }
-          } else {
-            $postData = ['cus_id' => $newCustomerBackup['cus_id'], 'service_key' => $tosProductCode, 'enterprise_number' => $enterprise, 'active' => $tosUse];
-            if (TosServicesBackup::where('enterprise_number', $enterprise)->where('service_key', $tosProductCode)->exists()) {
-               TosServicesBackup::where('enterprise_number', $enterprise)->where('service_key', $tosProductCode)->update($postData);
-            } else {
-              TosServicesBackup::create($postData);
-            }
-          }
-        }
-
       }
 
 
       DB::commit();
-      if($BACKUPSTATE)
-      {
-        DB::connection("db2")->commit();
-      }
+
       $logDuration = round(microtime(true) * 1000) - $startTime;
       Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($validData) . "|ADD_CUSTOMER|" . $logDuration . "|SUCCESS");
 
       return $this->ApiReturn(null, true, null, 200);
     } catch (Exception $exception) {
       DB::rollBack();
-      if($BACKUPSTATE)
-      {
-        DB::connection("db2")->rollBack();
-      }
+
       return $this->ApiReturn($exception, true, null, 433);
     }
   }
-
-
 
     public function editCustomer(Request $request)
     {
@@ -730,7 +477,7 @@ class V1CustomerController extends Controller
             return response()->json(['status' => false, 'message' => "Permission prohibit"], 400);
           }
 
-        $validData = $request->only('cus_name', 'enterprise_number', 'companyname', 'addr', 'phone1', 'email', 'ip_auth','ip_proxy','destination',  'ip_auth_backup',
+        $validData = $request->only('cus_name', 'enterprise_number', 'companyname', 'addr', 'phone1', 'email', 'ip_auth','ip_proxy','destination', 'telco_destination',  'ip_auth_backup',
           'ip_proxy_backup');
         $validator = Validator::make($validData, [
             'cus_name' => 'nullable|max:250',
@@ -744,6 +491,7 @@ class V1CustomerController extends Controller
           'ip_auth_backup' => 'nullable|ipv4|max:100',
           'ip_proxy_backup' => 'nullable|ipv4|max:100',
             'destination' => 'nullable|ipV4Port|max:100',
+            'telco_destination' => 'nullable|ipV4Port|max:50',
         ]);
         if ($validator->fails()) {
           $logDuration= round(microtime(true) * 1000)-$startTime;
@@ -757,42 +505,28 @@ class V1CustomerController extends Controller
         $customer=Customers::where('enterprise_number',$enterprise)->whereIn('blocked',[0,1])->first();
 
 
-
         if(!$customer)
         {
           return $this->ApiReturn([], false, 'Not found active enterprise number', 422);
 
         }
+        $customer->cus_name= request('cus_name', null);
+        $customer->companyname= request('companyname', null);
+        $customer->addr= request('addr', null);
+        $customer->phone1= request('phone1', null);
+        $customer->email= request('email', null);
+        $customer->ip_auth= request('ip_auth', null);
+        $customer->ip_proxy= request('ip_proxy', null);
+        $customer->destination= request('destination', null);
+        $customer->telco_destination= request('telco_destination', null);
+        $customer->ip_auth_backup= request('ip_auth_backup', null);
+        $customer->ip_proxy_backup= request('ip_proxy_backup', null);
 
-        if($BACKUPSTATE)
-        {
-          $customerBackup= CustomersBackup::where('enterprise_number', $enterprise)->whereIn('blocked',[0,1])->first();
+        $customer->save();
 
-          if(!$customerBackup)
-          {
-            $logDuration= round(microtime(true) * 1000)-$startTime;
-            Log::info(APP_API."|".date("Y-m-d H:i:s",time())."|".$user->email."|".$request->ip()."|".
-              $request->url()."|".json_encode($request->all())."|CHANGE_CUSTOMER_PRODUCTCODE|".$logDuration."|CHANGE_CUSTOMER_PRODUCT_CODE_FAIL Invalid enterprise number");
-            /** @var LOG  $logDuration */
 
-            return $this->ApiReturn(['enterprise_number' => 'Enterprise number not found on backup site'], false, 'The given data was invalid', 422);
-          }
 
-        }
 
-        unset($validData['enterprise_number']);
-        Customers::where('enterprise_number', $request->enterprise_number)
-            ->update($validData);
-        // Backup Site
-      if($BACKUPSTATE)
-      {
-        CustomersBackup::          where('enterprise_number', $request->enterprise_number)
-          ->update($validData);
-
-        $this->SetActivity($validData, "customers", $customerBackup->id, 0, config("sbc.action.update_customer"),"[BACKUPSITE] Cập nhật thông tin khách hàng", $enterprise, null);
-
-      }
-      // Backup Site
         $this->SetActivity($validData, "customers", $customer->id, 0, config("sbc.action.update_customer"),"Cập nhật thông tin khách hàng", $enterprise, null);
 
       $logDuration= round(microtime(true) * 1000)-$startTime;
@@ -2660,7 +2394,7 @@ class V1CustomerController extends Controller
             $sql=" SELECT a.companyname, a.blocked as status, a.updated_at, a.created_at, a.pause_state, a.server_profile,
                      a.enterprise_number,  b.total_amount total, c.service_name, 
                           a.ip_auth, a.ip_proxy,a.ip_auth_backup, a.ip_proxy_backup, a.destination, a.account_id, 
-                         a.addr, a.email, a.cus_name, a.id, 
+                         a.addr, a.email, a.cus_name, a.id, a.telco_destination, 
                      e.charge_result, e.charge_time as event_occur_time, a.phone1, c.product_code, a.cfu
                     FROM customers a
                     LEFT JOIN 

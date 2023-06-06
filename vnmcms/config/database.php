@@ -40,17 +40,16 @@ return [
         ],
 
 
-
       'mysql' => [
         'driver'    => 'mysql',
         // 'host'      => '210.245.89.137',
-        'host'      => '192.168.200.25',
+        'host'      => 'localhost',
         //         'host'      => 'localhost',
-        'port' => '6033',
+        'port' => '3306',
         'database'  => 'vnmcms',
         // 'username'  => 'aio',
-        'username'  => 'app',
-        'password'  => '6!ZAUy2v+aZP6!ZA6!ZAUy2v+aZP6!ZA',
+        'username'  => 'root',
+        'password'  => '123456a@',
         // 'password'  => 'aio',
         'charset'   => 'utf8',
         'collation' => 'utf8_unicode_ci',
@@ -60,13 +59,13 @@ return [
       'db2' => [
         'driver'    => 'mysql',
         // 'host'      => '210.245.89.137',
-        'host'      => '192.168.200.25',
+        'host'      => 'localhost',
         // 'host'      => 'localhost',
-        'port' => '6033',
+        'port' => '3306',
         'database'  => 'vnmcms',
         // 'username'  => 'aio',
-        'username'  => 'app',
-        'password'  => '6!ZAUy2v+aZP6!ZA6!ZAUy2v+aZP6!ZA',
+        'username'  => 'root',
+        'password'  => '123456a@',
         // 'password'  => 'aio',
         'charset'   => 'utf8',
         'collation' => 'utf8_unicode_ci',
@@ -74,23 +73,75 @@ return [
       ],
 
 
- 
+
 
       'db2_sbc' => [
         'driver'    => 'mysql',
         // 'host'      => '210.245.89.137',
-       'host'      => '192.168.200.25',
+       'host'      => 'localhost',
         // 'host'      => 'localhost',
-        'port' => '6033',
+        'port' => '3306',
         'database'  => 'sbc',
         // 'username'  => 'aio',
-        'username'  => 'app',
-        'password'  => '6!ZAUy2v+aZP6!ZA6!ZAUy2v+aZP6!ZA',
+        'username'  => 'root',
+        'password'  => '123456a@',
         // 'password'  => 'aio',
         'charset'   => 'utf8',
         'collation' => 'utf8_unicode_ci',
         'prefix'    => '',
       ],
+
+//      'mysql' => [
+//        'driver'    => 'mysql',
+//        // 'host'      => '210.245.89.137',
+//        'host'      => '192.168.200.25',
+//        //         'host'      => 'localhost',
+//        'port' => '6033',
+//        'database'  => 'vnmcms',
+//        // 'username'  => 'aio',
+//        'username'  => 'app',
+//        'password'  => '6!ZAUy2v+aZP6!ZA6!ZAUy2v+aZP6!ZA',
+//        // 'password'  => 'aio',
+//        'charset'   => 'utf8',
+//        'collation' => 'utf8_unicode_ci',
+//        'prefix'    => '',
+//      ],
+//
+//      'db2' => [
+//        'driver'    => 'mysql',
+//        // 'host'      => '210.245.89.137',
+//        'host'      => '192.168.200.25',
+//        // 'host'      => 'localhost',
+//        'port' => '6033',
+//        'database'  => 'vnmcms',
+//        // 'username'  => 'aio',
+//        'username'  => 'app',
+//        'password'  => '6!ZAUy2v+aZP6!ZA6!ZAUy2v+aZP6!ZA',
+//        // 'password'  => 'aio',
+//        'charset'   => 'utf8',
+//        'collation' => 'utf8_unicode_ci',
+//        'prefix'    => '',
+//      ],
+//
+//
+//
+//
+//      'db2_sbc' => [
+//        'driver'    => 'mysql',
+//        // 'host'      => '210.245.89.137',
+//       'host'      => '192.168.200.25',
+//        // 'host'      => 'localhost',
+//        'port' => '6033',
+//        'database'  => 'sbc',
+//        // 'username'  => 'aio',
+//        'username'  => 'app',
+//        'password'  => '6!ZAUy2v+aZP6!ZA6!ZAUy2v+aZP6!ZA',
+//        // 'password'  => 'aio',
+//        'charset'   => 'utf8',
+//        'collation' => 'utf8_unicode_ci',
+//        'prefix'    => '',
+//      ],
+
 
       'pgsql' => [
             'driver' => 'pgsql',

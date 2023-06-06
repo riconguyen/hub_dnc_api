@@ -102,21 +102,6 @@
         return $this->ApiReturn(["hotline_numbers" => ["Hotline numbers is uses " . implode(",", $linesInUsed)]], false, 'The given data was invalid', 422);
       }
 
-      if ($BACKUPSTATE) {
-        $lstInUseHotlineBackup = HotlinesBackup::whereIn('hotline_number', $hotlineNumbers)->whereIn('status', [0, 1])->get();
-        if (count($lstInUseHotlineBackup) > 0) {
-          $linesInUsed = [];
-          foreach ($lstInUseHotlineBackup as $line) {
-            array_push($linesInUsed, $line->hotline_number);
-          }
-
-          $logDuration = round(microtime(true) * 1000) - $startTime;
-          Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL Hotlines in used ON BACKUP|" . implode(",", $linesInUsed));
-
-          return $this->ApiReturn(["hotline_numbers" => ["Hotline numbers is uses " . implode(",", $linesInUsed)]], false, 'The given data was invalid', 422);
-        }
-      }
-
       $enterprise = $request->enterprise_number;
 
       $customer = Customers::where("enterprise_number", $enterprise)->whereIn('blocked', [0, 1])->first();
@@ -134,17 +119,6 @@
         $isBackup = true;
       }
 
-      if ($BACKUPSTATE) {
-        $customerBackup = CustomersBackup::where("enterprise_number", $enterprise)->first();
-        $vendorDataBackup = DB::connection("db2")->table('sbc.vendors')->where('i_vendor', $request->vendor_id ? $request->vendor_id : 1)->first();
-        $serviceBackup= ServiceConfigBackup::where('id',$customerBackup->service_id)->first();
-        if (!$customerBackup) {
-          $logDuration = round(microtime(true) * 1000) - $startTime;
-          Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL|Not found active enterprise number ON BACKUP");
-
-          return $this->ApiReturn([], false, "Not found active enterprise number on all site " . $enterprise, 404);
-        }
-      }
 
       $use_brand_name = false;
       if ($customer) {
@@ -154,9 +128,6 @@
       $sip = (object)[];
 
       DB::beginTransaction();
-      if ($BACKUPSTATE) {
-        DB::connection("db2")->beginTransaction();
-      }
 
       $initHotlineInitCharge = 0;
 
@@ -196,6 +167,7 @@
           $sip->ip_proxy = $customer->ip_proxy;
           $sip->description = $customer->enterprise_number;
           $sip->destination = $customer->destination;
+          $sip->telco_destination = $customer->telco_destination;
           $sip->profile_id_backup = $request->profile_id_backup ? $request->profile_id_backup : config('sbc.profile_id_backup');
           $sip->isRunOnBackup = $isBackup;
           $sip->status = $data['status'];
@@ -203,58 +175,9 @@
           $sipOk = $this->addSipRouting($sip, false);
         }
 
-        //  BACKUP CASE  ================================================TODO BACKUP=============================================================================================
-
-        if ($BACKUPSTATE) {
-          foreach ($hotlineNumbers as $line) {
-            $dataBackup = array('cus_id' => $customerBackup->id, 'init_charge' => $initHotlineInitCharge,
-              'enterprise_number' => $enterprise,
-              'hotline_number' => $line,
-              'status' => $customerBackup->blocked,
-              'pause_state' => 11,
-              'use_brand_name' => $use_brand_name,
-              'ocs_charge'=>$service?$service->ocs_charge:0
-
-            );
-            if ($isBackup) {
-              $dataBackup['status'] = $customerBackup->blocked;
-              $dataBackup['pause_state'] = 10;
-            }
-
-            $hotlineIdBackup = HotlinesBackup::insertGetId($dataBackup);
-
-            $this->SetActivity($dataBackup, 'hot_line_config', $hotlineIdBackup, 0, config("sbc.action.add_hotline"), "[BACKUPSITE] Tạo mới hotlines  " . $line, $request->enterprise_number, $line);
-
-            if ($isBackup) {
-              $CDR_TEXT = $enterprise . "|" . config("sbc.CDR.CHANGE") . "|" . date("YmdHis") . "|" . $line;
-              $this->CDRActivity($customerBackup->server_profile, $CDR_TEXT, $enterprise, $API_STATE . "ADD_HOTLINE");
-            }
-
-            $sip->hotline = $line;
-            $sip->hotline_id = $hotlineIdBackup;
-            $sip->cus_id = $customerBackup->id;
-            $sip->ip_auth = $customerBackup->ip_auth;
-            $sip->ip_auth_backup = $customerBackup->ip_auth_backup;
-            $sip->ip_proxy_backup = $customerBackup->ip_proxy_backup;
-
-            $sip->enterprise_number = $customerBackup->enterprise_number;
-            $sip->ip_proxy = $customerBackup->ip_proxy;
-            $sip->description = $customerBackup->enterprise_number;
-            $sip->destination = $customerBackup->destination;
-            $sip->profile_id_backup = $request->profile_id_backup ? $request->profile_id_backup : config('sbc.profile_id_backup');
-
-            $sip->vendor = $vendorDataBackup;
-            $sip->isRunOnBackup = $isBackup;
-            $sip->status = $dataBackup['status'];
-
-            $sipOk = $this->addSipRouting($sip, true);
-          }
-        }
 
         DB::commit();
-        if ($BACKUPSTATE) {
-          DB::connection("db2")->commit();
-        }
+
 
         $logDuration = round(microtime(true) * 1000) - $startTime;
         Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_SUCCESS");
@@ -262,9 +185,6 @@
         return $this->ApiReturn(null, true, null, 200);
       } catch (\Exception $e) {
         DB::rollBack();
-        if ($BACKUPSTATE) {
-          DB::connection("db2")->rollBack();
-        }
 
         $logDuration = round(microtime(true) * 1000) - $startTime;
         Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_CUSTOMER_HOTLINE|" . $logDuration . "|ADD_CUSTOMER_HOTLINE_FAIL Error 500");
@@ -286,7 +206,16 @@
       if ($validator->fails()) {
         return $this->ApiReturn($validator->errors(), false, 'The given data was invalid', 422);
       }
-      $hotlineInfo = DB::table('hot_line_config as a')->where('hotline_number', $request->hotline_number)->whereIn('a.status', [0, 1])->leftJoin('sbc.routing as b', 'a.hotline_number', '=', 'b.callee')->leftJoin('sbc.routing as c', 'a.hotline_number', '=', 'c.caller')->leftJoin('sbc.acl as d', 'c.i_acl', '=', 'd.i_acl')->leftJoin('sbc.acl as e', 'c.i_acl_backup', '=', 'e.i_acl')->select('enterprise_number', 'a.status', 'updated_at', 'a.hotline_number', 'e.ip_auth as ip_auth_backup', 'b.destination', 'b.i_sip_profile as profile', 'd.ip_auth', 'd.ip_proxy')->first();
+      $hotlineInfo = DB::table('hot_line_config as a')->where('hotline_number', $request->hotline_number)->whereIn('a.status', [0, 1])
+          ->leftJoin('sbc.routing as b', 'a.hotline_number', '=', 'b.callee')
+          ->leftJoin('sbc.routing as c', 'a.hotline_number', '=', 'c.caller')
+          ->leftJoin('sbc.acl as d', 'c.i_acl', '=', 'd.i_acl')
+          ->leftJoin('sbc.acl as e', 'c.i_acl_backup', '=', 'e.i_acl')
+          ->select('enterprise_number', 'a.status', 'updated_at', 'a.hotline_number', 'e.ip_auth as ip_auth_backup',
+              'b.destination',
+              'c.destination as telco_destination',
+              'b.i_sip_profile as profile',
+              'd.ip_auth', 'd.ip_proxy')->first();
 
       if ($hotlineInfo) {
         return $this->ApiReturn($hotlineInfo, true, null, 200);
@@ -341,28 +270,10 @@
 
       $this->SetActivity($request->all(), 'hot_line_config', $hotLine->id, 0, config("sbc.action.update_sip_config"), "Cập nhật cấu hình sip của hotline " . $lineNumber, $enterprise_number, $lineNumber);
 
-      // START FIXING
-      if (config("server.backup_site")) {
-        $customerBackup = CustomersBackup::where("enterprise_number", $request->enterprise_number)->whereIn('blocked', [0, 1])->first();
-        if (!$customerBackup) {
-          Log::info("NOT FOUND CUSTOMER " . $enterprise_number);
-          return $this->ApiReturn([], false, 'Not found active enterprise_number', 422);
-        }
-        $hotLineBackup = HotlinesBackup::where('hotline_number', $request->hotline_number)->where('cus_id', $customerBackup->id)->whereIn('status', [0, 1])->whereNotNull('sip_config')->first();
-        if (!$hotLineBackup) {
-          $logDuration = round(microtime(true) * 1000) - $startTime;
-          Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|CHANGE_HOTLINE_CONFIG|" . $logDuration . "|CHANGE_HOTLINE_CONFIG_FAIL not found hotline ");
-          return $this->ApiReturn(['hotline_number' => 'Hotline number not match with present enterprise number '], false, 'The given data was invalid', 422);
-        }
-      }
-
       $ip_proxy_backup = request('ip_proxy_backup', null);
       $ip_auth_backup = request('ip_auth_backup', null);
 
       DB::beginTransaction();
-      if ($BACKUP_STATE) {
-        DB::connection("db2")->beginTransaction();
-      }
 
       try {
         $routingCallee = SBCRouting::where('callee', $hotLine->hotline_number)->where('i_customer', $hotLine->cus_id)->first();
@@ -383,6 +294,12 @@
           $acl->save();
         }
 
+        $telco_destination=request('telco_destination',null);
+        if($telco_destination)
+        {
+            $routingCaller->destination= $telco_destination;
+        }
+
         if ($ip_proxy_backup || $ip_auth_backup) {
           if ($routingCaller->i_acl_backup && $routingCaller->i_acl != $routingCaller->i_acl_backup) {
             $aclBackup = SBCAcl::where('i_acl', $routingCaller->i_acl_backup)->first();
@@ -398,6 +315,8 @@
           $aclBackup->save();
 
           $routingCaller->i_acl_backup = $aclBackup->i_acl;
+
+
           $routingCaller->save();
         } else {
           $routingCaller->i_acl_backup = $routingCaller->i_acl;
@@ -407,61 +326,12 @@
         $hotLine->updated_at = date("Y-m-d H:i:s");
         $hotLine->save();
 
-        if (config("server.backup_site")) {
-          // Gửi lệnh lên backup server
-          // START FIXING
-          $routingCalleeBackup = SBCRoutingBackup::where('callee', $hotLineBackup->hotline_number)->where('i_customer', $hotLineBackup->cus_id)->first();
-          if ($routingCalleeBackup) {
-            if ($request->destination) {
-              $routingCalleeBackup->destination = $request->destination;
-            }
-            $routingCalleeBackup->save();
-          }
 
-          $routingCallerBackup = SBCRoutingBackup::where('caller', $hotLineBackup->hotline_number)->where('i_customer', $hotLineBackup->cus_id)->first();
-          $aclOnBackup = SBCAclBackup::where('i_acl', $routingCallerBackup->i_acl)->first();
-          if ($aclOnBackup) {
-            if ($request->ip_auth) {
-              $aclOnBackup->ip_auth = $request->ip_auth; // Lưuu IP Auth
-            }
-            if ($request->ip_proxy) {
-              $aclOnBackup->ip_proxy = $request->ip_proxy;
-            }
-            $aclOnBackup->save();
-          }
-
-          if ($ip_proxy_backup || $ip_auth_backup) {
-            if ($routingCallerBackup->i_acl_backup && $routingCallerBackup->i_acl != $routingCallerBackup->i_acl_backup) {
-              $aclBackupOnBackup = SBCAclBackup::where('i_acl', $routingCallerBackup->i_acl_backup)->first();
-            } else {
-              $aclBackupOnBackup = new SBCAclBackup();
-              $aclBackupOnBackup->block_regex_caller = $aclOnBackup ? $aclOnBackup->block_regex_caller : '';
-              $aclBackupOnBackup->block_regex_callee = $aclOnBackup ? $aclOnBackup->block_regex_callee : '^(00|\\\\+84|1900|1800).*';
-              $aclBackupOnBackup->allow_regex_caller = $aclOnBackup ? $aclOnBackup->allow_regex_caller : '';
-              $aclBackupOnBackup->allow_regex_callee = $aclOnBackup ? $aclOnBackup->allow_regex_callee : '^0[0-9]{8,11}$';
-            }
-            $aclBackupOnBackup->ip_proxy = $ip_proxy_backup;
-            $aclBackupOnBackup->ip_auth = $ip_auth_backup ? $ip_auth_backup : $aclOnBackup->ip_auth;
-            $aclBackupOnBackup->save();
-            $routingCallerBackup->i_acl_backup = $aclBackupOnBackup->i_acl;
-            $routingCallerBackup->save();
-          } else {
-            $routingCallerBackup->i_acl_backup = $routingCallerBackup->i_acl;
-            $routingCallerBackup->save();
-          }
-
-          $hotLineBackup->updated_at = date("Y-m-d H:i:s");
-          $hotLineBackup->save();
-          DB::connection("db2")->commit();
-        }
 
         DB::commit();
       } catch (\Exception $exception) {
         Log::info($exception->getTraceAsString());
         DB::rollback();
-        if ($BACKUP_STATE) {
-          DB::connection("db2")->rollback();
-        }
 
         return $this->ApiReturn(null, false, "Internal server error", 500);
       }
