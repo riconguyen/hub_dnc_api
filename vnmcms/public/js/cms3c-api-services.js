@@ -203,7 +203,7 @@ cms3c.factory('ApiServices', function($http,loginCheck){
             return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/'+report, data:data});
             // return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/'+report, data:data});
         },
-postViewMonthlyAudit:function (data) {
+		postViewMonthlyAudit:function (data) {
             return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/monthly', data:data});
             // return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/'+report, data:data});
         },
@@ -239,7 +239,7 @@ postViewMonthlyAudit:function (data) {
 			return $http({method: 'post', headers: headers, url: ApiUrl + '/api/v1/charging/request-check-charging', data:data});
 		},
 
-postRequestCharge: function (data) {
+	postRequestCharge: function (data) {
 			return $http({method: 'post', headers: headers, url: ApiUrl + '/api/v1/charging/request-charge', data:data});
 		},
 	postChangeCfu: function (data) {
@@ -374,7 +374,7 @@ postRequestCharge: function (data) {
 			});
 		},
 
-	postDNCBlacklist: function (data) {
+		postDNCBlacklist: function (data) {
 			return $http({
 				method: 'POST',
 				url: ApiUrl + '/api/nd91/dnc-blacklist',
@@ -410,6 +410,15 @@ postRequestCharge: function (data) {
 			return $http({
 				method: 'POST',
 				url: ApiUrl + '/api/nd91/dnc-whitelist',
+				data: data
+			});
+		},
+
+
+		getOperatorTelco: function (data) {
+			return $http({
+				method: 'GET',
+				url: ApiUrl + '/api/accounts/operator-telco',
 				data: data
 			});
 		},

@@ -141,8 +141,10 @@ Route::group(['middleware' => ['api', 'cors','logVT']], function () {
             Route::post('/postServiceCustomerOption', 'AccountController@postServiceCustomerOption');
             Route::post('/postServiceCustomerQuantity', 'AccountController@postServiceCustomerQuantity');
             Route::post('/saveFeeLimit', 'AccountController@saveFeeLimit');
-          Route::post('/saveRedWarning', 'AccountController@saveRedWarning');   // Update 2002 05 22
+            Route::post('/saveRedWarning', 'AccountController@saveRedWarning');   // Update 2002 05 22
             Route::post('/serviceAddedCode', 'V1CustomerController@serviceAddedCode'); // Serviced Added code  20200302
+            Route::get('/operator-telco', 'ServiceController@getOperatorTelco'); // Serviced Added code  20200302
+
             // Get account activity
 
           Route::get('/getListHotLinesByCustomers', 'AccountController@getListHotLinesByCustomers');

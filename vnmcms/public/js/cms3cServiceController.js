@@ -210,10 +210,6 @@ cms3c.controller('servicesController', function ($scope, ApiServices,$filter,  $
      */
 
 
-    $scope.activeConfigPriceZone= function()
-    {
-
-    }
 
 
     $scope.addNewPrefixType= function(){

@@ -1256,6 +1256,7 @@ cms3c.controller('customerControllerAdd', function ($scope, ApiServices, ApiV1, 
 
 	]
 
+	$scope.lstOperatorTelco=[];
 
     $scope.newCustomer= new Customer();
 
@@ -1273,7 +1274,22 @@ cms3c.controller('customerControllerAdd', function ($scope, ApiServices, ApiV1, 
 
     }
 
+
+
+    $scope.getLstOperatorTelco= function () {
+       ApiServices.getOperatorTelco().then(result=>{
+       	$scope.lstOperatorTelco= result.data?result.data.data:[];
+
+	   }, reason => {
+
+	   })
+
+    }
+
+
+
     $scope.getListService({});
+    $scope.getLstOperatorTelco({});
 
     // V1.2 Model ===============================================================
     $scope.closeFormAdd= function () {

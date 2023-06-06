@@ -2,9 +2,11 @@
 
   namespace App\Http\Controllers;
 
+  use App\OperatorTelco;
   use App\ServiceConfig;
   use App\ServicePrefixTypeName;
   use Illuminate\Support\Facades\Log;
+  use function response;
   use Validator;
   use Illuminate\Http\Request;
   use Illuminate\Support\Facades\DB;
@@ -25,19 +27,15 @@
         return response()->json(['status' => false, 'message' => "Permission denied"], 403);
       }
 
-
-      $errors = Validator::make($request->only('query', 'page', 'take'),
-        ['query' => 'nullable|unicode_valid|max:50', 'page' => 'nullable|integer|min:0|max:9999999',
-          'count' => 'nullable|integer|min:0|max:500',
+      $errors = Validator::make($request->only('query', 'page', 'take'), ['query' => 'nullable|unicode_valid|max:50', 'page' => 'nullable|integer|min:0|max:9999999', 'count' => 'nullable|integer|min:0|max:500',
 
         ]);
       if ($errors->fails()) {
         return $this->ApiReturn($errors->errors(), false, "The given data was invalid", 422);
       }
 
-
-      $page= request("page",1);
-      $take= request("count", 20);
+      $page = request("page", 1);
+      $take = request("count", 20);
 
       if ($request->query) {
         $query = $request->input('query');
@@ -46,8 +44,8 @@
       }
       $skip = ($page - 1) * $take;
 
-      $countServices = DB::table('service_config')->whereRaw('service_name like ? OR product_code like? ', ['%' . $query . '%','%' . $query . '%'])->count();
-      $res = DB::table('service_config')->whereRaw('service_name like ? OR product_code like? ', ['%' . $query . '%','%' . $query . '%'])->take($take)->skip($skip)->get();
+      $countServices = DB::table('service_config')->whereRaw('service_name like ? OR product_code like? ', ['%' . $query . '%', '%' . $query . '%'])->count();
+      $res = DB::table('service_config')->whereRaw('service_name like ? OR product_code like? ', ['%' . $query . '%', '%' . $query . '%'])->take($take)->skip($skip)->get();
 
       return response()->json(['status' => true, 'data' => $res, 'count' => $countServices, 'page' => 1, 'totalpage' => 0]);
     }
@@ -65,7 +63,7 @@
 
       $errors = Validator::make($data, ['id' => 'required|numeric|exists:service_config',
 
-        ]);
+      ]);
       if ($errors->fails()) {
         return $this->ApiReturn($errors->errors(), false, "The given data was invalid", 422);
       }
@@ -84,53 +82,52 @@
 
     // Tạo dịch vụ
 
-//    public function postServiceConfig(Request $request) {
-//      $startTime = round(microtime(true) * 1000);
-//
-//      $user = $request->user;
-//
-//      if (!$this->checkEntity($user->id, "UPDATE_SERVICE_CONFIG")) {
-//        Log::info($user->email . '  TRY TO GET ServiceController.getServiceConfigById WITHOUT PERMISSION');
-//        return response()->json(['status' => false, 'message' => "Permission denied"], 403);
-//      }
-//
-//      $serviceID = $request->input('id');
-//      if (!$serviceID) {
-//        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id'),
-//          ['service_name' => 'required|unicode_valid|max:50', 'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2',
-//            'product_code' => 'required|alpha_dash|unique:service_config,product_code|max:50',
-//
-//
-//          ]);
-//      } else {
-//        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id'), ['service_name' => 'required|max:50', 'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2', 'product_code' => 'required|alpha_dash|max:50']);
-//      }
-//
-//      if ($errors->fails()) {
-//        $logDuration = round(microtime(true) * 1000) - $startTime;
-//        Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_SERVICE|" . $logDuration . "|ADD_EDIT_SERVICE_FAIL Invalid input data");
-//
-//        return $this->ApiReturn($errors->errors(), false, "The given data was invalid", 422);
-//      }
-//
-//      $arrService = ['service_name' => $request->input('service_name'), 'type' => $request->input('type'), 'product_code' => $request->input('product_code'), 'status' => $request->input('status'), 'created_at' => date("Y-m-d H:i:s"), 'updated_at' => date("Y-m-d H:i:s")];
-//      if ($serviceID) {
-//        unset($arrService["created_at"]);
-//        $res = DB::table('service_config')->where('id', $serviceID)->update($arrService);
-//        $res = $serviceID;
-//        $this->Activity($arrService, "service_config", $serviceID, $serviceID, "Update");
-//      } else {
-//        $res = DB::table('service_config')->insertGetId($arrService);
-//
-//        $this->setDefaultServicePrefixType($res);
-//        $this->Activity($arrService, "service_config", $res, $res, "Create");
-//      }
-//      $logDuration = round(microtime(true) * 1000) - $startTime;
-//      Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_SERVICE|" . $logDuration . "|ADD_EDIT_SERVICE_SUCCESS");
-//
-//      return response()->json(array('status' => true, 'data' => $res));
-//    }
-
+    //    public function postServiceConfig(Request $request) {
+    //      $startTime = round(microtime(true) * 1000);
+    //
+    //      $user = $request->user;
+    //
+    //      if (!$this->checkEntity($user->id, "UPDATE_SERVICE_CONFIG")) {
+    //        Log::info($user->email . '  TRY TO GET ServiceController.getServiceConfigById WITHOUT PERMISSION');
+    //        return response()->json(['status' => false, 'message' => "Permission denied"], 403);
+    //      }
+    //
+    //      $serviceID = $request->input('id');
+    //      if (!$serviceID) {
+    //        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id'),
+    //          ['service_name' => 'required|unicode_valid|max:50', 'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2',
+    //            'product_code' => 'required|alpha_dash|unique:service_config,product_code|max:50',
+    //
+    //
+    //          ]);
+    //      } else {
+    //        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id'), ['service_name' => 'required|max:50', 'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2', 'product_code' => 'required|alpha_dash|max:50']);
+    //      }
+    //
+    //      if ($errors->fails()) {
+    //        $logDuration = round(microtime(true) * 1000) - $startTime;
+    //        Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_SERVICE|" . $logDuration . "|ADD_EDIT_SERVICE_FAIL Invalid input data");
+    //
+    //        return $this->ApiReturn($errors->errors(), false, "The given data was invalid", 422);
+    //      }
+    //
+    //      $arrService = ['service_name' => $request->input('service_name'), 'type' => $request->input('type'), 'product_code' => $request->input('product_code'), 'status' => $request->input('status'), 'created_at' => date("Y-m-d H:i:s"), 'updated_at' => date("Y-m-d H:i:s")];
+    //      if ($serviceID) {
+    //        unset($arrService["created_at"]);
+    //        $res = DB::table('service_config')->where('id', $serviceID)->update($arrService);
+    //        $res = $serviceID;
+    //        $this->Activity($arrService, "service_config", $serviceID, $serviceID, "Update");
+    //      } else {
+    //        $res = DB::table('service_config')->insertGetId($arrService);
+    //
+    //        $this->setDefaultServicePrefixType($res);
+    //        $this->Activity($arrService, "service_config", $res, $res, "Create");
+    //      }
+    //      $logDuration = round(microtime(true) * 1000) - $startTime;
+    //      Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_SERVICE|" . $logDuration . "|ADD_EDIT_SERVICE_SUCCESS");
+    //
+    //      return response()->json(array('status' => true, 'data' => $res));
+    //    }
 
     public function postServiceConfig(Request $request) {
       $startTime = round(microtime(true) * 1000);
@@ -144,21 +141,11 @@
 
       $serviceID = $request->input('id');
       if (!$serviceID) {
-        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id','ocs_charge','is_prepaid'),
-          ['service_name' => 'required|unicode_valid|max:50', 'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2',
-            'product_code' => 'required|alpha_dash|unique:service_config,product_code|max:50',
-            'ocs_charge'=>'required|in:0,1',
-            'is_prepaid'=>'required|in:0,1',
+        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id', 'ocs_charge', 'is_prepaid'), ['service_name' => 'required|unicode_valid|max:50', 'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2', 'product_code' => 'required|alpha_dash|unique:service_config,product_code|max:50', 'ocs_charge' => 'required|in:0,1', 'is_prepaid' => 'required|in:0,1',
 
           ]);
       } else {
-        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id','ocs_charge','is_prepaid'),
-          ['service_name' => 'required|max:50',
-            'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2',
-          'product_code' => 'required|alpha_dash|max:50',
-          'ocs_charge'=>'required|in:0,1',
-          'is_prepaid'=>'required|in:0,1',
-          ]);
+        $errors = Validator::make($request->only('service_name', 'type', 'status', 'product_code', 'id', 'ocs_charge', 'is_prepaid'), ['service_name' => 'required|max:50', 'type' => 'required|in:0,1', 'status' => 'required|in:0,1,2', 'product_code' => 'required|alpha_dash|max:50', 'ocs_charge' => 'required|in:0,1', 'is_prepaid' => 'required|in:0,1',]);
       }
 
       if ($errors->fails()) {
@@ -167,44 +154,33 @@
 
         return $this->ApiReturn($errors->errors(), false, "The given data was invalid", 422);
       }
-      $isNew= false;
+      $isNew = false;
 
-      if($serviceID)
-      {
-        $service= ServiceConfig::where('id',$serviceID)->first();
+      if ($serviceID) {
+        $service = ServiceConfig::where('id', $serviceID)->first();
+      } else {
+        $isNew = true;
+        $service = new ServiceConfig();
+        $service->created_at = date("Y-m-d H:i:s");
+        $service->ocs_charge = request('ocs_charge');
       }
-      else
-      {
-        $isNew= true;
-        $service= new ServiceConfig();
-        $service->created_at=date("Y-m-d H:i:s");
-        $service->ocs_charge=request('ocs_charge');
-
-      }
-      $service->is_prepaid=request('is_prepaid');
-      $service->service_name=request('service_name');
-      $service->type=request('type');
-      $service->product_code=request('product_code');
-      $service->status=request('status');
-
+      $service->is_prepaid = request('is_prepaid');
+      $service->service_name = request('service_name');
+      $service->type = request('type');
+      $service->product_code = request('product_code');
+      $service->status = request('status');
 
       $service->save();
 
-
-      if($isNew)
-      {
+      if ($isNew) {
         $this->setDefaultServicePrefixType($service->id);
       }
-
-
 
       $logDuration = round(microtime(true) * 1000) - $startTime;
       Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_SERVICE|" . $logDuration . "|ADD_EDIT_SERVICE_SUCCESS");
 
       return response()->json(array('status' => true, 'data' => $service->id));
     }
-
-
 
     // Tạo bản giá dịch vụ
     public function postServiceConfigPrice(Request $request) {
@@ -220,7 +196,7 @@
 
       $errors = Validator::make($request->only('from_user', 'to_user', 'price', 'id', 'service_config_id'), ['from_user' => 'required|integer', 'to_user' => 'required|integer', 'price' => 'required', 'service_config_id' => 'required|integer|exists:service_config,id', 'id' => 'bail|sometimes|integer|exists:service_config_price'
 
-        ]);
+      ]);
       if ($errors->fails()) {
         $logDuration = round(microtime(true) * 1000) - $startTime;
         Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_SERVICE_CONFIG_PRICE|" . $logDuration . "|ADD_EDIT_SERVICE_PRICE_FAIL Invalid Data");
@@ -262,7 +238,7 @@
 
       $errors = Validator::make($request->only('from_hotline_num', 'to_hotline_num', 'price', 'id', 'init_price', 'service_config_id'), ['from_hotline_num' => 'required|integer', 'to_hotline_num' => 'required|integer', 'price' => 'required', 'service_config_id' => 'required|integer|exists:service_config,id', 'init_price' => 'required', 'id' => 'bail|sometimes|integer|exists:service_config_hotline_price'
 
-        ]);
+      ]);
       if ($errors->fails()) {
         $logDuration = round(microtime(true) * 1000) - $startTime;
         Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_SERVICE_CONFIG_HOTLINE_PRICE|" . $logDuration . "|ADD_EDIT_SERVICE_CONFIG_HOTLINE_PRICE_FAIL Invalid data");
@@ -303,7 +279,7 @@
 
       $errors = Validator::make($request->only('from_min', 'to_min', 'call_fees', 'id', 'type', 'call_type', 'service_config_id'), ['from_min' => 'required|integer', 'to_min' => 'required|alpha_dash', 'call_fees' => 'required', 'type' => 'required', 'call_type' => 'required|in:0,1', 'service_config_id' => 'required|integer|exists:service_config,id', 'id' => 'bail|sometimes|integer|exists:call_fee_config'
 
-        ]);
+      ]);
       if ($errors->fails()) {
         $logDuration = round(microtime(true) * 1000) - $startTime;
         Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_SERVICE_CONFIG_CALL_PRICE|" . $logDuration . "|ADD_EDIT_SERVICE_CONFIG_CALL_PRICE_FAIL INVALID DATA");
@@ -596,8 +572,6 @@
     }
 
     public function getServiceZoneQuantityType(Request $request) {
-
-
       $lst = DB::table("prefix_type_name")->select("prefix_type_id as id", 'name', 'prefix_group')->get();
       $lstq = DB::table("prefix_type_group")->get();
 
@@ -617,9 +591,9 @@
 
       $errors = Validator::make($data, [
 
-          "id" => "nullable|exists:service_prefix_type,id", "service_config_id" => "required|exists:service_config,id", "prefix_type_id" => "required", "description" => "required|max:100", "prefix_caller" => "nullable|max:2000", "prefix_called" => "nullable|max:2000", "prefix_caller_match_switch" => "required|in:0,1", "prefix_called_match_switch" => "required|in:0,1", "prefix_match_constraint" => "required|in:0,1,2", "charge_block_type" => "required|in:0,1,2", "priority" => "required"
+        "id" => "nullable|exists:service_prefix_type,id", "service_config_id" => "required|exists:service_config,id", "prefix_type_id" => "required", "description" => "required|max:100", "prefix_caller" => "nullable|max:2000", "prefix_called" => "nullable|max:2000", "prefix_caller_match_switch" => "required|in:0,1", "prefix_called_match_switch" => "required|in:0,1", "prefix_match_constraint" => "required|in:0,1,2", "charge_block_type" => "required|in:0,1,2", "priority" => "required"
 
-        ]);
+      ]);
       if ($errors->fails()) {
         $logDuration = round(microtime(true) * 1000) - $startTime;
         Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_SERVICE_PREFIX_TYPE|" . $logDuration . "|ADD_EDIT_SERVICE_PREFIX_TYPE_FAIL Invalid input data");
@@ -701,9 +675,9 @@
 
       $errors = Validator::make($request->only("id"), [
 
-          "id" => "required|exists:service_prefix_type,id",
+        "id" => "required|exists:service_prefix_type,id",
 
-        ]);
+      ]);
       if ($errors->fails()) {
         $logDuration = round(microtime(true) * 1000) - $startTime;
         Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|DELETE_SERVICE_PREFIX_TYPE|" . $logDuration . "|DELETE_SERVICE_PREFIX_TYPE_FAIL Invalid input data");
@@ -728,5 +702,11 @@
 
       $this->Activity($data, "service_prefix_type", $res, 0, "Create default service_prefix_type");
       return $res;
+    }
+
+    public function getOperatorTelco()
+    {
+      $lstOperatorTelCo= OperatorTelco::select("id","description")->get();
+      return response()->json(['status'=>true, 'data'=>$lstOperatorTelCo],200);
     }
   }
