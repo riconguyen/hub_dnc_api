@@ -8,5 +8,5 @@ class OperatorTelco extends Model
 {
     //
   protected $table="operator_telco";
-  protected $primaryKey="id";
+
 }

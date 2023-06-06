@@ -706,7 +706,7 @@
 
     public function getOperatorTelco()
     {
-      $lstOperatorTelCo= OperatorTelco::select("id","description")->get();
+      $lstOperatorTelCo= DB::select("select description, id from operator_telco");
       return response()->json(['status'=>true, 'data'=>$lstOperatorTelCo],200);
     }
   }
