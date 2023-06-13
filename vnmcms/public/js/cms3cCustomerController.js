@@ -77,6 +77,7 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
         {field: "created_at", title: "Ngày tạo", sortable: "created_at", show: true},
         {field: "updated_at", title: "Cập nhật", sortable: "updated_at", show: true},
         {field: "total", title: "Lũy kế tháng", sortable: "total", show: true},
+        {field: "fee_limit", title: "Hạn mức", sortable: "", show: true},
         {field: "action", title: "CRUD.TITLE", sortable: "action", show: true},
     ];
 
@@ -181,6 +182,8 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
         );
     }
 
+
+
     $scope.openQuantityLimit= function () {
         if($scope.userAgent.role!=1 && $scope.userAgent.role!=6)
         {
@@ -189,6 +192,7 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
         $("#quantityLimitForm").modal('show');
 
     }
+
 
     $scope.saveFeeLimit= function (data) {
         var postData={'enterprise_number':$scope.currentCustomer.enterprise_number,
@@ -207,6 +211,89 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
        })
 
     }
+
+    /*--
+    Fixed
+     */
+
+    $scope.openAddFeeLimit=()=>
+    {
+        $("#feeLimitFormAdd").modal('show');
+        $scope.addFeeLimit= {
+            enterprise_number: $scope.currentCustomer.enterprise_number,
+            amount:"",
+            current_amount: $scope.fee.limit_amount,
+            reason:"",
+            new_limit_amount:angular.copy($scope.fee.limit_amount)
+        }
+    }
+
+    $scope.onAddFeeLimit=(data)=>
+    {
+        let isError= false;
+        let lstError="";
+        if(!data.amount)
+        {
+            lstError +="<li>Bạn chưa điền số tiền</li>";
+            isError= true;
+        }
+
+        if(isError)
+        {
+            $.jGrowl(`<b>Có lỗi xảy ra</b><ul>${lstError}</ul>`);
+            return;
+        }
+
+
+
+        let postData=angular.copy(data);
+        postData.new_limit_amount= parseInt(data.amount)	+ parseInt(data.current_amount)
+        ApiServices.saveAddFeeLimit(postData).then(result=>{
+
+            $.jGrowl("Thêm mới hạn mức thành công")
+            $("#feeLimitFormAdd").modal('hide');
+
+            $scope.viewCustomer($scope.currentCustomer)
+
+        }, reason => {
+            $.jGrowl("Thêm mới hạn mức không thành công thành công")
+        });
+
+    }
+
+    $scope.confirmRemoveLimit = () => {
+        $("#feeLimitFormConfirm").modal('show');
+    }
+
+    $scope.onConfirmRemoveLimit = () => {
+
+
+        let postData = {
+            'enterprise_number': $scope.currentCustomer.enterprise_number,
+            'limit_amount': -1
+        };
+        let res = ApiServices.saveFeeLimit(postData).then(result => {
+            $("#feeLimitFormConfirm").modal('hide');
+
+            $.jGrowl("Xóa hạn mức thành công");
+            $scope.viewCustomer($scope.currentCustomer);
+        }, reason => {
+            $scope.feeLimitError = error.data.errors;
+        })
+    }
+    $scope.opeFeeLimitLog = () => {
+        $("#feeLimitLog").modal('show');
+        $scope.lstFeeLimitHistoryLog = [];
+        let postData = {
+            'enterprise_number': $scope.currentCustomer.enterprise_number,
+        };
+        ApiServices.getFeeLimitLogs(postData).then(result => {
+            $scope.lstFeeLimitHistoryLog = result.data.status ? result.data.data : [];
+        }, reason => {
+            $.jGrowl("Có lỗi xảy ra, không thể tải được lịch sử hạn mức")
+        });
+    }
+
     $scope.editCustomerService = function (data) {
         // $scope.editCustomerEnterPrise={'enterprise_number':data};
         $("#editCustomerServiceCodeForm").modal('show');

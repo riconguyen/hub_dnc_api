@@ -2,9 +2,11 @@
 namespace App\Http\Controllers;
 
 
+use App\ChargeFeeLimit;
 use App\ChargeLog;
 use App\Customers;
 use App\CustomersBackup;
+use App\FeeLimitLog;
 use App\Hotlines;
 use App\HotlinesBackup;
 use App\HotlineStatusLog;
@@ -2368,6 +2370,14 @@ class V1CustomerController extends Controller
         array_push($param, $totalPerPage, $skip);
 
         $res= DB::select($sql, $param);
+
+        foreach ($res as $customer) {
+
+            $fee_limit = ChargeFeeLimit::where('enterprise_number', $customer->enterprise_number)->orderBy('updated_at', 'desc')->first();
+
+            $customer->fee_limit = $fee_limit ? $fee_limit->limit_amount : null;
+
+        }
 
       $logDuration=  round(microtime(true) * 1000)-$startTime;
       Log::info(APP_API."|".date("Y-m-d H:i:s",time())."|".$user->email."|".$request->ip()."|".$request->url()."|".json_encode($request->all())."|GET_CUSTOMER_LIST|".$logDuration."");

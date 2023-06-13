@@ -193,6 +193,16 @@ cms3c.factory('ApiServices', function($http,loginCheck){
         saveFeeLimit:function (data) {
             return $http({method:'post',headers:headers, url:ApiUrl+'/api/accounts/saveFeeLimit', data:data});
         },
+
+
+
+        saveAddFeeLimit:function (data) {
+            return $http({method:'post',headers:headers, url:ApiUrl+'/api/accounts/saveAddFeeLimit', data:data});
+        },
+        getFeeLimitLogs:function (data) {
+            return $http({method:'post',headers:headers, url:ApiUrl+'/api/accounts/getFeeLimitLogs', data:data});
+        },
+
         saveRedWarning:function (data) {
             return $http({method:'post',headers:headers, url:ApiUrl+'/api/accounts/saveRedWarning', data:data});
         },

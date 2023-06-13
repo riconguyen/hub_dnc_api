@@ -96,7 +96,15 @@
 
 
 
-                        <span ng-if="col.field=='total'" class="h6" ng-class="row.total>0?' text-success':''" >{{row.total|number:0}}</span>
+                        <span ng-if="col.field=='total'" class="h6" ng-class="row.total>0?' text-success':''" >
+                            <span title="Luỹ kế">{{row.total|number:0}}</span>
+                            <span class="text-warning small"> <br>{{(row.fee_limit-row.total)|number:0}}</span>
+
+                        </span>
+                        <span ng-if="col.field=='fee_limit'" class="h6" ng-class="row.fee_limit>0?' text-success':''" >
+
+
+                        </span>
                         <span ng-if="col.field=='companyname'">
                             <span ng-class="row.charge_result?'text-warning':''">{{row.companyname}}  <sup class="text-info" title="{{row.server_profile==SERVER_PROFILE?'':'Đang hoạt động trên server khác '}}">[{{row.server_profile}}]</sup>
 
@@ -507,9 +515,26 @@
                             {{'SERVICE.NAME.QUANTITY'|translate}}
                             ({{'LBL.OPTIONAL'|translate}})
                         </button>
-                        <button class="btn btn-outline-success"  ng-if="entity.CONFIG_FEE_LIMIT" ng-click="openQuantityLimit()">
-                            <i class="fa fa-bar-chart"></i> Thiết lập hạn mức <span ng-show="fee.limit_amount">({{fee.limit_amount|number:0}})</span>
+<!--                        <button class="btn btn-outline-success"  ng-if="entity.CONFIG_FEE_LIMIT" ng-click="openQuantityLimit()">-->
+<!--                            <i class="fa fa-bar-chart"></i> Thiết lập hạn mức <span ng-show="fee.limit_amount">({{fee.limit_amount|number:0}})</span>-->
+<!--                        </button>-->
+
+                        <button class="btn btn-outline-success"
+                                ng-if="entity.CONFIG_FEE_LIMIT && (!fee.limit_amount || fee.limit_amount==-1)" ng-click="openQuantityLimit()">
+                            <i class="fa fa-bar-chart"></i> Thiết lập hạn mức
                         </button>
+                        <button type="button" ng-if="entity.CONFIG_FEE_LIMIT && fee.limit_amount> 0"
+                                class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                            Hạn mức  <span ng-show="fee.limit_amount">({{fee.limit_amount|number:0}})</span>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="" ng-click="openAddFeeLimit()">Nạp thêm hạn mức</a>
+                            <a class="dropdown-item" href="" ng-click="confirmRemoveLimit()">Xóa hạn mức</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="" ng-click="opeFeeLimitLog()">Lịch sử hạn mức</a>
+
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -593,8 +618,10 @@
 
                                     <span ng-if="line.status==1" class="badge badge-warning text-uppercase p-1 ">
                         {{"PAUSE_STATE."+line.pause_state|translate}}
-                    </span>
 
+
+                    </span>
+                                    <span ng-show="line.operator_name">({{line.operator_name}})</span>
 
 
                                 </td>
@@ -1355,6 +1382,47 @@
 
 
 
+<!--<div class="modal" id="quantityLimitForm">-->
+<!--    <div class="modal-dialog">-->
+<!--        <div class="modal-content">-->
+
+<!--            &lt;!&ndash; Modal Header &ndash;&gt;-->
+<!--            <div class="modal-header">-->
+<!--                <h6 class="modal-title text-muted">Thiết lập hạn mức cước  </h6>-->
+<!--                &lt;!&ndash;                <button type="button" class="close" data-dismiss="modal">&times;</button>&ndash;&gt;-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; Modal body &ndash;&gt;-->
+<!--            <div class="modal-body bg-light">-->
+<!--                  <div class="form-group">-->
+<!--                      <label>Thiết lập hạn mức cho tài khoản {{currentCustomer.enterprise_number}}</label>-->
+<!--                      <input type="text" ng-model="fee.limit_amount" class="form-control">-->
+<!--                  </div>-->
+<!--                <p class="small text-info">Để xóa hạn mức vui lòng điền giá trị -1 </p>-->
+
+
+<!--            </div>-->
+
+
+<!--            &lt;!&ndash; Modal footer &ndash;&gt;-->
+<!--            <div class="modal-footer justify-content-start bg-light">-->
+<!--                <div class="form-group">-->
+<!--                    <button class="btn btn-outline-success " ng-click="saveFeeLimit(fee);">-->
+<!--                        Đồng ý-->
+<!--                    </button>-->
+<!--                    <button class="btn btn-secondary" data-dismiss="modal">-->
+<!--                        Hủy-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--            </div>-->
+
+
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+
+
 <div class="modal" id="quantityLimitForm">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1367,10 +1435,10 @@
 
             <!-- Modal body -->
             <div class="modal-body bg-light">
-                  <div class="form-group">
-                      <label>Thiết lập hạn mức cho tài khoản {{currentCustomer.enterprise_number}}</label>
-                      <input type="text" ng-model="fee.limit_amount" class="form-control">
-                  </div>
+                <div class="form-group">
+                    <label>Thiết lập hạn mức cho tài khoản {{currentCustomer.enterprise_number}}</label>
+                    <input type="text" ng-model="fee.limit_amount" class="form-control">
+                </div>
                 <p class="small text-info">Để xóa hạn mức vui lòng điền giá trị -1 </p>
 
 
@@ -1385,6 +1453,141 @@
                     </button>
                     <button class="btn btn-secondary" data-dismiss="modal">
                         Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal" id="feeLimitFormAdd">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Bổ sung hạn mức cước  </h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                <div class="form-group">
+                    <label>Bổ sung hạn mức cho tài khoản: {{currentCustomer.enterprise_number}}.<br>
+                        Hạn mức hiện tại: {{addFeeLimit.current_amount}}
+                    </label>
+                    <input type="text" ng-model="addFeeLimit.amount" class="form-control" placeholder="Số tiền">
+                    <br>
+
+
+                </div>
+
+                <div class="form-group">
+                    <label>Lý do: </label>
+                    <input type="text" ng-model="addFeeLimit.reason" class="form-control">
+                </div>
+
+
+            </div>
+
+
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group">
+                    <button class="btn btn-outline-success " ng-click="onAddFeeLimit(addFeeLimit);">
+                        Đồng ý
+                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="modal" id="feeLimitFormConfirm">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Xóa hạn mức  </h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                <div class="form-group">
+                    <label>Bạn muốn xóa hạn mức <b>{{fee.limit_amount|number:0}}</b> của tài khoản: {{currentCustomer.enterprise_number}}</label>
+
+                </div>
+
+            </div>
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group">
+                    <button class="btn btn-outline-success " ng-click="onConfirmRemoveLimit();">
+                        Đồng ý
+                    </button>
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="modal" id="feeLimitLog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title text-muted">Lịch sử hạn mức  </h6>
+                <!--                <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body bg-light">
+                <h6>Lịch sử các lần thay đổi hạn mức (sắp xếp từ mới nhất)</h6>
+                <table class="table table-sm table-striped" style="width: 728px">
+                    <tr><th>#</th><th>Ngày</th><th>Lý do</th><th class="text-right">Số tiền</th><th class="text-right">Hạn mức mới</th></tr>
+                    <tr ng-repeat="item in lstFeeLimitHistoryLog">
+                        <td  class="text-right">{{item.id}}</td>
+                        <td>{{item.created_at}}</td>
+                        <td>{{item.reason}}</td>
+                        <td class="text-right">{{item.amount|number:0}}</td>
+                        <td class="text-right">{{item.new_limit_amount|number:0}}</td>
+
+                    </tr>
+                </table>
+            </div>
+            <!-- Modal footer -->
+            <div class="modal-footer justify-content-start bg-light">
+                <div class="form-group text-right">
+
+                    <button class="btn btn-secondary" data-dismiss="modal">
+                        Đóng
                     </button>
                 </div>
             </div>

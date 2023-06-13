@@ -1,8 +1,10 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\ChargeFeeLimit;
 use App\Customers;
 use App\CustomersBackup;
+use App\FeeLimitLog;
 use App\Hotlines;
 use App\QuantitySubcriberBackup;
 use App\TosServices;
@@ -315,10 +317,11 @@ class AccountController extends Controller
     $start = ($pagenum - 1) * $count;
     $limit = $count;
 
-    $sql = "select hlc.*, cg.status as group_call_status, cg.enterprise as caller_group_master from hot_line_config hlc 
+    $sql = "select hlc.*, operator_telco.DESCRIPTION as operator_name,  cg.status as group_call_status, cg.enterprise as caller_group_master from hot_line_config hlc 
             force index (status,cus_id)
+             left join operator_telco on  hlc.operator_telco_id=operator_telco.id
             left join sbc.caller_group cg 
-            on hlc.hotline_number = cg.caller
+            on hlc.hotline_number = cg.caller           
             and  hlc.cus_id= cg.cus_id
             where hlc.cus_id= ?
             and hlc.status in (0,1)    ";
@@ -623,20 +626,6 @@ class AccountController extends Controller
     }
 
 
-    if(config("server.backup_site"))
-    {
-      $customerBackup = CustomersBackup::where('enterprise_number', $request->enterprise_number)->whereIn("blocked",[0,1])->first();
-
-      if(!$customerBackup)
-      {
-
-        return $this->ApiReturn(['enterprise_number' => 'Enterprise number not found on backup site'], false, 'The given data was invalid', 422);
-      }
-
-    }
-
-
-
     $litmitAmountText= $request->limit_amount>-1?$request->limit_amount:"xóa hạn mức";
 
 
@@ -666,41 +655,133 @@ class AccountController extends Controller
     }
 
 
-//    Backup
-
-    if(config("server.backup_site"))
-    {
-      $resBackup = DB::connection("db2")->table('charge_fee_limit')->where('enterprise_number', $request->enterprise_number);
-      if ($resBackup->exists()) {
-        if ($request->limit_amount > -1) {
-          $resBackup->update(['limit_amount' => $request->limit_amount, 'updated_at' => $updated_at,'over_quota_status'=>1]);
-          $this->SetActivity($validData, "charge_fee_limit", 0, 0, config("sbc.action.set_fee_limit"),"[BACKUPSITE] Thay đổi hạn mức  thành ".$litmitAmountText, $enterprise, null);
-
-        } else {
-          $logDuration = round(microtime(true) * 1000) - $startTime;
-          Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|DELETE_FEE_LIMIT|" . $logDuration . "|DELETE_FEE_LIMIT_SUCCESS");
-          $resBackup->delete();
-          $this->SetActivity($validData, "charge_fee_limit", 0, 0, config("sbc.action.set_fee_limit"),"[BACKUPSITE]  Xóa hạn mức hiện tại", $enterprise, null);
-
-        }
-      } else {
-        if ($request->limit_amount > -1) {
-          $resBackup->insertGetId($validData);
-          $this->SetActivity($validData, "charge_fee_limit", 0, 0, config("sbc.action.set_fee_limit"), "[BACKUPSITE] Thiết lập hạn mức thành " . $litmitAmountText, $enterprise, null);
-        }
-      }
-
-
-    }
-//    Backup
-
-
 
     $logDuration = round(microtime(true) * 1000) - $startTime;
     Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($request->all()) . "|ADD_EDIT_FEE_LIMIT|" . $logDuration . "|ADD_EDIT_FEE_LIMIT_SUCCESS");
 
     return $this->ApiReturn([], true, null, 200);
   }
+
+    // FEE LIMIT LOG
+
+
+    public function saveAddFeeLimit(Request $request)
+    {
+        $startTime = round(microtime(true) * 1000);
+        $apiRequest= $request->api_source;
+
+        $user = $request->user;
+        if (!$this->checkEntity($user->id, "CONFIG_FEE_LIMIT")) {
+            Log::info($user->email . '  TRY TO GET AccountController.saveAddFeeLimit WITHOUT PERMISSION');
+            return response()->json(['status' => false, 'message' => "Permission denied"], 403);
+        }
+
+
+        $validData = $request->only('limit_amount', 'enterprise_number','amount','reason' );
+
+        $validator = Validator::make($validData, [
+            'enterprise_number' => 'required|alpha_dash|max:250|exists:customers,enterprise_number',
+            'amount' => 'required|integer|max:9999999999',
+            'reason' => 'nullable|max:250'
+        ]);
+        if ($validator->fails()) {
+            $logDuration = round(microtime(true) * 1000) - $startTime;
+            Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($validData) . "|ADD_EDIT_FEE_LIMIT|" . $logDuration . "|SAVE_FAIL Invalid input data ");
+
+            return $this->ApiReturn($validator->errors(), false, 'The given data was invalid', 422);
+        }
+
+
+
+        $enterprise= $request->enterprise_number;
+        $customer=Customers::where('enterprise_number',$enterprise)->whereIn('blocked',[0,1])->first();
+
+        if(!$customer)
+        {
+            return $this->ApiReturn([], false, 'Not found active enterprise number', 422);
+        }
+        // Get Curent Fee Limti
+
+
+        DB::beginTransaction();
+        try{
+            $resCurentLimit=ChargeFeeLimit::where('enterprise_number', $enterprise)
+                ->first();
+
+            if(!$resCurentLimit)
+            {
+
+                return $this->ApiReturn([], false, 'Not found previous limit of '.$enterprise.'', 422);
+
+            }
+            $newLimitAmount = intval($request->amount)+ intval($resCurentLimit->limit_amount);
+
+            $newAddLimitLog= new FeeLimitLog();
+            $newAddLimitLog->enterprise_number= $enterprise;
+            $newAddLimitLog->amount= request('amount');
+            $newAddLimitLog->new_limit_amount= $newLimitAmount;
+            $newAddLimitLog->reason= request('reason');
+            $newAddLimitLog->cus_id= $customer->id;
+            $newAddLimitLog->user_id= $user->id;
+            $newAddLimitLog->save();
+
+
+
+            $resCurentLimit->limit_amount= $newLimitAmount;
+            $resCurentLimit->save();
+            DB::commit();
+        }
+        catch (\Exception $exception)
+        {
+
+            DB::rollback();
+
+            Log::info("ERROR ADD FEE LIMIT");
+            Log::info($exception->getTraceAsString());
+
+
+            return ['status'=>false,'message'=>'Internal server error'];
+        }
+        return ['status'=>true];
+
+    }
+
+
+    public function getFeeLimitLogs(Request $request) {
+        $startTime = round(microtime(true) * 1000);
+        $apiRequest = $request->api_source;
+
+        $user = $request->user;
+        if (!$this->checkEntity($user->id, "CONFIG_FEE_LIMIT")) {
+            Log::info($user->email . '  TRY TO GET AccountController.saveAddFeeLimit WITHOUT PERMISSION');
+            return response()->json(['status' => false, 'message' => "Permission denied"], 403);
+        }
+
+        $validData = $request->only('limit_amount', 'enterprise_number');
+
+        $validator = Validator::make($validData, [
+            'enterprise_number' => 'required|alpha_dash|max:250|exists:customers,enterprise_number',
+        ]);
+        if ($validator->fails()) {
+            $logDuration = round(microtime(true) * 1000) - $startTime;
+            Log::info(APP_API . "|" . date("Y-m-d H:i:s", time()) . "|" . $user->email . "|" . $request->ip() . "|" . $request->url() . "|" . json_encode($validData) . "|ADD_EDIT_FEE_LIMIT|" . $logDuration . "|SAVE_FAIL Invalid input data ");
+
+            return $this->ApiReturn($validator->errors(), false, 'The given data was invalid', 422);
+        }
+
+        $enterprise = $request->enterprise_number;
+        $customer = Customers::where('enterprise_number', $enterprise)->whereIn('blocked', [0, 1])->first();
+
+        if (!$customer) {
+            return $this->ApiReturn([], false, 'Not found active enterprise number', 422);
+        }
+        // Get Curent Fee Limti
+
+        $lsFeeLimitLog= FeeLimitLog::where('enterprise_number',$enterprise)->where('cus_id',$customer->id)->orderBy('updated_at', 'DESC')->get();
+
+        return $this->ApiReturn($lsFeeLimitLog, true, null, 200);
+
+    }
 
     private function getFeeLimit($enterprise)
     {
@@ -712,6 +793,7 @@ class AccountController extends Controller
 
         return $res;
     }
+
 
     public function saveRedWarning(Request $request)
     {
