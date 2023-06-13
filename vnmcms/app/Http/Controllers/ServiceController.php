@@ -70,7 +70,16 @@
 
       $service = DB::table('service_config')->where("id", $id)->get();
       $service_config_price = DB::table('service_config_price')->where("service_config_id", $id)->whereIn('status', [0, 1])->get();
-      $service_config_hotline_price = DB::table('service_config_hotline_price')->where('service_config_id', $id)->whereIn('status', [0, 1])->get();
+//      $service_config_hotline_price = DB::table('service_config_hotline_price')->where('service_config_id', $id)->whereIn('status', [0, 1])->get();
+
+
+
+        $service_config_hotline_price =DB::select("
+        select service_config_hotline_price.*, operator_telco.description operator_name  from service_config_hotline_price left join operator_telco on operator_telco.id= service_config_hotline_price.operator_telco_id
+        where service_config_hotline_price.service_config_id=? and service_config_hotline_price.status in (0,1)
+        ",[$id]);
+
+            DB::table('service_config_hotline_price')->where('service_config_id', $id)->whereIn('status', [0, 1])->get();
       $service_option_price = DB::table('service_option_price')->where('service_config_id', $id)->whereIn('status', [0, 1])->get();
       $service_call_price = DB::table('call_fee_config')->where('service_config_id', $id)->whereIn('status', [0, 1])->get();
       $service_sms_price = DB::table('sms_fee_config')->whereIn('status', [0, 1])->where('service_config_id', $id)->get();
@@ -236,7 +245,14 @@
         return response()->json(['status' => false, 'message' => "Permission denied"], 403);
       }
 
-      $errors = Validator::make($request->only('from_hotline_num', 'to_hotline_num', 'price', 'id', 'init_price', 'service_config_id'), ['from_hotline_num' => 'required|integer', 'to_hotline_num' => 'required|integer', 'price' => 'required', 'service_config_id' => 'required|integer|exists:service_config,id', 'init_price' => 'required', 'id' => 'bail|sometimes|integer|exists:service_config_hotline_price'
+      $errors = Validator::make($request->only('from_hotline_num', 'to_hotline_num', 'price', 'id', 'init_price', 'service_config_id','operator_telco_id'),
+          ['from_hotline_num' => 'required|integer',
+              'to_hotline_num' => 'required|integer',
+              'price' => 'required',
+              'service_config_id' => 'required|integer|exists:service_config,id',
+              'operator_telco_id' => 'required|exists:operator_telco,id',
+              'init_price' => 'required',
+              'id' => 'bail|sometimes|integer|exists:service_config_hotline_price'
 
       ]);
       if ($errors->fails()) {
@@ -248,7 +264,15 @@
 
       $id = $request->id;
 
-      $arrConfigPrice = ['service_config_id' => $request->input('service_config_id'), 'from_hotline_num' => $request->input('from_hotline_num'), 'to_hotline_num' => $request->input('to_hotline_num'), 'price' => $request->input('price'), 'init_price' => $request->input('init_price'), 'created_at' => date("Y-m-d H:i:s"), 'updated_at' => date("Y-m-d H:i:s")];
+      $arrConfigPrice = ['service_config_id' => $request->input('service_config_id'),
+          'from_hotline_num' => $request->input('from_hotline_num'),
+          'to_hotline_num' => $request->input('to_hotline_num'),
+          'price' => $request->input('price'),
+          'init_price' => $request->input('init_price'),
+          'created_at' => date("Y-m-d H:i:s"),
+          'updated_at' => date("Y-m-d H:i:s"),
+      'operator_telco_id'=>request('operator_telco_id')
+      ];
       // return response()->json($arrConfigPrice);
       if (!$id) {
         $res = DB::table('service_config_hotline_price')->insertGetId($arrConfigPrice);

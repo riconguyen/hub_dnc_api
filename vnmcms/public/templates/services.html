@@ -258,11 +258,13 @@
         </div>
         <div   class=" card mb-2">
             <div class="card-header">{{'SERVICE.PRICE.HOTLINE.TITLE'|translate}}
-                <button class="btn btn-sm btn-primary float-right" ng-if="entity.SET_SERVICE_CONFIG && serviceConfig.hotline_price[serviceConfig.hotline_price.length-1].to_hotline_num !=-1" ng-click="addConfigHotlinePrice()"><i class="fa fa-plus"></i> {{'CRUD.C'|translate}}</button>
+                <button class="btn btn-sm btn-primary float-right"
+                        ng-if="entity.SET_SERVICE_CONFIG " ng-click="addConfigHotlinePrice()"><i class="fa fa-plus"></i> {{'CRUD.C'|translate}}</button>
             </div>
             <div class="card-body small">
                 <table class="table table-bordered table-sm">
                     <tr>
+                        <th>Nhà mạng</th>
                         <th>{{'SERVICE.PRICE.HOTLINE.FROM_HOTLINE_NUM'|translate}}</th>
                         <th class="text-right" >{{'SERVICE.PRICE.HOTLINE.TO_HOTLINE_NUM'|translate}}</th>
                         <th class="text-right" >{{'SERVICE.PRICE.HOTLINE.PRICE'|translate}}</th>
@@ -273,11 +275,22 @@
                         <th class="text-right" style="width: 180px ">{{'CRUD.TITLE'|translate}}</th>
                     </tr>
                     <tr ng-repeat="hotline in serviceConfig.hotline_price">
+
+                        <td class="text-left" ng-if="!hotline.edit">{{hotline.operator_name}}</td>
+
                         <td class="text-right" ng-if="!hotline.edit">{{hotline.from_hotline_num}}</td>
                         <td class="text-right" ng-if="!hotline.edit">{{hotline.to_hotline_num}}</td>
                         <td class="text-right" ng-if="!hotline.edit">{{hotline.price}}</td>
                         <td class="text-right" ng-if="!hotline.edit">{{hotline.init_price}}</td>
 
+
+                        <td ng-if="hotline.edit">
+
+                                <select class="form-control"
+                                        ng-model="hotline.operator_telco_id" ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
+                                </select>
+
+                        </td>
 
                         <td ng-if="hotline.edit"><input class="form-control" type="number" string-to-number    ng-model="hotline.from_hotline_num"></td>
                         <td ng-if="hotline.edit"><input class="form-control" type="number" string-to-number   ng-model="hotline.to_hotline_num"/></td>
@@ -286,7 +299,11 @@
 
 
 
-                        <td>{{hotline.updated_at}}</td>
+                        <td>
+                        <span ng-show="!hotline.edit">    {{hotline.updated_at}}</span>
+
+
+                        </td>
                         <td class="text-right" >
                             <button  ng-if="!hotline.edit && entity.SET_SERVICE_CONFIG " class="btn btn-sm btn-default"  ng-click="editConfigHotlinePrice(hotline);"><i class="fa fa-edit"></i> {{'CRUD.E'|translate}} </button>
                             <button  ng-if="!hotline.edit && hotline.status !=2 && entity.SET_SERVICE_CONFIG " class="btn btn-sm btn-danger" ng-click="deleteConfigHotlinePrice(hotline); "><i class="fa fa-trash"></i> {{'CRUD.D'|translate}} </button>

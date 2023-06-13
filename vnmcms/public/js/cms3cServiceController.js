@@ -44,7 +44,7 @@ cms3c.controller('servicesController', function ($scope, ApiServices,$filter,  $
     $scope.getLstOperatorTelco= function () {
         ApiServices.getOperatorTelco().then(result=>{
             $scope.lstOperatorTelco= result.data?result.data.data:[];
-            $scope.lstOperatorTelco.unshift({'id':"",'description':"Chọn"})
+            $scope.lstOperatorTelco.unshift({'id':"",'description':"Chọn mạng"})
         }, reason => {
 
         })
@@ -407,7 +407,8 @@ cms3c.controller('servicesController', function ($scope, ApiServices,$filter,  $
                 "service_config_id": $scope.currentService.id,
                 "from_hotline_num": "0",
                 "to_hotline_num": "1",
-                "price": ""
+                "price": "",
+                "operator_telco_id":""
             })
         }
         else
@@ -424,7 +425,8 @@ cms3c.controller('servicesController', function ($scope, ApiServices,$filter,  $
                 "service_config_id": $scope.currentService.id,
                 "from_hotline_num":  parseInt($scope.serviceConfig.hotline_price[TotalConfigHotline-1].to_hotline_num)+1,
                 "to_hotline_num": parseInt($scope.serviceConfig.hotline_price[TotalConfigHotline-1].to_hotline_num)+2,
-                "price": ""
+                "price": "",
+                "operator_telco_id":""
             })
 
         }
@@ -438,8 +440,15 @@ cms3c.controller('servicesController', function ($scope, ApiServices,$filter,  $
     }
     $scope.saveConfigHotlinePrice = function (data) {
 
+        let postData= angular.copy(data);
+
+        if(!postData.operator_telco_id || !postData.init_price || !postData.price)
+        {
+            $.jGrowl("Thông tin còn thiếu");
+            return;
+        }
         // Set to service
-        res = ApiServices.postServiceConfigHotlinePrice(data)
+        var res = ApiServices.postServiceConfigHotlinePrice(postData)
         res.then(function (rdata) {
             if (rdata.status == 200) {
                 delete data.edit;

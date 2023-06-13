@@ -97,13 +97,12 @@
 
 
                         <span ng-if="col.field=='total'" class="h6" ng-class="row.total>0?' text-success':''" >
-                            <span title="Luỹ kế">{{row.total|number:0}}</span>
-                            <span class="text-warning small"> <br>{{(row.fee_limit-row.total)|number:0}}</span>
+                            <span title="Luỹ kế">{{(row.total?row.total:0)|number:0}}</span>
+                            <span class="text-warning small" title="Còn lại"> <br>{{(row.fee_limit-row.total)|number:0}}</span>
 
                         </span>
-                        <span ng-if="col.field=='fee_limit'" class="h6" ng-class="row.fee_limit>0?' text-success':''" >
-
-
+                        <span ng-if="col.field=='fee_limit'"   ng-class="row.fee_limit>0?' text-success':''" >
+                            <span title="Hạn mức">{{row.fee_limit|number:0}}</span>
                         </span>
                         <span ng-if="col.field=='companyname'">
                             <span ng-class="row.charge_result?'text-warning':''">{{row.companyname}}  <sup class="text-info" title="{{row.server_profile==SERVER_PROFILE?'':'Đang hoạt động trên server khác '}}">[{{row.server_profile}}]</sup>
@@ -145,7 +144,7 @@
                         <button class="btn btn-default btn-outline-secondary btn-sm" ng-click="viewCustomer(row);" ng-if="entity.CONFIG_CUSTOMER "><i class="fa fa-cogs"></i> Thiết lập</button>
                         </div>
 
-                        <span ng-if = "col.field !='status' && col.field !='action' && col.field !='companyname'&& col.field !='total'&& col.field !='charge_result'">{{row[col.field]}}</span>
+                        <span ng-if = "col.field !='fee_limit' &&col.field !='status' && col.field !='action' && col.field !='companyname'&& col.field !='total'&& col.field !='charge_result'">{{row[col.field]}}</span>
 
                     </td>
                 </tr>
