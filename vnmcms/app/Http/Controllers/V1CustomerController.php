@@ -198,7 +198,7 @@ class V1CustomerController extends Controller
       'companyname' => 'required|max:250',
       'addr' => 'required|max:250',
       'phone1' => 'required|number_dash|max:250',
-      'email' => 'required|email|max:250',
+      'email' => 'required|max:250',
       'product_code' => 'required|alpha_dash|max:50|exists:service_config,product_code',
       'status' => 'required|in:0,1',
       'ip_auth' => 'required|ipv4|max:50',
@@ -481,7 +481,7 @@ class V1CustomerController extends Controller
             'companyname' => 'nullable|max:250',
             'addr' => 'nullable|max:250',
             'phone1' => 'nullable|number_dash|max:250',
-            'email' => 'nullable|email|max:250',
+            'email' => 'nullable|max:250',
             'ip_auth' => 'nullable|ipv4|max:100',
             'ip_proxy' => 'nullable|ipv4|max:100',
           'ip_auth_backup' => 'nullable|ipv4|max:100',
@@ -2287,8 +2287,6 @@ class V1CustomerController extends Controller
         $charge_error= $request->charge_error &&$request->charge_error ==1 ?$request->charge_error: null;
         $download= $request->download && $request->download==1 ? true: false;
 
-
-
          $param= [];
             $sql=" SELECT a.companyname, a.blocked as status, a.updated_at, a.created_at, a.pause_state, a.server_profile,
                      a.enterprise_number,  b.total_amount total, c.service_name, 
@@ -2296,6 +2294,7 @@ class V1CustomerController extends Controller
                          a.addr, a.email, a.cus_name, a.id, a.telco_destination,  a.operator_telco_id,
                      e.charge_result, e.charge_time as event_occur_time, a.phone1, c.product_code, a.cfu
                     FROM customers a
+                        join hot_line_config on a.id= hot_line_config.cus_id
                     LEFT JOIN 
                     (
                     SELECT SUM(chotSale) AS total_amount, enterprise_number
@@ -2331,40 +2330,61 @@ class V1CustomerController extends Controller
                     ORDER BY T1.`charge_time` DESC) e                                 
                     on a.id = e.cus_id
                      WHERE 1=1 ";
-        $rscount= DB::table("customers");
+
+            $sqlCount= "SELECT COUNT(*) as total  from (     Select count(*)  total from customers a join hot_line_config on a.id= hot_line_config.cus_id 
+            LEFT JOIN 
+                        ( SELECT  T1.enterprise_num, T1.charge_result, T1.charge_time , cus_id
+                            FROM
+                             charge_log T1 
+                            INNER JOIN
+                            ( SELECT MAX(`charge_time`) AS `time`,`enterprise_num`
+                    FROM charge_log  where  charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')   and insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00') and  charge_result <> '0' and charge_result<>''    GROUP BY enterprise_num) T2 ON T1.`enterprise_num` = T2.`enterprise_num` AND T1.`charge_time` = T2.`time`
+                    WHERE    T1.insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00')  AND T1.charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
+                    ORDER BY T1.`charge_time` DESC) e                                 
+                    on a.id = e.cus_id
+  WHERE 1=1 
+";
+
 
         if($query)
         {
-            $sql.= "  AND  (a.companyname like ? OR a.enterprise_number like ? or a.email like ? or a.taxcode like ?) ";
-            array_push($param, "%$query%", "%$query%", "%$query%", "%$query%");
-            $rscount->whereRaw('companyname like ? OR enterprise_number like ? or email like ? or taxcode like ? ',$param);
+            $sql.= "  AND  (hot_line_config.hotline_number =? OR  a.companyname like ? OR a.enterprise_number like ? or a.email like ? or a.taxcode like ?) ";
+            $sqlCount.= "  AND  (hot_line_config.hotline_number =? OR a.companyname like ? OR a.enterprise_number like ? or a.email like ? or a.taxcode like ?) ";
+            array_push($param, "$query", "%$query%", "%$query%", "%$query%", "%$query%");
+
         }
 
         if($user->role == ROLE_BILLING)
         {
             $sql .=" AND a.account_id =? ";
+            $sqlCount .=" AND a.account_id =? ";
             array_push($param, $user->id);
-            $rscount->where('account_id', $user->id);
+
         }
 
         if($blocked > -1)
         {
             $sql .=" AND a.blocked = ?";
+            $sqlCount .=" AND a.blocked = ?";
             array_push($param, $blocked);
-            $rscount->where('blocked',$blocked);
+
         }
 
         if($charge_error)
         {
             $sql .=" AND e.charge_result <>'0' ";
+            $sqlCount .=" AND e.charge_result <>'0' ";
 
            // $rscount->where('charge_result',$blocked);
         }
       //  return $sql;
 
-            $count= $rscount->count();
+
 
         $sql.= " GROUP BY a.id ORDER BY ".$sortCol." ".$sort." ";
+        $sqlCount.= " GROUP BY a.id ) a  ";
+        $count= DB::select($sqlCount, $param)[0]->total;
+
 
         $sql .=" LIMIT ? OFFSET  ? ";
         array_push($param, $totalPerPage, $skip);
@@ -2383,7 +2403,7 @@ class V1CustomerController extends Controller
       Log::info(APP_API."|".date("Y-m-d H:i:s",time())."|".$user->email."|".$request->ip()."|".$request->url()."|".json_encode($request->all())."|GET_CUSTOMER_LIST|".$logDuration."");
 
 
-        return $this->ApiReturn(['data'=>$res, 'count'=>$count,   'user'=>['id'=>$user->id,'role'=>$user->role]],true, null, 200);
+        return $this->ApiReturn(['data'=>$res, 'count'=>$count,  'sqlCount'=>$sqlCount,   'user'=>['id'=>$user->id,'role'=>$user->role]],true, null, 200);
 
 
 
