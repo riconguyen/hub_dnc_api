@@ -2294,7 +2294,7 @@ class V1CustomerController extends Controller
                          a.addr, a.email, a.cus_name, a.id, a.telco_destination,  a.operator_telco_id,
                      e.charge_result, e.charge_time as event_occur_time, a.phone1, c.product_code, a.cfu
                     FROM customers a
-                        join hot_line_config on a.id= hot_line_config.cus_id
+                        join hot_line_config on a.id= hot_line_config.cus_id  
                     LEFT JOIN 
                     (
                     SELECT SUM(chotSale) AS total_amount, enterprise_number
@@ -2348,8 +2348,8 @@ class V1CustomerController extends Controller
 
         if($query)
         {
-            $sql.= "  AND  (hot_line_config.hotline_number =? OR  a.companyname like ? OR a.enterprise_number like ? or a.email like ? or a.taxcode like ?) ";
-            $sqlCount.= "  AND  (hot_line_config.hotline_number =? OR a.companyname like ? OR a.enterprise_number like ? or a.email like ? or a.taxcode like ?) ";
+            $sql.= "  AND  ((hot_line_config.status in (0,1) and hot_line_config.hotline_number =?) OR  a.companyname like ? OR a.enterprise_number like ? or a.email like ? or a.taxcode like ?) ";
+            $sqlCount.= "  AND  ((hot_line_config.status in (0,1) and hot_line_config.hotline_number =?)  OR a.companyname like ? OR a.enterprise_number like ? or a.email like ? or a.taxcode like ?) ";
             array_push($param, "$query", "%$query%", "%$query%", "%$query%", "%$query%");
 
         }
