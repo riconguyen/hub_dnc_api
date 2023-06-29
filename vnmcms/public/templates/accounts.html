@@ -274,7 +274,7 @@
                 <tr><td class="text-muted">{{'CUSTOMER.ENTERPRISE_NUMBER'|translate}}</td><td>{{currentCustomer.enterprise_number}}
                            <span class="text-secondary hand  pull-right mr-2"  ng-if="entity.CHANGE_CUSTOMER_ENTERPRISE_NUMBER" ng-click="editCustomerEnterprise(currentCustomer.enterprise_number);"><i class="fa fa-edit"></i>  </span></td></tr>
                 <tr><td class="text-muted">{{'CUSTOMER.PHONE1'|translate}}</td><td>{{currentCustomer.phone1}}</td></tr>
-                <tr><td class="text-muted">{{'CUSTOMER.EMAIL'|translate}}</td><td>{{currentCustomer.email}}</td></tr>
+                <tr><td class="text-muted">{{'CUSTOMER.EMAIL'|translate}}</td><td style="word-break: break-all">{{currentCustomer.email}}</td></tr>
                 <tr><td class="text-muted">{{'CUSTOMER.PRODUCT_CODE'|translate}}</td><td>{{currentCustomer.product_code}}
                     <span class="text-secondary hand  pull-right mr-2" ng-if="entity.CHANGE_PRODUCT_CODE " ng-click="editCustomerService(currentCustomer);"><i class="fa fa-edit"></i>  </span>
 

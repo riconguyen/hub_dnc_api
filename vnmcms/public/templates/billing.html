@@ -4,13 +4,13 @@
         <div class="col-md-3">
             <table class=" bg-white table table-sm small table-striped table-bordered mb-2" ng-alias="customer as billing.customer">
 
-                <tr><th>Khách hàng</th><td>{{customer.cus_name}}
+                <tr><th style="width: 120px">Khách hàng</th><td>{{customer.cus_name}}
                     <span class="small text-muted"><br>{{customer.companyname}}</span>
                     </td></tr>
 
                 <tr><th>Đầu số tính cước</th><td>{{customer.enterprise_number}}</td></tr>
                 <tr><th>Điện thoại liên hệ</th><td>{{customer.phone1}} </td></tr>
-                <tr><th>Email liên hệ</th><td>{{customer.email}} </td></tr>
+                <tr><th>Email liên hệ</th><td style="word-break: break-all">{{customer.email}} </td></tr>
                 <tr><th>Số lượng hotline</th><td>{{listHotlinesCount}} </td></tr>
 
 
