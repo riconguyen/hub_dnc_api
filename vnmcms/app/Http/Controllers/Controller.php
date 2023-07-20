@@ -173,8 +173,6 @@ class Controller extends BaseController
   public function addSipRouting($sip, $backupState)
   {
     Log::info("SIP CONFIG GLOBAL FOR HOTLINE ".$sip->hotline);
-
-
     $arrAcl = ['ip_auth' => $sip->ip_auth,
       'ip_proxy' => $sip->ip_proxy?$sip->ip_proxy:null,
       'description' => $sip->description?$sip->description:null,
@@ -193,20 +191,12 @@ class Controller extends BaseController
       'allow_regex_callee' => config('sip.allow_regex_callee')
     ];
 
-
-
-
       ////////// LƯU BÌNH THƯỜNG ==================================================================LƯU BÌNH THƯỜNG ==================================================================LƯU BÌNH THƯỜNG ==================================================================
-
-
 
       $acl = SBCRouting::where('caller',$sip->hotline)->where('i_customer',$sip->cus_id)
         ->select('i_acl as ACL','i_acl_backup')
         ->first();
-
       /** @var  ACL    $arrRoutingPrimary */
-
-
       if ($acl) {
           Log::info("Đã có ACL");
           $aclid = $acl->ACL;
@@ -253,6 +243,7 @@ class Controller extends BaseController
         $hotlineRoutingCallee->status = 0;
       }
       $hotlineRoutingCaller->direction=1;
+      $hotlineRoutingCaller->auto_detect_blocking=isset($sip->auto_detect_blocking)?$sip->auto_detect_blocking:1;
       $hotlineRoutingCaller->caller=$sip->hotline;
       $hotlineRoutingCaller->i_acl= $aclid;
       $hotlineRoutingCaller->i_acl_backup= $aclidBackup;
@@ -278,8 +269,6 @@ class Controller extends BaseController
       $hotlineRoutingCallee->i_sip_profile = isset($sip->profile_id_backup)?$sip->profile_id_backup: config('sbc.profile_id_backup');
 
       $hotlineRoutingCallee->save();
-
-
 
       Hotlines::where('id', $sip->hotline_id)
         ->update(['sip_config' => date("Y-m-d H:i:s"), 'vendor_id'=>$sip->vendor->i_vendor]);
@@ -314,45 +303,8 @@ class Controller extends BaseController
    */
  protected function CheckQuantityService($service_id, $isBackup)
 {
-
   // DISABLE CHECK QUANTIY SERVICE  HOTFIX20210315
-
   return [];
-  //
-
-  $sql="select q.id from service_config s join quantity_config q on s.id= q.service_config_id where s.product_code =? and q.status=0 ";
-
-  if ($isBackup) {
-    $quantity = DB::connection("db2")->select($sql, [$service_id]);
-    if (count($quantity) > 0) {
-      $returnQty= [];
-      foreach ($quantity as $qty)
-      {
-        array_push($returnQty,$qty->id);
-      }
-      return $returnQty;
-    } else {
-      return false;
-    }
-  }
-  else
-  {
-    $quantity = DB::select($sql, [$service_id]);
-
-    if (count($quantity) > 0) {
-      $returnQty= [];
-      foreach ($quantity as $qty)
-      {
-        array_push($returnQty,$qty->id);
-      }
-      return $returnQty;
-    } else {
-      return false;
-    }
-  }
-  return [];
-
-
 }
 
   /**
@@ -366,432 +318,22 @@ class Controller extends BaseController
    */
 protected function UpdateSubCharge($mode, $productCode,$customer, $BACKUP_STATE)
 {
-
   // DISABLE SUBCHARGE// DISABLE CHECK QUANTIY SERVICE  HOTFIX20210315
   return true;
 
-  // END SUBCHARGE
-
-
-
-  if($BACKUP_STATE)
-  {
-    $quantityIDBackup=$this->CheckQuantityService($productCode, true);
-
-    if($quantityIDBackup&& count($quantityIDBackup)>0)
-    {
-
-      foreach ($quantityIDBackup as $qty)
-      {
-        $newQuantity= QuantitySubcriberBackup::where('service_subcriber_id',$customer->id)->where('quantity_config_id',$qty)->where('status',0)->first();
-        if(!$newQuantity)
-        {
-          $begin_charge_date = date_create(date('Y-m-d H:i:s'));
-          date_modify($begin_charge_date, "+".config("sbc.delay_quantity_charge_in_minutes")." minutes");
-
-          if(config("sbc.auto_quantity_charge_add"))
-          {
-            if($mode==0)
-            {
-              $newQuantity=new QuantitySubcriberBackup();
-              $newQuantity->service_subcriber_id= $customer->id;
-              $newQuantity->status= 0;
-              $newQuantity->resub= 1;
-              $newQuantity->begin_use_date= $begin_charge_date;
-              $newQuantity->quantity_config_id= $qty;
-              $newQuantity->save();
-            }
-          }
-
-
-        }
-        else
-        {
-         //Sửa ngày
-          if ($newQuantity->last_charge_date > date("Y-m-01 00:00:00"))
-          {
-         // Không cập nhật
-          }
-          else
-          {
-            // Câp nhật lại ngày giờ
-            $newQuantity->quantity_config_id= $qty;
-            $newQuantity->last_charge_date= null;
-            $newQuantity->last_charge_sub_status= null;
-            $newQuantity->init_charge= null;
-            $newQuantity->status= 0;
-            $newQuantity->save();
-          }
-
-        }
-
-      }
-
-
-    }
-
-    return true;
-  }
-  else
-  {
-    $quantityID=$this->CheckQuantityService($productCode, false);
-    if($quantityID && count($quantityID)>0)
-    {
-
-      foreach ($quantityID as $qty)
-      {
-        Log::info("LOG QTY");
-        Log::info($qty);
-        $newQuantity= QuantitySubcriber::where('service_subcriber_id',$customer->id)->where('quantity_config_id',$qty)->where('status',0)->first();
-        if($newQuantity)
-        {
-          //Sửa ngày
-          if ($newQuantity->last_charge_date > date("Y-m-01 00:00:00"))
-          {
-            // Không cập nhật
-          }
-          else {
-            $newQuantity->quantity_config_id = $qty;
-            $newQuantity->last_charge_date = null;
-            $newQuantity->last_charge_sub_status = null;
-            $newQuantity->init_charge = null;
-            $newQuantity->status = 0;
-            $newQuantity->save();
-          }
-
-        }
-        else
-        {
-          $begin_charge_date = date_create(date('Y-m-d H:i:s'));
-          date_modify($begin_charge_date, "+".config("sbc.delay_quantity_charge_in_minutes")." minutes");
-
-          if(config("sbc.auto_quantity_charge_add"))
-          {
-            if($mode==0)
-            {
-              $newQuantity=new QuantitySubcriber();
-              $newQuantity->service_subcriber_id= $customer->id;
-              $newQuantity->quantity_config_id= $qty;
-              $newQuantity->status= 0;
-              $newQuantity->resub= 1;
-              $newQuantity->begin_use_date=$begin_charge_date;
-              $newQuantity->save();
-            }
-          }
-        }
-        Log::info("AFTER SAVE");
-        Log::info(json_encode($newQuantity));
-        Log::info(json_encode($customer));
-      }
-    }
-
-    return true;
-  }
 }
-
 
 protected  function CheckChargingHotline($enterprise, $BACKUP_STATE)
 {
 
-  // Disable charging hotline // DISABLE  SERVICE  HOTFIX20210315
+
   return -1; // Khong tim thay goi cuoc Ko cho tao
-  /// END DISABLE
-
-
-  // Kiểm tra xem đã charge cước sub chưa
-  if($BACKUP_STATE)
-  {
-    $lastChargeDate= ServiceSubcriberBackup::where("enterprise_number",$enterprise)->whereIn("status",[0,1])->whereNull("last_charge_date")->first();
-
-  }
-  else
-  {
-    $lastChargeDate= ServiceSubcriber::where("enterprise_number",$enterprise)->whereIn("status",[0,1])->whereNull("last_charge_date")->first();
-  }
-
-  if($lastChargeDate)
-  {
-    Log::info("Customer just created, not charge hotline");
-    return -2; // Chua charge
-  }
-
-
-
-  $priceSQL="select b.price from customers a left join service_config_hotline_price b on a.service_id=b.service_config_id where enterprise_number=? and  b.`status`=0";
-  if($BACKUP_STATE)
-  {
-    $getGiaTien=DB::connection("db2")->select($priceSQL,[$enterprise]);
-  }
-  else
-  {
-    $getGiaTien=DB::select($priceSQL,[$enterprise]);
-  }
-
-
-
-
-  Log::info(json_encode($getGiaTien));
-  if(count($getGiaTien)==0)
-
-  {
-    return -1; // Khong tim thay goi cuoc Ko cho tao
-  }
-  $sotienDicharge=$getGiaTien[0]->price;
-
-  return $sotienDicharge;
-
 
 }
   protected function SendChargingHotline($enterprise, $line, $BACKUP_STATE) {
     // Disable charging hotline // DISABLE  SERVICE  HOTFIX20210315
      return -2;
-    // Disable charging hotline // DISABLE  SERVICE  HOTFIX20210315
-
-      $customer= Customers::where("enterprise_number",$enterprise)->first();
-      $customerBackup= CustomersBackup::where("enterprise_number",$enterprise)->first();
-      $priceSQL="select b.price from customers a left join service_config_hotline_price b on a.service_id=b.service_config_id where enterprise_number=? and  b.`status`=0";
-      $getGiaTien=DB::select($priceSQL,[$enterprise]);
-      $limitAmount=config("sbc.limit_charge_amount");
-    $zeroEnter= $this->removeZero($enterprise);
-      Log::info("SET HẠN MỨC");
-
-
-      // Kiểm tra xem đã charge cước sub chưa
-      if($BACKUP_STATE)
-      {
-        $lastChargeDate= ServiceSubcriberBackup::where("enterprise_number",$enterprise)->whereIn("status",[0,1])->whereNull("last_charge_date")->first();
-
-      }
-      else
-      {
-        $lastChargeDate= ServiceSubcriber::where("enterprise_number",$enterprise)->whereIn("status",[0,1])->whereNull("last_charge_date")->first();
-      }
-
-      if($lastChargeDate)
-      {
-        Log::info("Customer just created, not charge hotline");
-        return 0;
-      }
-
-
-      Log::info(json_encode($getGiaTien));
-      if(count($getGiaTien)==0)
-
-      {
-        return -1;
-      }
-           $giaTienHotline=$getGiaTien[0]->price;
-//            $sotienDicharge= floor((date("t")- date("d")+1)/date("t")*$giaTienHotline*$line);
-            $sotienDicharge= $giaTienHotline*$line;
-             $sotienConlai= $sotienDicharge;
-
-// Chia số lần charge
-        $timeToCharge= ceil($sotienDicharge/$limitAmount);
-        if($timeToCharge> 1)
-        {
-          for($i=$timeToCharge; $i>=0; $i--)
-          {
-
-              if($sotienConlai>0)
-              {
-                Log::info("Lần charge thứ".$i." Số tiền còn lại.".$sotienConlai);
-                if($sotienConlai < $limitAmount)
-                {
-               $sotien= $sotienConlai;
-                }
-                else
-                {
-                  $sotien= $limitAmount;
-                }
-
-                $cdr = "000001|GPDN|VCONNECT|$zeroEnter|Hotline|$zeroEnter|" . date("YmdHis") . "|" . $sotien;
-                $event_id = "000001." . date("YmdHis") . "-".$this->generateRandomString(8)."-1";
-                $description=$cdr;
-
-                if($BACKUP_STATE)
-                {
-
-
-                  $chargeLog= new ChargeLogBackup();
-                  $chargeLog->event_type= "000001";
-                  $chargeLog->event_source= "3";
-                  $chargeLog->event_id= $event_id;
-                  $chargeLog->charge_session_id= $event_id;
-                  $chargeLog->display_num= "";
-                  $chargeLog->called_num= "";
-                  $chargeLog->hotline_num= "";
-                  $chargeLog->enterprise_num= $this->removeZero($enterprise);
-                  $chargeLog->event_occur_time= date("Y-m-d H:i:s");
-                  $chargeLog->charge_time= date("Y-m-d H:i:s");
-                  $chargeLog->insert_time= date("Y-m-d H:i:s");
-                  $chargeLog->retry_after= date("Y-m-d H:i:s");
-                  $chargeLog->amount= $sotien;
-                  $chargeLog->total_count= 0;
-                  $chargeLog->total_amount= 0;
-                  $chargeLog->charge_status= 0;
-                  $chargeLog->charge_result= "";
-                  $chargeLog->description= $description;
-                  $chargeLog->direction_type= "";
-                  $chargeLog->destination_type= "";
-                  $chargeLog->retry_times= 0;
-                  $chargeLog->count="0";
-                  $chargeLog->cus_id= $customerBackup->id;
-                  $chargeLog->account_id= $customerBackup->id;
-                  $chargeLog->save();
-
-
-                  $this->SetActivity($description,"charge_log",$chargeLog->id,0,config("sbc.action.charge_hotline"),"Gửi charge cước thêm mới hotline số tiền  ".$sotien,$enterprise, $line);
-
-                }
-                     else
-                {
-
-                  $chargeLog= new ChargeLog();
-                  $chargeLog->event_type= "000001";
-                  $chargeLog->event_source= "3";
-                  $chargeLog->event_id= $event_id;
-                  $chargeLog->charge_session_id= $event_id;
-                  $chargeLog->display_num= "";
-                  $chargeLog->called_num= "";
-                  $chargeLog->hotline_num= "";
-                  $chargeLog->enterprise_num= $this->removeZero($enterprise);
-                  $chargeLog->event_occur_time= date("Y-m-d H:i:s");
-                  $chargeLog->charge_time= date("Y-m-d H:i:s");
-                  $chargeLog->insert_time= date("Y-m-d H:i:s");
-                  $chargeLog->retry_after= date("Y-m-d H:i:s");
-                  $chargeLog->amount= $sotien;
-                  $chargeLog->total_count= 0;
-                  $chargeLog->total_amount= 0;
-                  $chargeLog->charge_status= 0;
-                  $chargeLog->charge_result= "";
-                  $chargeLog->description= $description;
-                  $chargeLog->direction_type= "";
-                  $chargeLog->destination_type= "";
-                  $chargeLog->retry_times= 0;
-                  $chargeLog->count="0";
-                  $chargeLog->cus_id= $customer->id;
-                  $chargeLog->account_id= $customer->id;
-                  $chargeLog->save();
-                  $this->SetActivity($description,"charge_log",$chargeLog->id,0,config("sbc.action.charge_hotline"),"Gửi charge cước thêm mới hotline số tiền  ".$sotien,$enterprise, $line);
-                }
-
-
-              }
-
-
-            $sotienConlai= $sotienConlai- $limitAmount;
-
-          }
-
-
-        }
-
-        else
-
-        {
-
-
-          $cdr = "000001|GPDN|VCONNECT|$zeroEnter|Hotline|$zeroEnter|" . date("YmdHis") . "|" . $sotienDicharge;
-          $event_id = "000001." . date("YmdHis") . "-".$this->generateRandomString(8)."-1";
-          $description=$cdr;
-
-          if($BACKUP_STATE)
-          {
-
-            $chargeLog= new ChargeLogBackup();
-            $chargeLog->event_type= "000001";
-            $chargeLog->event_source= "3";
-            $chargeLog->event_id= $event_id;
-            $chargeLog->charge_session_id= $event_id;
-            $chargeLog->display_num= "";
-            $chargeLog->called_num= "";
-            $chargeLog->hotline_num= "";
-            $chargeLog->enterprise_num= $this->removeZero($enterprise);
-            $chargeLog->event_occur_time= date("Y-m-d H:i:s");
-            $chargeLog->charge_time= date("Y-m-d H:i:s");
-            $chargeLog->insert_time= date("Y-m-d H:i:s");
-            $chargeLog->retry_after= date("Y-m-d H:i:s");
-            $chargeLog->amount= $sotienDicharge;
-            $chargeLog->total_count= 0;
-            $chargeLog->total_amount= 0;
-            $chargeLog->charge_status= 0;
-            $chargeLog->charge_result= "";
-            $chargeLog->count="0";
-            $chargeLog->description= $description;
-            $chargeLog->direction_type= "";
-            $chargeLog->destination_type= "";
-            $chargeLog->retry_times= 0;
-            $chargeLog->cus_id= $customerBackup->id;
-            $chargeLog->account_id= $customerBackup->id;
-            $chargeLog->save();
-            $this->SetActivity($description,"charge_log",$chargeLog->id,0,config("sbc.action.charge_hotline"),"Gửi charge cước thêm mới hotline số tiền ".$sotienDicharge,$enterprise, $line);
-
-
-
-          }
-          else
-          {
-
-            $chargeLog= new ChargeLog();
-            $chargeLog->event_type= "000001";
-            $chargeLog->event_source= "3";
-            $chargeLog->event_id= $event_id;
-            $chargeLog->charge_session_id= $event_id;
-            $chargeLog->display_num= "";
-            $chargeLog->called_num= "";
-            $chargeLog->hotline_num= "";
-            $chargeLog->enterprise_num= $this->removeZero($enterprise);
-            $chargeLog->event_occur_time= date("Y-m-d H:i:s");
-            $chargeLog->charge_time= date("Y-m-d H:i:s");
-            $chargeLog->insert_time= date("Y-m-d H:i:s");
-            $chargeLog->retry_after= date("Y-m-d H:i:s");
-            $chargeLog->amount= $sotienDicharge;
-            $chargeLog->total_count= 0;
-            $chargeLog->total_amount= 0;
-            $chargeLog->count="0";
-            $chargeLog->charge_status= 0;
-            $chargeLog->charge_result= "";
-            $chargeLog->description= $description;
-            $chargeLog->direction_type= "";
-            $chargeLog->destination_type= "";
-            $chargeLog->retry_times= 0;
-            $chargeLog->cus_id= $customer->id;
-            $chargeLog->account_id= $customer->id;
-            $chargeLog->save();
-            $this->SetActivity($description,"charge_log",$chargeLog->id,0,config("sbc.action.charge_hotline"),"Gửi charge cước thêm mới hotline số tiền  ".$sotienDicharge,$enterprise, $line);
-
-          }
-
-        }
-
-
-        if($BACKUP_STATE)
-        {
-          $subchare=    SubChargeFeeCycleBackup::where("enterprise_number", $zeroEnter)->where("cycle_from", date("Y-m-01 00:00:00"))->first();
-          if($subchare)
-          {
-            $subchare->total_amount= $subchare->total_amount+ $sotienDicharge;
-            $subchare->updated_at= date("Y-m-d H:i:s");
-            $subchare->save();
-            Log::info($subchare->total_amount);
-          }
-
-        }
-        else
-        {
-          $subchare=    SubChargeFeeCycle::where("enterprise_number", $zeroEnter)->where("cycle_from", date("Y-m-01 00:00:00"))->first();
-          if($subchare)
-          {
-            $subchare->total_amount= $subchare->total_amount+ $sotienDicharge;
-            $subchare->updated_at= date("Y-m-d H:i:s");
-            $subchare->save();
-            Log::info($subchare->total_amount);
-          }
-        }
-        return 1;
-
-        // Tìm và cộng tiền
-
+         // Tìm và cộng tiền
   }
 
 

@@ -54,12 +54,13 @@
             return response()->json(['status' => false, 'message' => "Permission denied"], 403);
         }
 
-        $validData = $request->only('enterprise_number', 'hotline_numbers', 'profile_id_backup', 'operator_telco_id');
+        $validData = $request->only('enterprise_number', 'hotline_numbers', 'profile_id_backup', 'operator_telco_id','auto_detect_blocking');
         $validator = Validator::make($validData,
             ['enterprise_number' => 'required|alpha_dash|max:250|exists:customers,enterprise_number',
                 'profile_id_backup' => 'nullable|in:2,3,4',
                 'hotline_numbers' => 'required|number_dash|max:1500',
-                'operator_telco_id' => 'nullable|max:40|exists:operator_telco,id'
+                'operator_telco_id' => 'nullable|max:40|exists:operator_telco,id',
+                'auto_detect_blocking' => 'nullable|in:0,1',
             ]);
         if ($validator->fails()) {
             $logDuration = round(microtime(true) * 1000) - $startTime;
@@ -121,6 +122,7 @@
             return $this->ApiReturn([], false, "Not found active enterprise number " . $enterprise, 404);
         }
         $operator_telco_id = request('operator_telco_id', $customer->operator_telco_id);
+        $auto_detect_blocking = request('auto_detect_blocking', $customer->auto_detect_blocking);
         if (!$operator_telco_id)
         {
             return $this->ApiReturn(["operator_telco_id"=>["Operator telco Id is invalid"]], false, "The given data was invalid", 422);
@@ -147,6 +149,7 @@
             'hotline_number' => $line,
             'status' => $customer->blocked,
             'operator_telco_id' => $operator_telco_id,
+            'auto_detect_blocking' => $auto_detect_blocking,
             'use_brand_name' => $use_brand_name,
             'ocs_charge'=>$service?$service->ocs_charge:0
 
@@ -171,6 +174,7 @@
           $sip->description = $customer->enterprise_number;
           $sip->destination = $customer->destination;
           $sip->telco_destination = $customer->telco_destination;
+          $sip->auto_detect_blocking = $auto_detect_blocking;
           $sip->profile_id_backup = $request->profile_id_backup ? $request->profile_id_backup : config('sbc.profile_id_backup');
           $sip->isRunOnBackup = false;
           $sip->status = $data['status'];

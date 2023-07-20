@@ -236,21 +236,41 @@
                             </div>
                         </div>
                         
-                        
-                        <div class="form-group"><label> Nhà mạng </label>
-                            
-                            <select class="form-control"
-                                    ng-class="newCustomerError.operator_telco_id   ?'is-invalid':''"
-                                    ng-model="newCustomer.operator_telco_id" ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
+                        <div class="form-row d-flex justify-content-between pb-2"  >
+
+                            <div class="col"><label> Nhà mạng </label>
+
+                                <select class="form-control"
+                                        ng-class="newCustomerError.operator_telco_id   ?'is-invalid':''"
+                                        ng-model="newCustomer.operator_telco_id" ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
 
 
-                            </select>
+                                </select>
 
 
-                            <div class="invalid-feedback">
-                                {{newCustomerError.operator_telco_id[0]}}
+                                <div class="invalid-feedback">
+                                    {{newCustomerError.operator_telco_id[0]}}
+                                </div>
                             </div>
+                            <div class="col">
+                                <label>Tự động phát hiện spam</label>
+                                <select class="form-control"
+                                        ng-class="newCustomerError.auto_detect_blocking   ?'is-invalid':''"
+                                        ng-model="newCustomer.auto_detect_blocking"
+                                        ng-options="item.id as item.title for item in lstAutoDetectBlocking"
+                                        title="Chọn chế độ">
+
+
+                                </select>
+
+
+                                <div class="invalid-feedback">
+                                    {{newCustomerError.auto_detect_blocking[0]}}
+                                </div>
+                            </div>
+
                         </div>
+
                         
                         
 

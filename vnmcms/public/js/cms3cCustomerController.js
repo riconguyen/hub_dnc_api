@@ -5,7 +5,12 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
 		$scope.authUser= value;
 	});
 
-	$scope.SERVER_PROFILE= SERVER_PROFILE;
+    $scope.lstAutoDetectBlocking=[
+        {id:0, title:"Tự động"},
+        {id:1, title:"Tắt"}
+    ]
+
+    $scope.SERVER_PROFILE= SERVER_PROFILE;
 
     var path= $location.path();
     $scope.getLstOperatorTelco= function () {
@@ -538,10 +543,11 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
 
     $scope.sipConfig = function (data) {
 
-        console.log(data);
+        console.log("sipConfig",data);
         $scope.sip={};
         $scope.sip.hotline=data.hotline_number;
         $scope.sip.cus_id=data.cus_id;
+        $scope.sip.auto_detect_blocking="auto_detect_blocking" in data?data.auto_detect_blocking:1;
 
         $scope.sip.caller_group_master=data.caller_group_master;
 
@@ -1379,6 +1385,10 @@ cms3c.controller('customerControllerAdd', function ($scope, ApiServices, ApiV1, 
 	   })
 
     }
+    $scope.lstAutoDetectBlocking=[
+        {id:0, title:"Tự động"},
+        {id:1, title:"Tắt"}
+    ]
 
     $scope.getLstOperatorTelco({});
 
@@ -1434,6 +1444,7 @@ function Customer() {
     this.baodo=0;
     this.operator_telco_id="";
     this.telco_destination="";
+    this.auto_detect_blocking=1;
 
 
 }
@@ -1443,5 +1454,6 @@ function  newHotlines(data) {
 	this.enterprise_number=data.enterprise_number;
 	this.hotline_numbers= "";
     this.operator_telco_id=data.operator_telco_id?data.operator_telco_id:"";
+    this.auto_detect_blocking="auto_detect_blocking" in data?data.auto_detect_blocking:"1";
 
 }

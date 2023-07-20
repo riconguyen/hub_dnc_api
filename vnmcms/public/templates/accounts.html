@@ -289,7 +289,7 @@
             <div class="card   mb-2 mt-2">
                 <div class="card-header" ng-click="showPackage =!showPackage"> GÓI CƯỚC
                     {{serviceConfig.service.service_name}}
-                </div>
+                </div>`
                 <div class="card-body" ng-show="showPackage">
                     <ul class="list-group">
                        <li class="list-group-item text-right">  <span class="text-muted float-left">
@@ -553,32 +553,60 @@
                     <div class="card-body small" ng-show="newHotlines_show">
 
                         <div class="form-group">
-                        <label>Thêm mới hotline</label>
+                            <label>Thêm mới hotline</label>
 
-
-                            <input type="text" class="form-control" ng-model="newHotlines.hotline_numbers" placeholder="Có thể thêm nhiều hotline, cách nhau bởi dấu phảy"
-                                   ng-class="newHotlines.error.hotline_numbers?'is-invalid':''"
-                                    class="form-control">
-                            <div class="invalid-feedback"> {{newHotlines.error.hotline_numbers[0]}}</div>
-
-                        </div>
-                        <div class="form-group"><label> Nhà mạng </label>
                             <div class="input-group">
-                            <select class="form-control"
-                                    ng-class="newHotlines.error.operator_telco_id  ?'is-invalid':''"
-                                    ng-model="newHotlines.operator_telco_id" ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
-                            </select>
+                                <input type="text" class="form-control" ng-model="newHotlines.hotline_numbers"
+                                       placeholder="Có thể thêm nhiều hotline, cách nhau bởi dấu phảy"
+                                       ng-class="newHotlines.error.hotline_numbers?'is-invalid':''"
+                                       class="form-control">
                                 <div class="input-group-append">
-                                    <button class="btn btn-warning" ng-click="onSaveHotline(newHotlines)"><i class="fa fa-save"></i> Thêm  </button>
+                                    <button class="btn btn-warning" ng-click="onSaveHotline(newHotlines)"><i
+                                            class="fa fa-save"></i> Thêm
+                                    </button>
                                 </div>
-                                <div class="invalid-feedback"> {{newHotlines.error.operator_telco_id[0]}}</div>
+                                <div class="invalid-feedback"> {{ newHotlines.error.hotline_numbers[0] }}</div>
+
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col">
+                                <label> Nhà mạng </label>
+
+                                <select class="form-control"
+                                        ng-class="newHotlines.error.operator_telco_id  ?'is-invalid':''"
+                                        ng-model="newHotlines.operator_telco_id"
+                                        ng-options="item.id as item.description for item in lstOperatorTelco"
+                                        title="Chọn nhà mạng">
+                                </select>
+                                <div class="invalid-feedback"> {{ newHotlines.error.operator_telco_id[0] }}</div>
                             </div>
 
+
+
+
+
+
+
+
+                            <div class="col">
+                                <label> Tự động phát hiện spam</label>
+                                <select class="form-control"
+                                        ng-class="newHotlines.error.auto_detect_blocking   ?'is-invalid':''"
+                                        ng-model="newHotlines.auto_detect_blocking"
+                                        ng-options="item.id as item.title for item in lstAutoDetectBlocking"
+                                        title="Tự động phát hiện spam">
+                                </select>
+                                <div class="invalid-feedback">
+                                    {{ newHotlines.auto_detect_blocking[0] }}
+                                </div>
+                            </div>
+
+
                         </div>
 
-
-
                     </div>
+                </div>
                     <div class="card-body small">
 
                         <table ng-table="CusHotlineTable"
@@ -1025,8 +1053,9 @@
                     </small>
                 </div>
 
-                <div class="form-group"><label> Nhà mạng </label>
-
+                <div class="form-row mb-2">
+                    <div class="col">
+                    <label> Nhà mạng </label>
                     <select class="form-control"
                             ng-class="sip.error.operator_telco_id  ?'is-invalid':''"
                             ng-model="sip.operator_telco_id"
@@ -1035,6 +1064,19 @@
                     <div class="invalid-feedback"> {{ sip.error.operator_telco_id[0] }}</div>
 
                 </div>
+                <div class="col">
+                    <label> Tự động phát hiện spam</label>
+                    <select class="form-control"
+                            ng-class="sip.error.auto_detect_blocking   ?'is-invalid':''"
+                            ng-model="sip.auto_detect_blocking"
+                            ng-options="item.id as item.title for item in lstAutoDetectBlocking"
+                            title="Tự động phát hiện spam">
+                    </select>
+                    <div class="invalid-feedback">
+                        {{ sip.error.auto_detect_blocking[0] }}
+                    </div>
+                </div>
+            </div>
 
                 <div class="form-group"><label>Nhóm cuộc gọi</label>
 
@@ -1224,16 +1266,30 @@
 
                </div>
            </div>
-            <div class="form-group"><label> Nhà mạng </label>
+                <div class="form-group"><label> Nhà mạng </label>
 
-                <select class="form-control"
-                        ng-class="editCustomer.error.operator_telco_id  ?'is-invalid':''"
-                        ng-model="editCustomer.operator_telco_id"
-                        ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
-                </select>
-                <div class="invalid-feedback"> {{ editCustomer.error.operator_telco_id[0] }}</div>
+                    <select class="form-control"
+                            ng-class="editCustomer.error.operator_telco_id  ?'is-invalid':''"
+                            ng-model="editCustomer.operator_telco_id"
+                            ng-options="item.id as item.description for item in lstOperatorTelco" title="Chọn nhà mạng">
+                    </select>
+                    <div class="invalid-feedback"> {{ editCustomer.error.operator_telco_id[0] }}</div>
 
-            </div>
+                </div>
+                <div class="form-group">
+                    <label> Tự động phát hiện spam</label>
+                    <select class="form-control"
+                            ng-class="editCustomer.error.auto_detect_blocking   ?'is-invalid':''"
+                            ng-model="editCustomer.auto_detect_blocking"
+                            ng-options="item.id as item.title for item in lstAutoDetectBlocking"
+                            title="Tự động phát hiện spam">
+                    </select>
+                    <div class="invalid-feedback">
+                        {{ editCustomer.error.auto_detect_blocking[0] }}
+                    </div>
+
+
+                </div>
 
             </div>
             <div class="modal-footer">

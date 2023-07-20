@@ -266,6 +266,7 @@ where a.direction= ? ";
                 'destination' => 'required|max:100',
                 'callee_regex' => 'nullable|max:5000',
                 'operator_telco_id' => 'required|max:40|exists:operator_telco,id',
+                'auto_detect_blocking' => 'nullable|in:0,1',
                 'hotline' => 'required|max:200',
 
 
@@ -286,6 +287,7 @@ where a.direction= ? ";
                 'hotline_number' => 'required|max:200',
                 'caller_group_master' => 'nullable|max:200',
                 'operator_telco_id' => 'required|max:40|exists:operator_telco,id',
+                'auto_detect_blocking' => 'nullable|in:0,1',
                 'callee_regex' => 'nullable|max:5000',
 
 
@@ -333,7 +335,6 @@ where a.direction= ? ";
       }
         $callee_regex= request("callee_regex", $vendorData->hotline_prefix);
     DB::beginTransaction();
-
 
       try{
         if ($request->caller_group) {
@@ -384,6 +385,7 @@ where a.direction= ? ";
           $sip->description = $request->input('description');
           $sip->destination = $request->input('destination');
           $sip->telco_destination = request('telco_destination',null);
+          $sip->auto_detect_blocking = request('auto_detect_blocking',1);
           $sip->allow_regex_callee = $request->allow_regex_callee;
           $sip->block_regex_callee = $request->block_regex_callee;
           $sip->profile_id_backup = $request->profile_id_backup?$request->profile_id_backup:2 ;
@@ -410,6 +412,7 @@ where a.direction= ? ";
               $sip->description = $request->input('description');
               $sip->destination = $request->input('destination');
                 $sip->telco_destination = request('telco_destination',null);
+                $sip->auto_detect_blocking = request('auto_detect_blocking',1);
               $sip->allow_regex_callee = $request->allow_regex_callee;
               $sip->block_regex_callee = $request->block_regex_callee;
               $sip->groupHotLine= $request->caller_group;
@@ -547,6 +550,7 @@ where a.direction= ? ";
         "destination" =>isset($sip->telco_destination)&& $sip->telco_destination?$sip->telco_destination: config('sip.RoutingDestination'),  /// Primary Server  ....120// change to 10.50.245.96:5060// secondary server 121
         "priority" => 10,
         "i_customer" => $hotlineInfo->cus_id,
+        "auto_detect_blocking" =>$sip->auto_detect_blocking,
         "i_vendor" => 2,
         "network"=>1,
         "description" => $sip->description,
@@ -589,6 +593,7 @@ where a.direction= ? ";
       Hotlines::where('id', $hotlineInfo->id)
         ->update(['sip_config' => date("Y-m-d H:i:s"),
             'operator_telco_id'=>$sip->operator_telco_id,
+            'auto_detect_blocking'=>$sip->auto_detect_blocking,
             'vendor_id'=>$sip->vendor->i_vendor]);
 
       return response()->json(['status' => true], 200);

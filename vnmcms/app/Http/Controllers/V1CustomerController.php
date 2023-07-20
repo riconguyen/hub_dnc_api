@@ -201,6 +201,7 @@ class V1CustomerController extends Controller
       'email' => 'required|max:250',
       'product_code' => 'required|alpha_dash|max:50|exists:service_config,product_code',
       'status' => 'required|in:0,1',
+      'auto_detect_blocking' => 'nullable|in:0,1',
       'ip_auth' => 'required|ipv4|max:50',
       'ip_proxy' => 'nullable|ipv4|max:50',
       'ip_auth_backup' => 'nullable|ipv4|max:50',
@@ -290,11 +291,13 @@ class V1CustomerController extends Controller
     $ip_auth_backup = $request->ip_auth_backup ? $request->ip_auth_backup : null;
     $ip_proxy_backup = $request->ip_proxy_backup ? $request->ip_proxy_backup : null;
 
+    $auto_detect_blocking=request('auto_detect_blocking',1);
 
 
     $newCustomer = $request->only('cus_name', 'enterprise_number', 'companyname', 'addr', 'phone1', 'email', 'ip_auth', 'ip_proxy', 'destination', 'ip_auth_backup', 'ip_proxy_backup', 'blocked');
     $newCustomer['service_id'] = $resServiceId->id;
     $newCustomer['blocked'] = $request->status;
+    $newCustomer['auto_detect_blocking'] = $auto_detect_blocking;
     $newCustomer['pause_state'] = "10";
     $newCustomer['server_profile']=config("server.server_profile");
     $newCustomer['telco_destination']=$telco_destination;
@@ -367,7 +370,8 @@ class V1CustomerController extends Controller
             'hotline_number' => $line, 'status' => $request->status,
             'use_brand_name'=>$use_brand_name,
             'ocs_charge'=>$resServiceId->ocs_charge,
-            'operator_telco_id'=>$operator_telco_id
+            'operator_telco_id'=>$operator_telco_id,
+              'auto_detect_blocking'=>$auto_detect_blocking
 
           );
 
@@ -401,6 +405,7 @@ class V1CustomerController extends Controller
           $sip->vendor = $vendorData;
           $sip->isRunOnBackup = false;
           $sip->status = $request->status;
+          $sip->auto_detect_blocking =$auto_detect_blocking;
 
           $sipOk = $this->addSipRouting($sip,false);
 
@@ -482,6 +487,7 @@ class V1CustomerController extends Controller
             'addr' => 'nullable|max:250',
             'phone1' => 'nullable|number_dash|max:250',
             'email' => 'nullable|max:250',
+            'auto_detect_blocking' => 'nullable|in:0,1',
             'ip_auth' => 'nullable|ipv4|max:100',
             'ip_proxy' => 'nullable|ipv4|max:100',
           'ip_auth_backup' => 'nullable|ipv4|max:100',
@@ -517,6 +523,7 @@ class V1CustomerController extends Controller
         $customer->destination= request('destination', null);
         $customer->telco_destination= request('telco_destination', null);
         $customer->operator_telco_id= request('operator_telco_id');
+        $customer->auto_detect_blocking= request('auto_detect_blocking',1);
         $customer->ip_auth_backup= request('ip_auth_backup', null);
         $customer->ip_proxy_backup= request('ip_proxy_backup', null);
 
@@ -898,9 +905,6 @@ class V1CustomerController extends Controller
       $BACKUPSTATE=$request->single_mode==1?false:config("server.backup_site");
       $API_STATE= $request->api_source?"API|":"WEB|";
 
-
-
-
       if (!$this->checkEntity($user->id, "CHANGE_CUSTOMER_STATUS")) {
         Log::info($user->email . '  TRY TO GET V1CustomerController.changeCustomersStatus WITHOUT PERMISSION');
         return response()->json(['status' => false, 'message' => "Permission prohibit"], 403);
@@ -951,18 +955,7 @@ class V1CustomerController extends Controller
       try{
         $reason= $request->reason?$request->reason:"CHANGE_CUSTOMER_STATUS_NO_REASON";
         $productCode= ServiceConfig::where("id",$cus->service_id)->first();
-        if($productCode)
-        {
-          // Set Quantity check
-          $this->UpdateSubCharge(1,$productCode->product_code, $cus, false);
-          if($BACKUPSTATE)
-          {
 
-            $productCodeBackup= ServiceConfigBackup::where("id",$cusBackup->service_id)->first();
-            $this->UpdateSubCharge(1, $productCodeBackup->product_code, $cusBackup, true);
-          }
-
-        }
 
         if(!$IS_BACKUP) // Nếu không phải là backup hoặc trạng thái mới là 1 thì khóa luôn
           {
@@ -2289,60 +2282,60 @@ class V1CustomerController extends Controller
 
          $param= [];
             $sql=" SELECT a.companyname, a.blocked as status, a.updated_at, a.created_at, a.pause_state, a.server_profile,
-                     a.enterprise_number,  b.total_amount total, c.service_name, 
-                          a.ip_auth, a.ip_proxy,a.ip_auth_backup, a.ip_proxy_backup, a.destination, a.account_id, 
-                         a.addr, a.email, a.cus_name, a.id, a.telco_destination,  a.operator_telco_id,
-                     e.charge_result, e.charge_time as event_occur_time, a.phone1, c.product_code, a.cfu
-                    FROM customers a
-                        join hot_line_config on a.id= hot_line_config.cus_id  
-                    LEFT JOIN 
-                    (
-                    SELECT SUM(chotSale) AS total_amount, enterprise_number
-                    FROM (
-                    SELECT SUM(total_amount) chotSale, a.enterprise_number
-                    FROM call_fee_cycle_status a
-                    WHERE cycle_to > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
-                    GROUP BY a.enterprise_number UNION ALL
-                    SELECT SUM(total_amount) chotSale, a.enterprise_number
-                    FROM subcharge_fee_cycle_status a
-                    WHERE cycle_to > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
-                    GROUP BY a.enterprise_number UNION ALL
-                    SELECT SUM(total_amount) chotSale, a.enterprise_number
-                    FROM sms_fee_cycle_status a
-                    WHERE cycle_to > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
-                    GROUP BY a.enterprise_number
-                    
-                    ) b
-                    GROUP BY enterprise_number
-                    )
-                    b ON SUBSTR(a.enterprise_number,2) = b.enterprise_number  
-                    LEFT  JOIN service_config c ON a.service_id = c.id                
-                    
-                    LEFT JOIN 
-                    ( SELECT  T1.enterprise_num, T1.charge_result, T1.charge_time , cus_id
-                    FROM
-                     charge_log T1 
-                    INNER JOIN
-                     (
-                    SELECT MAX(`charge_time`) AS `time`,`enterprise_num`
-                    FROM charge_log  where  charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')   and insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00') and  charge_result <> '0' and charge_result<>''    GROUP BY enterprise_num) T2 ON T1.`enterprise_num` = T2.`enterprise_num` AND T1.`charge_time` = T2.`time`
-                    WHERE    T1.insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00')  AND T1.charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
-                    ORDER BY T1.`charge_time` DESC) e                                 
-                    on a.id = e.cus_id
-                     WHERE 1=1 ";
+                a.enterprise_number,  b.total_amount total, c.service_name, 
+                a.ip_auth, a.ip_proxy,a.ip_auth_backup, a.ip_proxy_backup, a.destination, a.account_id, 
+                a.addr, a.email, a.cus_name, a.id, a.telco_destination,  a.operator_telco_id,  a.auto_detect_blocking,
+                e.charge_result, e.charge_time as event_occur_time, a.phone1, c.product_code, a.cfu
+                FROM customers a
+                join hot_line_config on a.id= hot_line_config.cus_id  
+                LEFT JOIN 
+                (
+                SELECT SUM(chotSale) AS total_amount, enterprise_number
+                FROM (
+                SELECT SUM(total_amount) chotSale, a.enterprise_number
+                FROM call_fee_cycle_status a
+                WHERE cycle_to > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
+                GROUP BY a.enterprise_number UNION ALL
+                SELECT SUM(total_amount) chotSale, a.enterprise_number
+                FROM subcharge_fee_cycle_status a
+                WHERE cycle_to > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
+                GROUP BY a.enterprise_number UNION ALL
+                SELECT SUM(total_amount) chotSale, a.enterprise_number
+                FROM sms_fee_cycle_status a
+                WHERE cycle_to > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
+                GROUP BY a.enterprise_number
+                
+                ) b
+                GROUP BY enterprise_number
+                )
+                b ON SUBSTR(a.enterprise_number,2) = b.enterprise_number  
+                LEFT  JOIN service_config c ON a.service_id = c.id                
+                
+                LEFT JOIN 
+                ( SELECT  T1.enterprise_num, T1.charge_result, T1.charge_time , cus_id
+                FROM
+                charge_log T1 
+                INNER JOIN
+                (
+                SELECT MAX(`charge_time`) AS `time`,`enterprise_num`
+                FROM charge_log  where  charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')   and insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00') and  charge_result <> '0' and charge_result<>''    GROUP BY enterprise_num) T2 ON T1.`enterprise_num` = T2.`enterprise_num` AND T1.`charge_time` = T2.`time`
+                WHERE    T1.insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00')  AND T1.charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
+                ORDER BY T1.`charge_time` DESC) e                                 
+                on a.id = e.cus_id
+                WHERE 1=1 ";
 
-            $sqlCount= "SELECT COUNT(*) as total  from (     Select count(*)  total from customers a join hot_line_config on a.id= hot_line_config.cus_id 
-            LEFT JOIN 
-                        ( SELECT  T1.enterprise_num, T1.charge_result, T1.charge_time , cus_id
-                            FROM
-                             charge_log T1 
-                            INNER JOIN
-                            ( SELECT MAX(`charge_time`) AS `time`,`enterprise_num`
-                    FROM charge_log  where  charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')   and insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00') and  charge_result <> '0' and charge_result<>''    GROUP BY enterprise_num) T2 ON T1.`enterprise_num` = T2.`enterprise_num` AND T1.`charge_time` = T2.`time`
-                    WHERE    T1.insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00')  AND T1.charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
-                    ORDER BY T1.`charge_time` DESC) e                                 
-                    on a.id = e.cus_id
-  WHERE 1=1 
+                $sqlCount= "SELECT COUNT(*) as total  from (     Select count(*)  total from customers a join hot_line_config on a.id= hot_line_config.cus_id 
+                LEFT JOIN 
+                ( SELECT  T1.enterprise_num, T1.charge_result, T1.charge_time , cus_id
+                FROM
+                charge_log T1 
+                INNER JOIN
+                ( SELECT MAX(`charge_time`) AS `time`,`enterprise_num`
+                FROM charge_log  where  charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')   and insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00') and  charge_result <> '0' and charge_result<>''    GROUP BY enterprise_num) T2 ON T1.`enterprise_num` = T2.`enterprise_num` AND T1.`charge_time` = T2.`time`
+                WHERE    T1.insert_time > DATE_FORMAT(NOW(),'%Y-%m-%-01 00:00:00')  AND T1.charge_time > DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00')
+                ORDER BY T1.`charge_time` DESC) e                                 
+                on a.id = e.cus_id
+                WHERE 1=1 
 ";
 
 
