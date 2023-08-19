@@ -253,7 +253,8 @@ class V1CustomerController extends Controller
       }
         // Multiple
 
-
+        $listHotline= array_unique($listHotline);
+      
         $inValidHotline = DB::table('hot_line_config')->whereIn('hotline_number', $listHotline)->whereIn('status', [0, 1])->count();
         if ($inValidHotline > 0) {
           $logDuration = round(microtime(true) * 1000) - $startTime;
@@ -363,7 +364,8 @@ class V1CustomerController extends Controller
        * THÊM HOTLINE
        */
       $sip = (object)[];
-      if (count($listHotline) > 0) {
+        $listHotline= array_unique($listHotline);
+        if (count($listHotline) > 0) {
         foreach ($listHotline as $key => $line) {
           $data = array('cus_id' => $newCustomer['cus_id'],
             'enterprise_number' => $request->enterprise_number,

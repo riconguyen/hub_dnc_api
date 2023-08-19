@@ -179,27 +179,6 @@ class ReportController extends Controller
             ->where('event_type','000001')
             ->sum('amount');
 
-        //  return response()->json($sub_fee);
-
-//
-//        // Cấu hình dữ liệu báo cáo
-//        $call_fee = DB::table('call_fee_cycle_status')
-//            ->whereDate('cycle_from', '>=', $datePeriod->start_date)
-//            ->whereDate('cycle_to', '<=', $datePeriod->end_date)
-//            ->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('SUM(total_duration) as total_duration'))
-//            ->get();
-//        $sms_fee = DB::table('sms_fee_cycle_status')
-//            ->whereDate('cycle_from', '>=', $datePeriod->start_date)
-//            ->whereDate('cycle_to', '<=', $datePeriod->end_date)
-//            ->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('SUM(total_count) as total_count'))
-//            ->get();
-//        $sub_fee = DB::table('subcharge_fee_cycle_status')
-//            ->whereDate('cycle_from', '>=', $datePeriod->start_date)
-//            ->whereDate('cycle_to', '<=', $datePeriod->end_date)
-//            ->sum('total_amount');
-//
-//
-//
 
 
         $total_fee = $sms_fee[0]->total_amount + $call_fee[0]->total_amount + $sub_fee;
@@ -378,14 +357,9 @@ where  full_time between ? and ? group by day";
                      else 'sub'
                      end as Direction
                      from charge_log
-                     where charge_status=1
-                         and insert_time >=?
-                     and insert_time< ?
-                     and charge_time>=?
-                     and charge_time< ?
-                     group by Direction";
+                     where   insert_time between ? and ?    group by Direction";
 
-    $resChargeLog = DB::select($chargeLogs, [$start_date, $end_date,$start_date, $end_date]);
+    $resChargeLog = DB::select($chargeLogs, [$start_date, $end_date]);
 
 
 
@@ -402,7 +376,7 @@ where  full_time between ? and ? group by day";
     $returnReport->charge_logs = $resChargeLog;
 
 
-    return $this->ApiReturn($returnReport, true, [], 200);
+    return $this->ApiReturn($returnReport, true,[],  200);
   }
 }
 

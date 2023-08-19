@@ -95,6 +95,7 @@
             return $this->ApiReturn(["hotline_numbers" => ["Hotline numbers is invalid"]], false, 'The given data was invalid: ' . implode(",", $lstErrors), 422);
         }
 
+        $hotlineNumbers= array_unique($hotlineNumbers);
         $lstInUseHotline = Hotlines::whereIn('hotline_number', $hotlineNumbers)->whereIn('status', [0, 1])->get();
         if (count($lstInUseHotline) > 0) {
             $linesInUsed = [];
