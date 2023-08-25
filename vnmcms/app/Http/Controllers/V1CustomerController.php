@@ -254,7 +254,7 @@ class V1CustomerController extends Controller
         // Multiple
 
         $listHotline= array_unique($listHotline);
-      
+
         $inValidHotline = DB::table('hot_line_config')->whereIn('hotline_number', $listHotline)->whereIn('status', [0, 1])->count();
         if ($inValidHotline > 0) {
           $logDuration = round(microtime(true) * 1000) - $startTime;

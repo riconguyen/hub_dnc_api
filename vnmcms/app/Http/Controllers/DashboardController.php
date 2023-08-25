@@ -63,23 +63,11 @@ class DashboardController extends Controller
                 
                 union all 
                 
-                select 'quantity' as col, sum(totalcall) as total ,
-                sum(success) as col1,
-                sum(fail) as col2,
-                ceil(sum(duration)/60)  as col3 
-                from 
-                (
-                select count(id) as totalcall, count(id) as success, 0 as fail, sum(duration) as duration from sbc.cdr_vendors force index (i_vendor, setup_time)  where setup_time >= DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00') and i_vendor in(2,17)
-                
-                union all 
-                select count(id) as totalcall, 0 as success, count(id) as fail,  0  as duration from sbc.cdr_vendors_failed  force index (i_vendor, setup_time)  where setup_time >= DATE_FORMAT(NOW(),'%Y-%m-01 00:00:00') and i_vendor in(2,17)
-                
-                 ) a
-                 
-                 
-                
-                
-                 ");
+              select 'quantity' as col, 0 as total ,
+0 as col1,
+0 as col2,
+0 as col3
+                ");
         $dash = [];
         if (count($info) == 3) {
             foreach ($info as $val) {
