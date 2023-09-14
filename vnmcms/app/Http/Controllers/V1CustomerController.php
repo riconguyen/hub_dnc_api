@@ -2238,9 +2238,11 @@ class V1CustomerController extends Controller
         return response()->json(['status' => false, 'message' => "Permission denied"], 403);
       }
 
+      $isAm=$this->checkEntity($user->id, "AM");
 
 
 
+      // Render list AM
 
       $totalPerPage= $request->count?$request->count:20;
         $page= $request->page?$request->page:1;
