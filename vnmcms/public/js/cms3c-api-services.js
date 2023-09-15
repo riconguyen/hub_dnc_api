@@ -217,6 +217,18 @@ cms3c.factory('ApiServices', function($http,loginCheck){
             return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/monthly', data:data});
             // return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/'+report, data:data});
         },
+		searchCustomer:function (data) {
+            return $http({method:'post',headers:headers, url:ApiUrl+'/api/v1/customer/postSearchCustomer', data:data});
+            // return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/'+report, data:data});
+        },
+		searchReportGrowth:function (data) {
+            return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/searchReportGrowth', data:data});
+            // return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/'+report, data:data});
+        },
+		searchReportAudit:function (data) {
+            return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/searchReportAudit', data:data});
+            // return $http({method:'post',headers:headers, url:ApiUrl+'/api/report/'+report, data:data});
+        },
 
         // Server config
 
@@ -489,6 +501,11 @@ cms3c.factory('ApiUsers', function ($http, loginCheck) {
             return $http({method:'post',headers:headers, url:ApiUrl+'/api/role/getUserByRole'});
         },
 
+    getAms:function(data)
+        {
+            return $http({method:'get',headers:headers, url:ApiUrl+'/api/admin/am'});
+        },
+
 
     }
 });
@@ -522,6 +539,7 @@ cms3c.factory('ApiV1', function ($http, loginCheck) {
         removeHotline:function (data) {                   return $http({method:'POST', headers:headers, url:ApiUrl+'api/v1/hotline/removeHotline', data:data});       },
         getServiceByCode:function (data) {            return $http({method:'GET', headers:headers, url:ApiUrl+'api/v1/service/getServiceByCode?'+ $.param(data)});       },
         getServices:function (data) {                   return $http({method:'GET', headers:headers, url:ApiUrl+'api/v1/service/getServices?'+ $.param(data)}); }
+
 
 
     }

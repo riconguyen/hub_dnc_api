@@ -229,25 +229,12 @@ class AccountController extends Controller
         // END VALIDATE
         $customer = DB::table('customers')
             ->where('enterprise_number', $id)
+            ->whereIn('blocked',[0,1])
             ->select('id', 'cus_name', 'enterprise_number','account_id', 'companyname', 'addr', 'taxcode', 'licenseno', 'dateofissue', 'issuedby', 'phone1', 'email', 'service_id', 'blocked', 'pause_state', 'blocked as status')
             ->first();
+        // Check AM
 
-
-
-        // find data by hotline id
-
-//      $hotlines = DB::table("hot_line_config as a")
-//        ->leftJoin('sbc.caller_group as b',
-//          function ($join)
-//          {
-//            $join->on('a.hotline_number','=','b.caller')
-//              ->on('a.cus_id','=','b.cus_id');
-//          }
-//        )
-//        ->select("a.*","b.status as group_call_status","b.enterprise as caller_group_master")
-//        ->where("a.cus_id", $customer->id)
-//        ->whereIn('a.status',[0,1])
-//        ->get();
+        $customer->ams= DB::select("select users.id user_id, name as username, email from users join customer_ams on users.id= customer_ams.user_id where cus_id=? ",[$customer->id]);
 
 
 

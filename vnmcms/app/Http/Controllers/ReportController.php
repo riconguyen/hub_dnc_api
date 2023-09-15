@@ -1,9 +1,16 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\CustomerAms;
+use App\Customers;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use function array_push;
+use function intval;
+use function response;
+use stdClass;
 
 class ReportController extends Controller
 {
@@ -78,14 +85,31 @@ class ReportController extends Controller
         ]);
         $range = $request->all();
         $datePeriod = $this->filterDateRange($range);
-        $result = DB::select("SELECT SUM(amount) TOTAL,
+// AM Fixing
+      $isAm=$this->checkEntity($user->id, "AM");
+
+      $sql = "SELECT SUM(amount) TOTAL,
                 IFNULL(SUM(CASE WHEN event_type='000002' THEN amount ELSE 0 END), 0) VOICE_CALL,
                 IFNULL(SUM(CASE WHEN event_type='000002' THEN count ELSE 0 END), 0) VOICE_DURATION,
                 IFNULL(SUM(CASE WHEN event_type='000001' THEN amount ELSE 0 END), 0) SUB,
                 IFNULL(SUM(CASE WHEN event_type='000003' THEN amount ELSE 0 END), 0) SMS,
                 IFNULL(SUM(CASE WHEN event_type='000003' THEN count ELSE 0 END), 0) SMS_DURATION
                 from charge_log a
-                where   insert_time  between ? and ?  and   event_occur_time between ? and ? ", [$datePeriod->start_date, $datePeriod->end_date,$datePeriod->start_date, $datePeriod->end_date]);
+                where   insert_time  between ? and ?    ";
+      $params = [$datePeriod->start_date, $datePeriod->end_date];
+      if ($isAm) {
+        $checkCusAms = CustomerAms::where('user_id', $user->id)->count();
+
+        if ($checkCusAms == 0) {
+          return response()->json(['fee' =>[],'message'=>'No Customer found by AM '],200);
+
+        }
+
+        $sql .= " AND cus_id in (select id from customer_ams where user_id=? ) ";
+        array_push($params, $user->id);
+      }
+
+      $result = DB::select($sql, $params);
 
 
 
@@ -130,79 +154,7 @@ class ReportController extends Controller
         //postViewReportQuantity
     }
 
-    public function postViewReportQuantityOLD(Request $request)
-    {
-        $user= $request->user;
-        if($user->role != ROLE_ADMIN )
-        {
-            return ['error'=>'Permission denied'];
-        }
 
-
-
-
-        $validatedData = $request->validate([
-            'start_date'=>'nullable|date',
-            'end_date'=>'nullable|date',
-            'report'=>'required',
-            'datePeriod'=>'required',
-        ]);
-
-
-
-
-
-
-        $range = $request->all();
-        $datePeriod = $this->filterDateRange($range);
-
-
-
-
-        $call_fee = DB::table('charge_log')
-            ->whereBetween('event_occur_time', [ $datePeriod->start_date, $datePeriod->end_date])
-            ->whereBetween('insert_time', [ $datePeriod->start_date, $datePeriod->end_date])
-            ->where('event_type','000002')
-            ->select(DB::raw('SUM(amount) as total_amount'), DB::raw('SUM(count) as total_duration'))
-            ->get();
-
-        $sms_fee = DB::table('charge_log')
-            ->whereBetween('event_occur_time', [ $datePeriod->start_date, $datePeriod->end_date])
-            ->whereBetween('insert_time', [ $datePeriod->start_date, $datePeriod->end_date])
-            ->where('event_type','000003')
-            ->select(DB::raw('SUM(amount) as total_amount'), DB::raw('SUM(count) as total_duration'))
-            ->get();
-
-        $sub_fee = DB::table('charge_log')
-            ->whereBetween('event_occur_time', [ $datePeriod->start_date, $datePeriod->end_date])
-            ->whereBetween('insert_time', [ $datePeriod->start_date, $datePeriod->end_date])
-            ->where('event_type','000001')
-            ->sum('amount');
-
-
-
-        $total_fee = $sms_fee[0]->total_amount + $call_fee[0]->total_amount + $sub_fee;
-        if ($total_fee > 0) {
-            $sub_fee_per = ($sub_fee * 100) / $total_fee;
-            $sms_fee_per = ($sms_fee[0]->total_amount * 100) / $total_fee;
-            $call_fee_per = ($call_fee[0]->total_amount * 100) / $total_fee;
-        } else {
-            $sub_fee_per = 0;
-            $sms_fee_per = 0;
-            $call_fee_per = 0;
-        }
-        // select sum(total_amount) from call_fee_cycle_status where cycle_from >=@dateStart and cycle_to <=@endDate
-        return response()->json(['fee' =>
-                [array('name' => 'CALL_FEE', 'amount' => $call_fee[0]->total_amount, 'count' => ceil($call_fee[0]->total_duration/60), 'unit' => 'min', 'percent' => $call_fee_per),
-                    array('name' => 'SMS_FEE', 'amount' => $sms_fee[0]->total_amount, 'count' => $sms_fee[0]->total_duration, 'unit' => 'sms', 'percent' => $sms_fee_per),
-                    array('name' => 'SUB_FEE', 'amount' => $sub_fee, 'percent' => $sub_fee_per)
-                ],
-                'date' => ['start_date'=>date('d/m/Y',strtotime($datePeriod->start_date)),'end_date'=>date('d/m/Y',strtotime($datePeriod->end_date))],
-                'total_fee' => $total_fee
-            ]
-        );
-        //postViewReportQuantity
-    }
 
   public function postViewReportFlow(Request $request) {
     $user = $request->user;
@@ -261,6 +213,7 @@ where  full_time between ? and ? group by day";
         return response()->json(['status' => false, 'message' => "Permission denied"], 403);
       }
 
+      $isAm=$this->checkEntity($user->id, "AM");
 
 
         $validatedData = $request->validate([
@@ -273,14 +226,60 @@ where  full_time between ? and ? group by day";
         $range = $request->all();
         // Cấu hình dữ liệu báo cáo
         $datePeriod = $this->filterDateRange($range);
+
+
+      if ($isAm) {
+        $checkCusAms = CustomerAms::where('user_id', $user->id)->count();
+
+        if ($checkCusAms == 0) {
+          return response()->json(['date' =>
+            ['start_date' => date('d/m/Y', strtotime($datePeriod->start_date)),
+              'end_date' => date('d/m/Y', strtotime($datePeriod->end_date))],
+            'customer' => [],
+            'hotline' => [],
+            'total' => [
+              'customer' => 0,
+              'hotline' => 0
+            ],
+            'date_range' => '',
+            'message' => 'No Customer found by AM '], 200);
+        }
+      }
+
+
+
         $queryTotalCustomer = "select DATE(a.full_time) as day, COUNT(b.id) as number_of_cus  
         from report_days  a left join customers b on a.full_time= DATE(b.created_at)  
-        where full_time between ? and ?   group by day";
-        $resCustomer = DB::select($queryTotalCustomer, [$datePeriod->start_date, $datePeriod->end_date]);
+        where full_time between ? and ?  ";
+
+
+        $paramsCustomers=[$datePeriod->start_date, $datePeriod->end_date];
+
+
+        if($isAm)
+        {
+          $queryTotalCustomer .=" and b.id in (select cus_id from customer_ams where user_id =?)";
+          array_push($paramsCustomers, $user->id) ;
+        }
+
+        $queryTotalCustomer .=" group by day";
+
+        $resCustomer = DB::select($queryTotalCustomer,$paramsCustomers );
+
+
         $queryHotline = "select DATE(a.full_time) as day, COUNT(b.id) as number_of_hotline 
         from report_days  a left join hot_line_config b on a.full_time= DATE(b.created_at)  
-        where full_time between ? and ?  group by day";
-        $resHotline = DB::select($queryHotline, [$datePeriod->start_date, $datePeriod->end_date]);
+        where full_time between ? and ? ";
+
+      if($isAm)
+      {
+        $queryHotline .=" and b.cus_id in (select cus_id from customer_ams where user_id =?)";
+      }
+
+
+      $queryHotline .=" group by day";
+
+        $resHotline = DB::select($queryHotline, $paramsCustomers);
         $customer = array();
         $dateAvail = array();
         $totalCustomer = 0;
@@ -321,10 +320,26 @@ where  full_time between ? and ? group by day";
 
     ]);
 
-    $start_date = date("Y-m-01 00:00:00", strtotime($request->start_date));
-    $end_date = date("Y-m-t 23:59:59", strtotime($start_date));
+    $start_date = date("Y-m-d 00:00:00", strtotime($request->start_date));
+    $end_date = date("Y-m-d 23:59:59", strtotime($start_date));
+
 
     $returnReport = new \stdClass();
+    $returnReport->charge_logs = [];
+
+
+    $isAm=$this->checkEntity($user->id, "AM");
+    if ($isAm) {
+      $checkCusAms = CustomerAms::where('user_id', $user->id)->count();
+
+      if ($checkCusAms == 0) {
+        return $this->ApiReturn($returnReport, true, 'No AM found', 200);
+      }
+    }
+
+
+
+
 
     $sqlGroupPrefix = DB::select("select prefix_group, GROUP_CONCAT(prefix_type_id SEPARATOR ',') listId  from prefix_type_name f group by f.prefix_group");
 
@@ -332,7 +347,7 @@ where  full_time between ? and ? group by day";
     $groupObject=new \stdClass();
     foreach($lstGroupPrefix as $groupPrefix)
     {
-  $groupObject->{$groupPrefix->id}= $groupPrefix->group_name;
+      $groupObject->{$groupPrefix->id}= $groupPrefix->group_name;
     }
 
     $groupObject->{0}="No group";
@@ -357,11 +372,20 @@ where  full_time between ? and ? group by day";
                      else 'sub'
                      end as Direction
                      from charge_log
-                     where   insert_time between ? and ?    group by Direction";
+                     where   insert_time between ? and ?  ";
 
-    $resChargeLog = DB::select($chargeLogs, [$start_date, $end_date]);
+    $params=[$start_date, $end_date];
 
+    if($isAm)
+    {
 
+       $chargeLogs.= " AND cus_id in (select cus_id from customer_ams where user_id= ?) ";
+       array_push($params, $user->id);
+    }
+
+    $chargeLogs.='  group by Direction';
+
+    $resChargeLog = DB::select($chargeLogs, $params);
 
 
     if(count($resChargeLog)>0)
@@ -378,5 +402,250 @@ where  full_time between ? and ? group by day";
 
     return $this->ApiReturn($returnReport, true,[],  200);
   }
+
+
+  public function postSearchReportGrowth(Request $request)
+  {
+    $user = $request->user;
+
+    if (!$this->checkEntity($user->id, "VIEW_REPORT_DETAIL")) {
+      Log::info($user->email . '  TRY TO GET ReportController.postSearchReportGrowth WITHOUT PERMISSION');
+      return response()->json(['status' => false, 'message' => "Permission denied"], 403);
+    }
+
+    $isAm = $this->checkEntity($user->id, "AM");
+    if ($isAm) {
+      $checkCusAms = CustomerAms::where('user_id', $user->id)->count();
+
+      if ($checkCusAms == 0) {
+        return $this->ApiReturn([], true, 'No AM found', 400);
+      }
+    }
+    $validatedData = $request->validate([
+      'start_date' => 'required|date',
+      'end_date' => 'required|date',
+      'prefix_group' => 'nullable|int'
+    ]);
+    $start_date= request('start_date', date('Y-m-01 00:00:00'));
+    $end_date= request('end_date', date('Y-m-d H:i:s'));
+
+    $enterprise= request('enterprise_number',null);
+    $prefix_group= request('prefix_group',null);
+    $checkCus= false;
+    if($enterprise)
+    {
+       $checkCus= Customers::where('enterprise_number', $enterprise)->whereIn('blocked',[0,1])->first();
+       if(!$checkCus)
+       {
+         return $this->ApiReturn([], true, 'Không tìm thấy khách hàng', 400);
+       }
+
+    }
+
+
+    $prefix_group_result= null;
+
+    if($prefix_group)
+    {
+      $resCheck=DB::select("select listId from prefix_type_group  join (select prefix_group, GROUP_CONCAT(prefix_type_id SEPARATOR ',') listId  from prefix_type_name f group by f.prefix_group) pg on pg.prefix_group=prefix_type_group.id where prefix_type_group.id=?",[$prefix_group]);
+      $prefix_group_result= count($resCheck)>0?$resCheck[0]->listId:null;
+    }
+
+
+
+    $start_datex = new DateTime($start_date);
+    $end_datex = new DateTime($end_date);
+
+    $interval = $start_datex->diff($end_datex);
+
+    if ($interval->days > 31) {
+      return $this->ApiReturn([], true, 'Thời gian bắt đầu và kết thúc không quá 31 ngày', 422);
+
+    }
+
+    $params=[$start_date,$end_date];
+    $sql="select sum(amount) total_amount, sum(count) total_duration, count(1) total_call,  date(insert_time) day from charge_log where insert_time between ? and ?  ";
+    if($isAm)
+    {
+      $sql .=" AND cus_id in (select cus_id from customer_ams where user_id=?) ";
+      array_push($params, $user->id);
+    }
+
+    if($checkCus)
+    {
+      $sql .= " AND cus_id =? ";
+      array_push($params, $checkCus->id);
+    }
+
+    if($prefix_group_result)
+    {
+      $sql .=" AND destination_type in ($prefix_group_result)";
+    }
+
+
+
+    $sql.=" group by day order by day desc    ";
+    $sqlCount= "select count(1) total from ($sql) a ";
+    $total= DB::select($sqlCount, $params);
+    $sql.=" LIMIT ?,?  ";
+    array_push($params, 0,100);
+    $res=DB::select($sql, $params);
+
+
+    $dataSummary=new stdClass();
+    $dataSummary->total_amount=0;
+    $dataSummary->total_duration=0;
+    $dataSummary->total_call=0;
+
+    foreach ($res as $item)
+    {
+      $dataSummary->total_amount += intval($item->total_amount);
+      $dataSummary->total_duration += intval($item->total_duration);
+      $dataSummary->total_call += intval($item->total_call);
+    }
+
+
+
+
+
+
+
+    return response()->json(['data'=>$res, 'count'=>$total[0]->total, 'summary'=>$dataSummary],200);
+
+  }
+
+
+
+  public function postSearchReportAudit(Request $request)
+  {
+    $user = $request->user;
+
+    if (!$this->checkEntity($user->id, "VIEW_REPORT_DETAIL")) {
+      Log::info($user->email . '  TRY TO GET ReportController.postSearchReportGrowth WITHOUT PERMISSION');
+      return response()->json(['status' => false, 'message' => "Permission denied"], 403);
+    }
+
+    $isAm = $this->checkEntity($user->id, "AM");
+    if ($isAm) {
+      $checkCusAms = CustomerAms::where('user_id', $user->id)->count();
+
+      if ($checkCusAms == 0) {
+        return $this->ApiReturn([], true, 'No AM found', 400);
+      }
+    }
+    $validatedData = $request->validate([
+      'start_date' => 'required|date',
+      'end_date' => 'required|date',
+      'enterprise_number' => 'required',
+      'prefix_group' => 'nullable|int'
+    ]);
+    $start_date= request('start_date', date('Y-m-01 00:00:00'));
+    $end_date= request('end_date', date('Y-m-d H:i:s'));
+
+
+    $totalPerPage= request('count',50);
+    $page= request('page',1);
+    $skip= ($page-1)*$totalPerPage;
+
+
+
+
+
+    $enterprise= request('enterprise_number',null);
+    $prefix_group= request('prefix_group',null);
+    $checkCus= false;
+    if($enterprise)
+    {
+      $checkCus= Customers::where('enterprise_number', $enterprise)->whereIn('blocked',[0,1])->first();
+      if(!$checkCus)
+      {
+        return $this->ApiReturn([], true, 'Không tìm thấy khách hàng', 400);
+      }
+
+    }
+
+
+    $prefix_group_result= null;
+
+    if($prefix_group)
+    {
+      $resCheck=DB::select("select listId from prefix_type_group  join (select prefix_group, GROUP_CONCAT(prefix_type_id SEPARATOR ',') listId  from prefix_type_name f group by f.prefix_group) pg on pg.prefix_group=prefix_type_group.id where prefix_type_group.id=?",[$prefix_group]);
+      $prefix_group_result= count($resCheck)>0?$resCheck[0]->listId:null;
+    }
+
+
+
+    $start_datex = new DateTime($start_date);
+    $end_datex = new DateTime($end_date);
+
+    $interval = $start_datex->diff($end_datex);
+
+    if ($interval->days > 31) {
+      return $this->ApiReturn([], true, 'Thời gian bắt đầu và kết thúc không quá 31 ngày', 422);
+
+    }
+/**
+
+    select sum(amount) total_amount, sum(count) total_duration, count(1) total_call,  date(insert_time) day, ifNULL(prefix_type_name.name,"sub") prefixName from charge_log
+left join prefix_type_name on prefix_type_name.prefix_type_id= destination_type
+where insert_time between '2022-10-01 00:00:00' and '2022-12-30 14:12:25'   group by day, prefixName    order by insert_time desc    LIMIT 0,100
+
+*/
+
+    $params=[$start_date,$end_date];
+    $sql="select sum(amount) total_amount, sum(count) total_duration, count(1) total_call,  date(insert_time) day, ifNULL(prefix_type_name.name,\"sub\") prefixName from charge_log
+left join prefix_type_name on prefix_type_name.prefix_type_id= destination_type
+where insert_time between ? and ?  ";
+    if($isAm)
+    {
+      $sql .=" AND cus_id in (select cus_id from customer_ams where user_id=?) ";
+      array_push($params, $user->id);
+    }
+
+    if($checkCus)
+    {
+      $sql .= " AND cus_id =? ";
+      array_push($params, $checkCus->id);
+    }
+    if($prefix_group_result)
+    {
+      $sql .=" AND destination_type in ($prefix_group_result)";
+    }
+
+
+
+    $sql.=" group by day, prefixName order by day desc    ";
+    $sqlCount= "select count(1) total from ($sql) a ";
+    $total= DB::select($sqlCount, $params);
+    $sql.=" LIMIT ?,?  ";
+    array_push($params, $skip, $totalPerPage);
+    $res=DB::select($sql, $params);
+
+
+    $dataSummary=new stdClass();
+    $dataSummary->total_amount=0;
+    $dataSummary->total_duration=0;
+    $dataSummary->total_call=0;
+
+    foreach ($res as $item)
+    {
+      $item->customer_name= $checkCus->cus_name;
+      $item->enterprise_number= $checkCus->enterprise_number;
+      $dataSummary->total_amount += intval($item->total_amount);
+      $dataSummary->total_duration += intval($item->total_duration);
+      $dataSummary->total_call += intval($item->total_call);
+    }
+
+
+
+
+
+
+
+    return response()->json(['data'=>$res, 'count'=>$total[0]->total, 'summary'=>$dataSummary],200);
+
+  }
+
+
 }
 

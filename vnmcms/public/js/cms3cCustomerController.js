@@ -1,4 +1,4 @@
-cms3c.controller('customerController', function ($filter, $scope, ApiServices, ApiV1, $location, dataShare, loginCheck,ngTableParams, $window) {
+cms3c.controller('customerController', function ($filter, $scope, ApiServices, ApiV1, $location, dataShare, loginCheck,ngTableParams, $window, ApiUsers) {
 	var Token=loginCheck.getEntity().then(function (value) {
 
 		$scope.entity=value.entity;
@@ -123,6 +123,16 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
 
     $scope.editCustomerForm=function (data) {
         $scope.editCustomer=angular.copy(data);
+
+        let ams= [];
+        if(data.cog && data.cog.customer && data.cog.customer.ams)
+		{
+			data.cog.customer.ams.map(cus=>{
+				ams.push(cus.user_id);
+			})
+		}
+        $scope.editCustomer.ams=ams;
+
         $scope.editCustomer.operator_telco_id= angular.copy(data.operator_telco_id?data.operator_telco_id:"");
         $("#editCustomerForm").modal('show');
 
@@ -134,7 +144,7 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
             if(resData.data.status==true)
             {
                 $("#editCustomerForm").modal('hide');
-				$scope.currentCustomer= data;
+				$scope.viewCustomer($scope.currentCustomer);
 				$.jGrowl("Cập nhật thành công");
 				return;
             }
@@ -824,7 +834,19 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
         dataShare.data.billing = data;
         $location.path("/billing");
     }
-    $scope. viewCustomer = function (data) {
+
+	$scope.getListAm=  ()=> {
+		let res = ApiUsers.getAms();
+		res.then(function (resData) {
+				$scope.lstAms = resData.data.data;
+
+			}
+		);
+
+	}
+
+
+    $scope.viewCustomer = function (data) {
     	$scope.newHotlines_show=false;
         console.log("current data ", data)
 
@@ -855,26 +877,14 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
 
 
         }
-        // if ($scope.currentCustomer.enterprise_number) {
-        //     res = ApiServices.getFeeByEntNumber($scope.currentCustomer.enterprise_number);
-        //     res.then(function (data) {
-        //         $scope.currentCustomer.fee = data.data;
-        //         var call = 0, sub = 0, sms = 0;
-        //         if (data.data.sub.length > 0) {
-        //             sub = parseFloat(data.data.sub[0].sum_sub);
-        //         }
-        //         if (data.data.sms.length > 0) {
-        //             sms = parseFloat(data.data.sms[0].sum_sms);
-        //         }
-        //         if (data.data.call.length > 0) {
-        //             call = parseFloat(data.data.call[0].sum_call);
-        //         }
-        //         $scope.currentCustomer.fee.total_amount = call + sub + sms;
-        //     })
-        // }
 
 
 		$scope.getListHotline();
+        if($scope.entity.UPDATE_CUSTOMER)
+		{
+			$scope.getListAm();
+		}
+
     };
 
     $scope.sbcHotlineTableParam={};
@@ -1340,7 +1350,7 @@ cms3c.controller('customerController', function ($filter, $scope, ApiServices, A
 });
 
 
-cms3c.controller('customerControllerAdd', function ($scope, ApiServices, ApiV1, $location, dataShare, loginCheck) {
+cms3c.controller('customerControllerAdd', function ($scope, ApiServices, ApiV1, $location, dataShare, loginCheck, ApiUsers) {
 	var Token=loginCheck.getEntity().then(function (value) {
 
 		$scope.entity=value.entity;
@@ -1375,6 +1385,18 @@ cms3c.controller('customerControllerAdd', function ($scope, ApiServices, ApiV1, 
     }
 
 
+
+    $scope.getListAm=  ()=> {
+        let res = ApiUsers.getAms();
+        res.then(function (resData) {
+                $scope.lstAms = resData.data.data;
+
+            }
+        );
+
+    }
+
+
     $scope.lstOperatorTelco=[];
     $scope.getLstOperatorTelco= function () {
        ApiServices.getOperatorTelco().then(result=>{
@@ -1393,6 +1415,9 @@ cms3c.controller('customerControllerAdd', function ($scope, ApiServices, ApiV1, 
     $scope.getLstOperatorTelco({});
 
     $scope.getListService({});
+
+
+    $scope.getListAm({});
 
 
     // V1.2 Model ===============================================================

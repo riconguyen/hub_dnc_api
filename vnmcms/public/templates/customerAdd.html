@@ -101,6 +101,20 @@
                                         {{newCustomerError.status[0]}}
                                     </div>
                                 </div>
+                                <div class="form-group"><label> AM Quản lý</label>
+                                    <br>
+                                    <ol class="nya-bs-select" ng-model="newCustomer.ams" multiple="" style="width: 100%">
+                                        <li nya-bs-option="option in lstAms" data-value="option.id" style="padding: 4px 9px">
+                                            <a>
+                                                {{option.username}}
+                                            </a>
+                                            <span class="glyphicon glyphicon-ok check-mark"></span>
+                                        </li>
+                                    </ol>
+                                    <div class="invalid-feedback">
+                                        {{newCustomerError.status[0]}}
+                                    </div>
+                                </div>
 
                         </div>
                             <div class="col-6">

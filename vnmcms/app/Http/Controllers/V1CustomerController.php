@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\ChargeFeeLimit;
 use App\ChargeLog;
+use App\CustomerAms;
 use App\Customers;
 use App\CustomersBackup;
 use App\FeeLimitLog;
@@ -20,6 +21,7 @@ use App\ServiceConfigBackup;
 use App\TosServices;
 use App\TosServicesBackup;
 use App\User;
+use function array_push;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -215,6 +217,7 @@ class V1CustomerController extends Controller
       'profile_id_backup' => "nullable|in:2,3,4",
       "use_tos"=>"nullable|in:0,1",
       "tos_product_code"=>"nullable|alpha_dash|max:50",
+      'am'=>"nullable|array",
       'services' => 'nullable|array']);
 
     // Trả lỗi kiểm tra đầu vào
@@ -240,6 +243,10 @@ class V1CustomerController extends Controller
     if ($resServiceId) {
         $use_brand_name = ServiceConfig::where("id", $resServiceId->id)->where("product_code", "like", '%VB%')->exists();
     }
+
+
+    $lstAm= request('ams',[]);
+
 
 
 
@@ -317,6 +324,8 @@ class V1CustomerController extends Controller
 
     try {
 
+
+
       $billingAccount = [
         'email' => $email_login_portal,
         'role' => ROLE_BILLING,
@@ -326,6 +335,19 @@ class V1CustomerController extends Controller
         $user = User::create($billingAccount);
         $newCustomer['account_id']=$user->id;
         $newCustomer['cus_id'] = Customers::insertGetId($newCustomer);
+
+
+        if(count($lstAm)>0)
+        {
+          foreach ($lstAm as $item)
+          {
+            $am= new CustomerAms();
+            $am->user_id= $item;
+            $am->cus_id= $newCustomer['cus_id'];
+            $am->save();
+
+          }
+        }
 
       // Backup
       $this->SetActivity($request->all(), 'customers', $newCustomer['cus_id'], 0, config("sbc.action.create_customer"), "Tạo mới khách hàng " . $request->companyname, $enterprise, null);
@@ -481,7 +503,7 @@ class V1CustomerController extends Controller
           }
 
         $validData = $request->only('cus_name', 'enterprise_number', 'companyname', 'addr', 'phone1', 'email', 'ip_auth','ip_proxy','destination', 'telco_destination',  'ip_auth_backup',
-          'ip_proxy_backup','operator_telco_id');
+          'ip_proxy_backup','operator_telco_id','ams');
         $validator = Validator::make($validData, [
             'cus_name' => 'nullable|max:250',
             'enterprise_number' => 'required|alpha_dash|max:25|min:5|exists:customers,enterprise_number',
@@ -497,6 +519,7 @@ class V1CustomerController extends Controller
             'destination' => 'nullable|ipV4Port|max:100',
             'telco_destination' => 'nullable|ipV4Port|max:50',
             'operator_telco_id' => 'required|max:50|exists:operator_telco,id',
+          'ams'=>'nullable|array'
         ]);
         if ($validator->fails()) {
           $logDuration= round(microtime(true) * 1000)-$startTime;
@@ -505,6 +528,8 @@ class V1CustomerController extends Controller
 
           return $this->ApiReturn($validator->errors(), false, 'The given data was invalid', 422);
         }
+
+      $lstAm= request('ams',[]);
 
         $enterprise= $request->enterprise_number;
         $customer=Customers::where('enterprise_number',$enterprise)->whereIn('blocked',[0,1])->first();
@@ -530,6 +555,27 @@ class V1CustomerController extends Controller
         $customer->ip_proxy_backup= request('ip_proxy_backup', null);
 
         $customer->save();
+
+
+    if(count($lstAm)>0)
+    {
+      // Delete AM Not IN
+      CustomerAms::where('cus_id', $customer->id)->whereNotIn('user_id', $lstAm)->delete();
+      foreach ($lstAm as $item)
+      {
+        $am=  CustomerAms::where('cus_id', $customer->id)->where('user_id', $item)->first();
+        if(!$am)
+        {
+          $am = new CustomerAms();
+        }
+        $am->user_id= $item;
+        $am->cus_id= $customer->id;
+        $am->save();
+
+
+
+      }
+    }
 
 
 
@@ -2238,7 +2284,6 @@ class V1CustomerController extends Controller
         return response()->json(['status' => false, 'message' => "Permission denied"], 403);
       }
 
-      $isAm=$this->checkEntity($user->id, "AM");
 
 
 
@@ -2272,6 +2317,19 @@ class V1CustomerController extends Controller
       if ($validator->fails()) {
         return $this->ApiReturn($validator->errors(), false, 'The given data was invalid', 422);
       }
+
+
+      $isAm=$this->checkEntity($user->id, "AM");
+      if($isAm)
+      {
+        $checkCusAms= CustomerAms::where('user_id',$user->id)->count();
+        if($checkCusAms==0)
+        {
+          return $this->ApiReturn(['data'=>[], 'count'=>0], true, 'No Customer found', 200);
+        }
+      }
+
+
 
 
 
@@ -2367,6 +2425,12 @@ class V1CustomerController extends Controller
 
         }
 
+        if($isAm)
+        {
+          $sql .= "AND a.id in (select cus_id from customer_ams where user_id =? )";
+          $sqlCount .= "AND a.id in (select cus_id from customer_ams where user_id =? )";
+          array_push($param, $user->id);
+        }
         if($charge_error)
         {
             $sql .=" AND e.charge_result <>'0' ";
@@ -2400,7 +2464,7 @@ class V1CustomerController extends Controller
       Log::info(APP_API."|".date("Y-m-d H:i:s",time())."|".$user->email."|".$request->ip()."|".$request->url()."|".json_encode($request->all())."|GET_CUSTOMER_LIST|".$logDuration."");
 
 
-        return $this->ApiReturn(['data'=>$res, 'count'=>$count,  'sqlCount'=>$sqlCount,   'user'=>['id'=>$user->id,'role'=>$user->role]],true, null, 200);
+        return $this->ApiReturn(['data'=>$res, 'count'=>$count, 'am'=>$isAm, 'sqlCount'=>$sqlCount,   'user'=>['id'=>$user->id,'role'=>$user->role]],true, null, 200);
 
 
 
@@ -3311,6 +3375,62 @@ class V1CustomerController extends Controller
     }
 
     return $this->ApiReturn([],true,null, 200);
+
+
+  }
+
+
+  public function postSearchCustomer(Request $request)
+  {
+
+    $startTime=  round(microtime(true) * 1000);
+
+
+
+    $user= $request->user;
+
+
+
+    if (!$this->checkEntity($user->id, "VIEW_CUSTOMER")) {
+      Log::info($user->email . '  TRY TO GET getCustomersV2 WITHOUT PERMISSION');
+      return response()->json(['status' => false, 'message' => "Permission denied"], 403);
+    }
+
+
+
+    $isAm=$this->checkEntity($user->id, "AM");
+    if($isAm)
+    {
+      $checkCusAms= CustomerAms::where('user_id',$user->id)->count();
+      if($checkCusAms==0)
+      {
+        return $this->ApiReturn(['data'=>[], 'count'=>0], true, 'No Customer found', 200);
+      }
+    }
+
+    $query= request('q', null);
+
+    $sqlCustomer=" select enterprise_number, id from customers where blocked in (0,1) ";
+    $param=[];
+
+    if($isAm)
+    {
+      $sqlCustomer.=" AND id in (select cus_id from customer_ams where user_id=?)";
+      array_push($param, $user->id);
+
+    }
+
+    if($query)
+    {
+      $sqlCustomer .=" AND (enterprise_number =?  or companyname like ? or cus_name like ? )";
+      array_push($param, $query, "%$query%","%$query%");
+    }
+
+    $sqlCustomer.= " order by created_at desc LIMIT 100";
+
+    $res= DB::select($sqlCustomer, $param);
+
+    return response()->json($res,200);
 
 
   }
