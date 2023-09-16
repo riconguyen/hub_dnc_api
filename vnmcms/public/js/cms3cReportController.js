@@ -17,6 +17,7 @@ cms3c.controller('reportController', function ($scope, ApiServices,$filter,login
 	$scope.optionsMonth = '{format:"YYYY-MM", useCurrent: false,debug:true}';
 $scope.reportMonthlyParam={};
 $scope.reportMonthlyParam.start_date=moment().format("YYYY-MM-DD");
+$scope.reportMonthlyParam.end_date=moment().format("YYYY-MM-DD");
 $scope.monthlyReport={tab:"customer",acumulated:[], count:0,prefix_charge:[]};
 
 	$scope.mraCols = [
@@ -318,6 +319,7 @@ $scope.viewReport= function (data) {
 		$("#loading").modal("show");
 		// var auditParam={};
 		$scope.reportMonthlyParam.start_date = (moment(data && data.start_date ? data.start_date : null).format("YYYY-MM-DD 00:00:00"));
+		$scope.reportMonthlyParam.end_date = (moment(data && data.end_date ? data.end_date : null).format("YYYY-MM-DD 23:59:59"));
 		ApiServices.postViewMonthlyAudit($scope.reportMonthlyParam).then(function (response) {
 			// console.log(response);
 			// $scope.monthlyReport.acumulated = response.data.data.acumulated;
@@ -333,12 +335,12 @@ $scope.viewReport= function (data) {
 	$scope.viewDetailAudit = () => {
 		// init audit all
         $scope.subNav='growth';
-		var date = new Date(), y = date.getFullYear(), m = date.getMonth();
+		// var date = new Date(), y = date.getFullYear(), m = date.getMonth();
         $scope.queryDetail= {};
-        $scope.queryDetail.start_date=  new Date(y, m, 1);
+        $scope.queryDetail.start_date= new Date();
         $scope.queryDetail.end_date= new Date();
         $scope.queryDetail.prefix_group=null;
-		$scope.searchReportGrowth($scope.queryDetail);
+		// $scope.searchReportGrowth($scope.queryDetail);
         ApiServices.getServiceZoneQuantityType().then(result=>{
 
             $scope.lstPrefixGroup=result.data.group;
@@ -367,19 +369,11 @@ $scope.viewReport= function (data) {
 
     }
 
-	$scope.tagAdded = function(tag) {
-		$scope.log.push('Added: ' + tag.text);
-	};
-
-	$scope.tagRemoved = function(tag) {
-		$scope.log.push('Removed: ' + tag.text);
-	};
-
 
 	$scope.colReportGrowth=[
         {field:'day', name:'Ngày', format:0},
         {field:'total_call', name:'Cuộc gọi',format:1},
-        {field:'total_duration', name:'Thời lượng',format:1},
+        {field:'total_duration', name:'Thời lượng',format:2},
         {field:'total_amount', name:'Doanh thu',format:1}
     ]
 
@@ -388,13 +382,17 @@ $scope.viewReport= function (data) {
         {field:'day', name:'Ngày', format:0},
         {field:'customer_name', name:'Tên khách hàng',format:0},
         {field:'prefixName', name:'Loại cuộc gọi',format:0},
-		{field:'total_duration', name:'Thời lượng',format:1},
+		{field:'total_duration', name:'Thời lượng',format:2},
 		{field:'total_amount', name:'Thành tiền',format:1},
     ]
 
 	$scope.searchReportGrowth=(query)=>{
-	    console.log(query)
 
+		if(!query.enterprise_number)
+		{
+			$.jGrowl("Số đại diện bắt buộc nhập",{theme:'error'})
+			return;
+		}
         let postData= new Set();
 	    postData.start_date= moment(query.start_date).format("YYYY-MM-DD HH:mm:ss");
 	    postData.end_date= moment(query.end_date).format("YYYY-MM-DD HH:mm:ss");

@@ -156,7 +156,7 @@ class ReportController extends Controller
 
 
 
-  public function postViewReportFlow(Request $request) {
+  public function postViewReportFlowBK(Request $request) {
     $user = $request->user;
     if (!$this->checkEntity($user->id, "VIEW_REPORT_FLOW")) {
       Log::info($user->email . '  TRY TO GET ReportController.postViewReportFlow WITHOUT PERMISSION');
@@ -177,6 +177,61 @@ class ReportController extends Controller
 from report_days  a left join sbc.cdr_vendors_failed b on a.full_time= DATE(b.setup_time)   and i_vendor in ( 2,17) 
 where  full_time between ? and ? group by day";
         $resCallFailed = DB::select($queryFailed, [$datePeriod->start_date, $datePeriod->end_date]);
+        $callFailed = array();
+        $dateAvail = array();
+        $callSuccessAmount = array();
+        $callSuccessTime = array();
+        $total_success_call = 0;
+        $total_success_call_time = 0;
+        $total_failed_call = 0;
+        foreach ($resCallSuccess as $key => $val) {
+            $total_success_call += intval($val->num_of_call);
+            $total_success_call_time += ceil(intval($val->total_minute) / 60);
+            array_push($callSuccessAmount, intval($val->num_of_call)?intval($val->num_of_call):0);
+            array_push($callSuccessTime, ceil(intval($val->total_minute) / 60));
+        }
+        foreach ($resCallFailed as $key => $val) {
+            $total_failed_call += intval($val->num_of_call);
+            array_push($callFailed, intval($val->num_of_call)?intval($val->num_of_call):0);
+            array_push($dateAvail, ($val->day));
+            //  array_push($callSuccessTime, intval($val->total_minute));
+        }
+        return response()->json([
+            'total' => ['success' => $total_success_call, 'success_time' => $total_success_call_time, 'failed' => $total_failed_call],
+            'call_success' => $callSuccessAmount, 'call_time' => $callSuccessTime, 'call_failed' => $callFailed, 'date' =>
+                ['start_date' => date('d/m/Y', strtotime($datePeriod->start_date)), 'end_date' => date('d/m/Y', strtotime($datePeriod->end_date))],
+            'date_range' => $dateAvail
+        ]);
+        //postViewReportFlow
+    }
+public function postViewReportFlow(Request $request) {
+    $user = $request->user;
+    if (!$this->checkEntity($user->id, "VIEW_REPORT_FLOW")) {
+      Log::info($user->email . '  TRY TO GET ReportController.postViewReportFlow WITHOUT PERMISSION');
+      return response()->json(['status' => false, 'message' => "Permission denied"], 403);
+    }
+
+    $validatedData = $request->validate(['start_date' => 'nullable|date', 'end_date' => 'nullable|date', 'report' => 'required', 'datePeriod' => 'required',
+        ]);
+        $range = $request->all();
+        $datePeriod = $this->filterDateRange($range);
+        // So luong cuoc goi
+        $querySuccess = "select DATE(a.full_time) as day,  total_minute, 
+                num_of_call  from report_days  a 
+					 LEFT JOIN (     
+Select count(*) num_of_call, IFNULL(SUM(duration),0) total_minute,  DATE(setup_time) day  from sbc.cdr_vendors where setup_time
+ between   ? and  ?  group by DATE(setup_time)) b 
+on a.full_time= b.day
+    where  full_time between ? and  ?   ";
+        $resCallSuccess = DB::select($querySuccess, [$datePeriod->start_date, $datePeriod->end_date,$datePeriod->start_date, $datePeriod->end_date]);
+        $queryFailed = "select DATE(a.full_time) as day,  
+                num_of_call  from report_days  a 
+					 LEFT JOIN (     
+Select count(*) num_of_call,    DATE(setup_time) day  from sbc.cdr_vendors_failed where setup_time
+ between   ? and  ?  group by DATE(setup_time)) b 
+on a.full_time= b.day
+    where  full_time between ? and  ? ";
+        $resCallFailed = DB::select($queryFailed, [$datePeriod->start_date, $datePeriod->end_date,$datePeriod->start_date, $datePeriod->end_date]);
         $callFailed = array();
         $dateAvail = array();
         $callSuccessAmount = array();
@@ -321,8 +376,17 @@ where  full_time between ? and ? group by day";
     ]);
 
     $start_date = date("Y-m-d 00:00:00", strtotime($request->start_date));
-    $end_date = date("Y-m-d 23:59:59", strtotime($start_date));
+    $end_date = date("Y-m-d 23:59:59", strtotime($request->end_date));
 
+    $start_datex = new DateTime($start_date);
+    $end_datex = new DateTime($end_date);
+
+    $interval = $start_datex->diff($end_datex);
+
+    if ($interval->days > 31) {
+      return $this->ApiReturn([], true, 'Thời gian bắt đầu và kết thúc không quá 31 ngày', 422);
+
+    }
 
     $returnReport = new \stdClass();
     $returnReport->charge_logs = [];
@@ -424,7 +488,8 @@ where  full_time between ? and ? group by day";
     $validatedData = $request->validate([
       'start_date' => 'required|date',
       'end_date' => 'required|date',
-      'prefix_group' => 'nullable|int'
+      'prefix_group' => 'nullable|int',
+      'enterprise_number' => 'required'
     ]);
     $start_date= request('start_date', date('Y-m-01 00:00:00'));
     $end_date= request('end_date', date('Y-m-d H:i:s'));
@@ -437,7 +502,7 @@ where  full_time between ? and ? group by day";
        $checkCus= Customers::where('enterprise_number', $enterprise)->whereIn('blocked',[0,1])->first();
        if(!$checkCus)
        {
-         return $this->ApiReturn([], true, 'Không tìm thấy khách hàng', 400);
+         return $this->ApiReturn([], true, 'Không tìm thấy khách hàng '.$enterprise, 400);
        }
 
     }
@@ -502,6 +567,8 @@ where  full_time between ? and ? group by day";
       $dataSummary->total_amount += intval($item->total_amount);
       $dataSummary->total_duration += intval($item->total_duration);
       $dataSummary->total_call += intval($item->total_call);
+
+      $item->total_duration= $this->secondsToTime($item->total_duration);
     }
 
 
@@ -543,7 +610,7 @@ where  full_time between ? and ? group by day";
     $end_date= request('end_date', date('Y-m-d H:i:s'));
 
 
-    $totalPerPage= request('count',50);
+    $totalPerPage= request('count',500);
     $page= request('page',1);
     $skip= ($page-1)*$totalPerPage;
 
@@ -559,7 +626,7 @@ where  full_time between ? and ? group by day";
       $checkCus= Customers::where('enterprise_number', $enterprise)->whereIn('blocked',[0,1])->first();
       if(!$checkCus)
       {
-        return $this->ApiReturn([], true, 'Không tìm thấy khách hàng', 400);
+        return $this->ApiReturn([], true, 'Không tìm thấy khách hàng '.$enterprise, 400);
       }
 
     }
@@ -634,6 +701,8 @@ where insert_time between ? and ?  ";
       $dataSummary->total_amount += intval($item->total_amount);
       $dataSummary->total_duration += intval($item->total_duration);
       $dataSummary->total_call += intval($item->total_call);
+
+      $item->total_duration= $this->secondsToTime($item->total_duration);
     }
 
 
@@ -644,6 +713,13 @@ where insert_time between ? and ?  ";
 
     return response()->json(['data'=>$res, 'count'=>$total[0]->total, 'summary'=>$dataSummary],200);
 
+  }
+  function secondsToTime($seconds) {
+    $hours = floor($seconds / 3600);
+    $minutes = floor(($seconds % 3600) / 60);
+    $seconds = $seconds % 60;
+
+    return sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
   }
 
 
