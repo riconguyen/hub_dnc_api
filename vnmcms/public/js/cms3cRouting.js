@@ -34,10 +34,7 @@ cms3c.config(['$routeProvider', '$httpProvider',
         }) .when('/user', {
             templateUrl: '/templates/users.html',
             controller: 'userController'
-        }).when('/addAccount', {
-            templateUrl: '/templates/addCustomer.html',
-            controller: 'customerControllerAdd'
-        }).when('/report', {
+        }) .when('/report', {
             templateUrl: '/templates/report.html',
             controller: 'reportController'
         }).when('/billing', {

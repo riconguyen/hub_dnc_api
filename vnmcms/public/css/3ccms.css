@@ -55,3 +55,48 @@
     overflow: hidden !important;
     text-overflow: ellipsis;
 }
+
+
+.open>.dropdown-menu {
+    display: block;
+}
+.nya-bs-select{
+    display: block;
+    width: 100%;
+    height: calc(2.25rem + 2px);
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.nya-bs-select .btn.dropdown-toggle{
+    background: transparent;
+}
+.nya-bs-option.active{
+    background-color: transparent;
+}
+.nya-bs-select.btn-group .dropdown-menu li a:active {
+    color: #212529;
+    background-color: #fbfbfb;
+}
+
+
+.glyphicon {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    font-family: FontAwesome;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.glyphicon-ok:before {
+    content: "\f00c";
+}

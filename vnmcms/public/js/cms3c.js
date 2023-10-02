@@ -43,7 +43,7 @@ function ngAlias($compile) {
 }
 
 
-var cms3c = angular.module("cms3c", ['ngRoute', 'pascalprecht.translate','ngTable']);
+var cms3c = angular.module("cms3c", ['ngRoute', 'pascalprecht.translate','ngTable','nya.bootstrap.select','ngTagsInput']);
 
 cms3c.directive('focusOn', function() {
 	return function(scope, elem, attr) {
@@ -252,8 +252,16 @@ cms3c.controller('dashboardController', function ($scope, ApiServices, loginChec
 			$location.path("/billing");
 		}
 
-		$scope.viewDashboard();
-		$scope.flowDailyChart();
+		if($scope.entity.VIEW_DASHBOARD)
+		{
+			$scope.viewDashboard();
+			$scope.flowDailyChart();
+		}
+		else
+		{
+			$("#loading").modal("hide");
+		}
+
 
 	});
 
@@ -984,6 +992,9 @@ cms3c.controller('loginController', function ($scope, ApiUsers, $location, $filt
                 else if (data.data.response == 'success') {
                     $scope.login.message = $filter('translate')('LOGIN.COMPLETE');
                     localStorage.setItem('token', data.data.result.token)
+
+				//TODO	entity.VIEW_DASHBOARD
+
                     location.href = '/';
                 }
             }

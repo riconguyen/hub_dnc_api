@@ -699,6 +699,24 @@ return response()->json(['data'=>$users, 'count'=>$total]);
 
 
   }
+  public function getAms(Request $request)
+  {
+
+
+    $sql="select u.name as username, u.id, u.email, roles.name role_name from users u join 
+roles on roles.id= u.role
+join
+role_entity re on roles.id=re.role_id
+where re.entity_id=(select id from entity where entity.entity_key='AM')";
+
+
+    $resUsers = DB::select($sql);
+
+
+    return response()->json(['status' => true, 'data'=>$resUsers], 200);
+
+
+  }
 
 
 }

@@ -17,9 +17,20 @@
                                 href="">{{'REPORT.NAV.CUSTOMER'|translate}}</a></li>
         <li class="nav-item"><a class="nav-link" ng-class="selectedReport=='monthly_audit'?'disabled':''"
                                 ng-click="viewReport('monthly_audit');"
-                                href="">{{'REPORT.NAV.MONTHLY_AUDIT'|translate}}</a></li>
+                                href="">Thống kê ngày</a></li>
+        <li class="nav-item"><a class="nav-link" ng-class="selectedReport=='detail_audit'?'disabled':''"
+                                ng-click="viewReport('detail_audit');"
+                                href="">Chi tiết</a></li>
+        
     </ul>
 <div class="container-fluid mt-1 ">
+    <div class="row" ng-show="!selectedReport">
+        <div class="col-md">
+            <div class="text-muted display-4">
+                Chọn một loại báo cáo để hiển thị
+            </div>
+        </div>
+    </div>
     <div class="row" ng-show="selectedReport=='quantity'">
         <div class="col-md-4">
 
@@ -230,23 +241,17 @@
         </div>
     </div>
 
-    <div class="row" ng-show="!selectedReport">
-        <div class="col-md">
-            <div class="text-muted display-4">
-                Chọn một loại báo cáo để hiển thị
-            </div>
-        </div>
-    </div>
+ 
 
     <div class="row" ng-show="selectedReport=='monthly_audit'"  style="border-top: 1px solid rgba(238,239,240,0.17)">
         <div class="col-3">
 
             <div class=" form-group">
 
-                <label> Chọn tháng</label>
+                <label> Từ ngày</label>
 
 
-                <div class="input-group input-sm  date" datetimepicker-options="{{optionsMonth}}" datetimepicker=""
+                <div class="input-group input-sm  date" datetimepicker-options="{{optionsDate}}" datetimepicker=""
                      ng-model="reportMonthlyParam.start_date">
 
                     <input type="text" class="form-control">
@@ -254,10 +259,33 @@
                           <span class="input-group-text"><i class="fa fa-clock-o"></i></span>
                             </span>
                     <div class="input-group-append">
-                        <button class="btn btn-primary" ng-click="onSearchMonthlyAudit(reportMonthlyParam);"><i class="fa fa-book"></i> Xem </button>
+                    
                     </div>
                 </div>
 
+            </div>
+            <div class=" form-group">
+
+                <label> Đến ngày</label>
+
+
+                <div class="input-group input-sm  date" datetimepicker-options="{{optionsDate}}" datetimepicker=""
+                     ng-model="reportMonthlyParam.end_date">
+
+                    <input type="text" class="form-control">
+                    <span class="input-group-append input-group-addon">
+                          <span class="input-group-text"><i class="fa fa-clock-o"></i></span>
+                            </span>
+                    <div class="input-group-append">
+                    
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="form-group">
+                <button class="btn btn-primary" ng-click="onSearchMonthlyAudit(reportMonthlyParam);">
+                    <i class="fa fa-book"></i> Xem </button>
             </div>
         </div>
         <div class="col-9">
@@ -293,6 +321,163 @@
 
 
     </div>
+    
+    <div class="row" ng-show="selectedReport=='detail_audit'" style="    border-top: 1px solid #dddddd;">
+        
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    
+            <ul class="navbar-nav">
+                <li class="nav-item " ng-class="subNav=='growth'?'active':''">
+                    <a class="nav-link"  href="" ng-click="subNavDetailReport('growth')">Tăng trưởng</a>
+                </li>
+                <!--<li class="nav-item" ng-class="subNav=='prefix'?'active':''">-->
+                    <!--<a class="nav-link"  href="" ng-click="subNavDetailReport('prefix')">Doanh thu theo hướng</a>-->
+                <!--</li>-->
+                <li class="nav-item" ng-class="subNav=='audit'?'active':''">
+                    <a class="nav-link"  href=""  ng-click="subNavDetailReport('audit')">Đối soát</a>
+                </li>
+            </ul>
+        </nav>
+        <div class="col-12"  ng-show="subNav=='growth'">
+            <div class="card">
+                <!--<div class="card-header ">-->
+                    <!--<div class="row statics-box">-->
+                    <!--<div   class="border border-primary">Doanh thu-->
+                    <!--<h3>{{searchReportGrowthData.summary.total_amount|number:0}}</h3>-->
+                    <!--</div>-->
+                    <!--<div   class="border border-secondary">Phút thoại-->
+                        <!--<h3>{{searchReportGrowthData.summary.total_duration|number:0}}</h3>-->
+                    <!--</div>-->
+                    <!--<div   class="border border-success">Cuộc gọi thành công-->
+                        <!--<h3>{{searchReportGrowthData.summary.total_call|number:0}}</h3>-->
+                    <!--</div>-->
+       <!---->
+                    <!--</div>-->
+                <!--</div>-->
+                <div class="card-body d-flex  justify-content-between">
+                    <div class="input-group" style="width: calc(100vw/2 + 100px);">
+                        <input type="date" ng-model="queryDetail.start_date" class="form-control" title="Từ ngày" >
+                        <input type="date"  ng-model="queryDetail.end_date"  class="form-control" title="Từ tới ngày" >
+                        <input type="text"  ng-model="queryDetail.enterprise_number"  class="form-control" title="Số đại diện"  placeholder="Số đại diện">
+    
+                        <div class="input-group-btn">
+    
+                        <ol class="nya-bs-select " ng-model="queryDetail.prefix_group"
+                            style="    width: calc(100vw/7);    border-top-left-radius: 0px;    border-bottom-left-radius: 0px;    height: 40px;    margin-left: -1px;">
+                            <li nya-bs-option="option in lstPrefixGroup" data-value="option.id" style="padding: 4px 9px">
+                                <a>
+                                    {{option.group_name}}
+                                </a>
+                                <span class="glyphicon glyphicon-ok check-mark"></span>
+                            </li>
+                        </ol>
+                        </div>
+                       
+                       
+                    </div>
+    
+                    <div class="btn-group">
+                        <button class="btn btn-primary" ng-click="searchReportGrowth(queryDetail)">Tìm</button>
+                        <!--<button class="btn btn-default" ng-click="searchExportReportGrowth(queryDetail)">Xuất dữ liệu</button>-->
+                        <button class="btn btn-default" ng-disabled="!searchReportGrowthData|| searchReportGrowthData.count==0"  id="button" onclick="htmlTableToExcel('xlsx','tblToExcl')">Export  </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="table small" id="tblToExcl">
+                        <tr  ng-if="searchReportGrowthData.count==0"><td>Không có dữ liệu</td> </tr>
+                        <tr ng-show="searchReportGrowthData.count>0">
+                            <th ng-repeat="col in colReportGrowth" ng-class="col.format==1||col.format==2?'text-right':''">
+                                {{col.name}}
+                            </th>
+                        </tr>
+                        <tr ng-repeat="item in searchReportGrowthData.data">
+                            <td ng-repeat="col in colReportGrowth" ng-class="col.format==1||col.format==2?'text-right':''">
+                                {{col.format==1?(item[col.field]|number:0):item[col.field]}}
+                            </td>
+                        </tr>
+                    </table>
+                    
+                </div>
+            </div>
+            
+        
+        
+        </div>
+        <div class="col-12"  ng-show="subNav=='prefix'">
+        
+        
+        </div>
+        
+        
+        <div class="col-12"  ng-show="subNav=='audit'">
+    
+            <div class="card">
+                <!--<div class="card-header ">-->
+                    <!--<div class="row statics-box">-->
+                        <!--<div   class="border border-primary">Doanh thu-->
+                            <!--<h3>{{searchReportGrowthData.summary.total_amount|number:0}}</h3>-->
+                        <!--</div>-->
+                        <!--<div   class="border border-secondary">Phút thoại-->
+                            <!--<h3>{{searchReportGrowthData.summary.total_duration|number:0}}</h3>-->
+                        <!--</div>-->
+                        <!--<div   class="border border-success">Cuộc gọi thành công-->
+                            <!--<h3>{{searchReportGrowthData.summary.total_call|number:0}}</h3>-->
+                        <!--</div>-->
+            <!---->
+                    <!--</div>-->
+                <!--</div>-->
+                <div class="card-body d-flex  justify-content-between">
+                    <div class="input-group" style="width: calc(100vw/2 + 100px);">
+                        <input type="date" ng-model="queryDetail.start_date" class="form-control" title="Từ ngày" >
+                        <input type="date"  ng-model="queryDetail.end_date"  class="form-control" title="Từ tới ngày" >
+                        <input type="text"  ng-model="queryDetail.enterprise_number"  class="form-control" title="Số đại diện"  placeholder="Số đại diện">
+                
+                        <div class="input-group-btn">
+                    
+                            <ol class="nya-bs-select " ng-model="queryDetail.prefix_group"
+                                style="    width: calc(100vw/7);    border-top-left-radius: 0px;    border-bottom-left-radius: 0px;    height: 40px;    margin-left: -1px;">
+                                <li nya-bs-option="option in lstPrefixGroup" data-value="option.id" style="padding: 4px 9px">
+                                    <a>
+                                        {{option.group_name}}
+                                    </a>
+                                    <span class="glyphicon glyphicon-ok check-mark"></span>
+                                </li>
+                            </ol>
+                        </div>
+            
+            
+                    </div>
+            
+                    <div class="btn-group">
+                        <button class="btn btn-primary" ng-click="searchReportAudit(queryDetail)">Tìm</button>
+                        <!--<button class="btn btn-default" ng-click="searchExportReportGrowth(queryDetail)">Xuất dữ liệu</button>-->
+                        <button class="btn btn-default" ng-disabled="!searchReportAuditData|| searchReportAuditData.count==0"  id="button1" onclick="htmlTableToExcel('xlsx','auditMonth')">Export  </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="table small" id="auditMonth">
+                        <tr  ng-if="searchReportAuditData.count==0"><td>Không có dữ liệu</td> </tr>
+                        <tr ng-show="searchReportAuditData.count>0">
+                            <th ng-repeat="col in colReportAudit"  ng-class="col.format==1||col.format==2?'text-right':''">
+                                {{col.name}}
+                            </th>
+                        </tr>
+                        <tr ng-repeat="item in searchReportAuditData.data">
+                            <td ng-repeat="col in colReportAudit"  ng-class="col.format==1||col.format==2?'text-right':''">
+                                {{col.format==1?(item[col.field]|number:0):item[col.field]}}
+                                
+                            </td>
+                        </tr>
+                        
+                    </table>
+        
+                </div>
+            </div>
+
+        </div>
+        
+        
+    </div>
 
 
 </div>
@@ -305,3 +490,20 @@
         </th>
     </tr>
 </script>
+
+
+
+
+<style>
+    
+    .statics-box .border{
+        width: calc((100vw/5) - 17px);
+        min-width: 200px;
+        height: 84px;
+        margin: 4px;
+        max-width: 349px;
+        padding:9px
+        
+    }
+    .statics-box .border h3{text-align: right}
+</style>

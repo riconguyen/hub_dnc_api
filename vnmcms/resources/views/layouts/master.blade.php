@@ -17,8 +17,11 @@
 <link rel="stylesheet" href="<?=asset('css/ng-table.min.css')?>"/>
 <link rel="stylesheet" href="<?=asset('css/font-awesome.min.css')?>"/>
 <link rel="stylesheet" href="<?=asset('css/3ccms.css')?>?v=20181129"/>
+<link rel="stylesheet" href="<?=asset('css/nya-bs-select.css')?>?v=20181129"/>
 <link rel="stylesheet" href="<?=asset('css/jquery.jgrowl.min.css')?>?v=20181129"/>
 <link rel="stylesheet" href="<?=asset('css/bootstrap-datetimepicker.min.css')?>?v=20181129"/>
+<link rel="stylesheet" href="<?=asset('css/ng-tags-input.min.css')?>?v=20181129"/>
+<link rel="stylesheet" href="<?=asset('css/ng-tags-input.bootstrap.min.css')?>?v=20181129"/>
 
 <script>
     localStorage.setItem('lang', '{{$lang}}');
@@ -29,6 +32,7 @@
 <script src="<?= asset('js/popper.min.js') ?>"></script>
 <script src="<?= asset('js/angular.min.js') ?>"></script>
 <script src="<?= asset('js/angular-route.min.js') ?>"></script>
+<script src="<?= asset('js/nya-bs-select.min.js') ?>"></script>
 
 <script src="<?= asset('js/cms3c.js') ?>?v=20181129"></script>
 <script src="<?= asset('js/cms3cRouting.js') ?>?v=20181129"></script>
@@ -43,6 +47,7 @@
 <script src="<?= asset('js/cms3c-api-services.js') ?>?v=20181129"></script>
 <script src="<?= asset('js/angular-translate.min.js') ?>"></script>
 <script src="<?= asset('js/angular-translate-loader-static-files.min.js') ?>"></script>
+<script src="<?= asset('js/dist_xlsx.full.min.js') ?>"></script>
 
 <script src="<?= asset('js/bootstrap.min.js') ?>"></script>
 
@@ -50,6 +55,7 @@
 <script src="<?= asset('js/jquery.jgrowl.min.js') ?>"></script>
 
 <script src="<?= asset('js/highcharts.js') ?>"></script>
+<script src="<?= asset('js/ng-tags-input.min.js') ?>"></script>
 
 <link rel="stylesheet"; href="<?= asset('css/ng-table.min.css') ?>">
 <script src="<?= asset('js/ng-table.min02.js') ?>"></script>

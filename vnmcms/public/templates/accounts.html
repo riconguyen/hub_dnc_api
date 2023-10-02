@@ -281,6 +281,10 @@
                 </td></tr>
                 <tr><td class="text-muted">{{'LBL.CREATED_AT'|translate}}</td><td>{{currentCustomer.created_at}}</td></tr>
                 <tr><td class="text-muted">{{'LBL.UPDATED_AT'|translate}}</td><td>{{currentCustomer.updated_at}}</td></tr>
+                <tr><td class="text-muted">Am Quản lý</td><td>
+                    <span class="text-info small"  ng-repeat="item in currentCustomer.cog.customer.ams" title="{{item.email}}">- {{item.username}} <br></span>
+                    
+                </td></tr>
             </table>
 
 
@@ -1290,6 +1294,22 @@
 
 
                 </div>
+    
+                <div class="form-group"><label> AM Quản lý</label>
+                    <br>
+                    <ol class="nya-bs-select" ng-model="editCustomer.ams" multiple="" style="width: 100%">
+                        <li nya-bs-option="option in lstAms" data-value="option.id" style="padding: 4px 9px">
+                            <a>
+                                {{option.username}}
+                            </a>
+                            <span class="glyphicon glyphicon-ok check-mark"></span>
+                        </li>
+                    </ol>
+                    <div class="invalid-feedback">
+                        {{editCustomer.errors.ams[0]}}
+                    </div>
+                </div>
+                
 
             </div>
             <div class="modal-footer">

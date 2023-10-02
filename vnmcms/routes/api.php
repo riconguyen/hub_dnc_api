@@ -53,6 +53,7 @@ Route::group(['middleware' => ['api', 'cors','logVT']], function () {
             Route::prefix('/customer')->group(function () {
 
                 Route::get('getCustomers', 'V1CustomerController@getCustomers'); //3.1
+                Route::post('postSearchCustomer', 'V1CustomerController@postSearchCustomer'); //3.1
                 Route::post('getCustomersV2', 'V1CustomerController@getCustomersV2'); //3.1
                 Route::post('addCustomer', 'V1CustomerController@addCustomer'); //3.2
                 Route::post('editCustomer', 'V1CustomerController@editCustomer'); //3.3
@@ -178,6 +179,8 @@ Route::group(['middleware' => ['api', 'cors','logVT']], function () {
             Route::post('/flow', 'ReportController@postViewReportFlow');
             Route::post('/customer', 'ReportController@postViewReportCustomer');
             Route::post('/monthly', 'ReportController@postViewReportMonthlyAudit');
+            Route::post('/searchReportGrowth', 'ReportController@postSearchReportGrowth');
+            Route::post('/searchReportAudit', 'ReportController@postSearchReportAudit');
         });
         Route::post('/activity', function (Request $request) {
             $table = $request->input('table');
@@ -195,6 +198,7 @@ Route::group(['middleware' => ['api', 'cors','logVT']], function () {
             Route::post('/server-resource', 'ServerController@postServerResource');
             Route::post('/server-move-customer', 'MoveCustomerController@postServerMoveCustomer');
             Route::post('/users/{id}', 'UserController@update');
+            Route::get('/am', 'UserController@getAms');
           Route::post('/migration', 'MoveCustomerController@mirgradeServer');
         });
 
