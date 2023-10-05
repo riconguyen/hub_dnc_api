@@ -45,7 +45,7 @@ Route::group(['middleware' => ['api', 'cors','logVT']], function () {
 
 
         Route::prefix('/v1')->group(function () {
-            Route::post('dnd', 'V1DNDController@postDnd'); //2.1
+            Route::post('dnc', 'V1DNDController@postDnd'); //2.1
             Route::prefix('/service')->group(function () { // 2
                 Route::get('getServices', 'V1ServiceController@getServices'); //2.1
                 Route::get('getServiceByCode', 'V1ServiceController@getServiceByCode'); //2.2

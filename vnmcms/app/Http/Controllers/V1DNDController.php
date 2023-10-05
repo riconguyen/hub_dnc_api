@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\DNC;
+use DateTime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Validator;
@@ -17,10 +19,10 @@ class V1DNDController extends Controller
         $telco= request('telco',null);
         $shortcode= request('shortcode',null);
         $info= request('info',null);
-        $mo_time = request('mo_time',null);
+        $mo_time = request('mo_time',date('Y-m-d H:i:s'));
         $cmd_code  = request('cmd_code',null);
 
-        $mo_time= date_format(strtotime($mo_time), 'd-m-Y-H-i-s');
+        $mo_time= date_format(new DateTime($mo_time), 'd/m/Y H:i:s');
 
         $validator = Validator::make(request()->all(),
             [
